@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ItalParcel
 
-## Getting Started
+Marketing site and inquiry form for **ItalParcel** — Italian parcel forwarding from Trento, worldwide.
 
-First, run the development server:
+Built with Next.js 16 (App Router), Tailwind v4, Framer Motion, react-hook-form + Zod, and Resend.
+
+## Getting started
 
 ```bash
+npm install
+cp .env.local.example .env.local   # then fill in RESEND_API_KEY
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable          | Required | Notes                                                           |
+| ----------------- | -------- | --------------------------------------------------------------- |
+| `RESEND_API_KEY`  | yes      | Without it, contact submissions log to stdout instead of email. |
+| `CONTACT_EMAIL`   | no       | Defaults to `contact@italparcel.com`.                           |
+| `FROM_EMAIL`      | no       | Defaults to Resend's `onboarding@resend.dev` for testing.       |
 
-## Learn More
+## Deploying to Netlify
 
-To learn more about Next.js, take a look at the following resources:
+The repo ships with `netlify.toml` and uses the official `@netlify/plugin-nextjs`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Create a Netlify site connected to this repo.
+2. In **Site settings → Environment variables**, set `RESEND_API_KEY` (and optionally `CONTACT_EMAIL`, `FROM_EMAIL`).
+3. Deploy — Netlify detects the Next.js build automatically; the plugin handles SSR routes such as `/api/contact`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The first deploy installs `@netlify/plugin-nextjs` automatically.
 
-## Deploy on Vercel
+## Project layout
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+app/
+  layout.tsx          # metadata, JSON-LD, viewport, theme color
+  page.tsx            # home (sections orchestrated here)
+  manifest.ts         # PWA manifest
+  robots.ts           # robots.txt
+  sitemap.ts          # sitemap.xml
+  icon.png            # favicon / icon convention
+  apple-icon.png      # iOS home-screen icon
+  opengraph-image.png # 1200×630 OG/Twitter card
+  api/contact/        # Resend-backed inquiry endpoint
+components/           # Nav, Footer, sections, ui primitives
+lib/                  # schema (zod), countries, faqs, whatsapp helpers
+public/logo.png       # logotype used in Nav + Footer
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## SEO
+
+- Open Graph + Twitter card images via `app/opengraph-image.png`.
+- JSON-LD `Organization`, `WebSite`, `Service` injected in `app/layout.tsx`.
+- JSON-LD `FAQPage` injected in `app/page.tsx`.
+- `robots.ts` and `sitemap.ts` emit `/robots.txt` and `/sitemap.xml`.
+- `manifest.ts` exposes a PWA manifest at `/manifest.webmanifest`.

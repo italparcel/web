@@ -24,28 +24,28 @@ const STEPS: Step[] = [
     n: "01",
     kicker: "Phase 1 — Activation",
     title: "You tell us what's coming.",
-    body: "Fill the form and pay a €17 activation fee — credited toward your first parcel. We send you your Italian receiving address and any operational notes.",
+    body: "Fill in the form and we'll get back to you with an estimated total (our fee + shipping). If you like it, pay the €10 activation fee — don't worry, it'll be deducted from the total — and you'll get your Italian address right after payment.",
     Art: ActivateArt,
   },
   {
     n: "02",
     kicker: "Phase 2 — Reception",
     title: "Sellers ship. We receive.",
-    body: "Your parcels arrive at our Trento address. We open each one, photograph the contents on request, and re-pack to the destination carrier's specs.",
+    body: "Order using our address (or a designated pickup point). We receive, open and repack your parcels, and — on request — consolidate them into a single shipment.",
     Art: ReceiveArt,
   },
   {
     n: "03",
     kicker: "Phase 3 — Quote & ship",
     title: "One quote. Then it flies.",
-    body: "Final quote inclusive of carrier rates. You approve and pay — we hand the parcel to DHL, UPS, BRT or GLS the same business day.",
+    body: "Based on your parcel's actual weight and dimensions, you'll get the final shipping quote. After payment, we hand it to the carrier as soon as possible. (Customers outside the EU will need to provide the information needed for the customs declaration.)",
     Art: ShipArt,
   },
   {
     n: "04",
     kicker: "Phase 4 — After-care",
     title: "We don't disappear.",
-    body: "Tracking support, customs questions, and claims assistance until the parcel lands. WhatsApp or email — we reply within hours.",
+    body: "Tracking support, customs questions, and claims assistance until the parcel lands, we got you. WhatsApp or email — we reply within 36 working hours.",
     Art: TrackArt,
   },
 ];
@@ -588,10 +588,10 @@ function ShipArt() {
 
           {/* line items */}
           {[
-            { label: "Handling", value: "€9.50", y: 102 },
+            { label: "Handling", value: "€17.00", y: 102 },
             { label: "Repack", value: "Included", y: 124 },
-            { label: "Shipping · DHL", value: "€32.40", y: 146 },
-            { label: "Insurance", value: "€4.80", y: 168 },
+            { label: "Shipping · DHL", value: "€30.00", y: 146 },
+            { label: "Activation credit", value: "−€10.00", y: 168 },
           ].map((row) => (
             <g key={row.y}>
               <text
@@ -647,7 +647,7 @@ function ShipArt() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.9 }}
           >
-            €46.70
+            €37.00
           </motion.text>
 
           {/* approved stamp */}

@@ -2,7 +2,6 @@
 
 import {
   Boxes,
-  ShieldCheck,
   Camera,
   Lock,
   ScrollText,
@@ -44,9 +43,9 @@ export function Features() {
                 </CardIcon>
                 <CardTitle dark>Repack &amp; consolidate</CardTitle>
                 <CardCopy dark>
-                  We open every parcel, document the contents, and re-pack to
-                  carrier specs. Multiple orders ship as one — you save on
-                  freight.
+                  We open and document every parcel, then repack it to carrier
+                  specifications. Several orders can ship as a single parcel,
+                  cutting your shipping cost.
                 </CardCopy>
               </CardBody>
             </Card>
@@ -82,36 +81,22 @@ export function Features() {
             </Card>
           </Reveal>
 
-          <Reveal delay={0.14} className="md:col-span-2">
-            <Card>
-              <CardBody>
-                <CardIcon>
-                  <ShieldCheck size={18} />
-                </CardIcon>
-                <CardTitle>Optional loss coverage</CardTitle>
-                <CardCopy>
-                  Activate broker/carrier loss-only coverage before shipment.
-                </CardCopy>
-              </CardBody>
-            </Card>
-          </Reveal>
-
-          <Reveal delay={0.18} className="md:col-span-2">
+          <Reveal delay={0.14} className="md:col-span-3">
             <Card>
               <CardBody>
                 <CardIcon>
                   <Camera size={18} />
                 </CardIcon>
-                <CardTitle>Up to 10 photos</CardTitle>
+                <CardTitle>Up to 3 photos, free of charge</CardTitle>
                 <CardCopy>
-                  Hi-res photos of contents on request — receipts before you
-                  approve the shipment.
+                  Up to 3 high-resolution photos of your parcel&apos;s contents
+                  on request — free of charge, before you approve the shipment.
                 </CardCopy>
               </CardBody>
             </Card>
           </Reveal>
 
-          <Reveal delay={0.22} className="md:col-span-2">
+          <Reveal delay={0.18} className="md:col-span-3">
             <Card className="relative overflow-hidden border-fg bg-bg">
               <CardArtDots />
               <CardBody className="relative">
@@ -120,8 +105,8 @@ export function Features() {
                 </CardIcon>
                 <CardTitle>Real humans, fast</CardTitle>
                 <CardCopy>
-                  Email or WhatsApp. We reply within 36 hours — often within
-                  the hour.
+                  Email or WhatsApp. We reply within 36 working hours — often
+                  within the hour.
                 </CardCopy>
               </CardBody>
             </Card>

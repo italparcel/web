@@ -72,6 +72,14 @@ export function Footer() {
                   Privacy Policy
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/prohibited-items"
+                  className="text-fg hover:text-accent"
+                >
+                  Prohibited Items
+                </Link>
+              </li>
             </ul>
           </div>
         </div>

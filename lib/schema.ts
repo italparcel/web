@@ -57,7 +57,7 @@ export const contactSchema = z
     }),
     acceptClauses: z.literal(true, {
       message:
-        "You must specifically approve clauses 3.2(b), 3.10, 4.5, 5.9 and 8.2.",
+        "You must specifically approve clauses 3.2(b), 3.10, 4.5, 5.9, 7.3 and 8.2.",
     }),
   })
   .refine(

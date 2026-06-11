@@ -89,7 +89,7 @@ export function ContactForm() {
               <span className="display-light text-fg-muted">parcels.</span>
             </>
           }
-          description="Fill the form once. We'll reply by your preferred channel within 1 business day."
+          description="Fill the form once. We'll reply by your preferred channel within 36 working hours."
         />
 
         <div className="mx-auto mt-14 max-w-2xl">
@@ -328,9 +328,11 @@ export function ContactForm() {
                       aria-invalid={!!errors.acceptClauses}
                       label={
                         <>
-                          Pursuant to{" "}
-                          <strong>arts. 1341 and 1342 of the Italian Civil Code</strong>
-                          , I specifically approve clauses{" "}
+                          I specifically approve, pursuant to{" "}
+                          <strong>
+                            Articles 1341 and 1342 of the Italian Civil Code
+                          </strong>
+                          , clauses{" "}
                           <Link
                             href="/terms#sec-3-2"
                             target="_blank"
@@ -361,6 +363,14 @@ export function ContactForm() {
                             className="text-fg underline underline-offset-2 hover:text-accent"
                           >
                             5.9
+                          </Link>
+                          ,{" "}
+                          <Link
+                            href="/terms#sec-7-3"
+                            target="_blank"
+                            className="text-fg underline underline-offset-2 hover:text-accent"
+                          >
+                            7.3
                           </Link>{" "}
                           and{" "}
                           <Link
@@ -391,7 +401,7 @@ export function ContactForm() {
 
                   <div className="flex items-center justify-between gap-4 pt-2">
                     <p className="text-xs text-fg-subtle">
-                      We reply within 1 business day.
+                      We reply within 36 working hours.
                     </p>
                     <Button
                       type="submit"
@@ -501,7 +511,7 @@ function SuccessCard({
       <p className="mt-2 text-sm text-fg-muted">
         {channel === "whatsapp"
           ? "Your message is on its way via WhatsApp. We've logged an email copy on our end too."
-          : "We will reply within one business day."}
+          : "We will reply within 36 working hours."}
       </p>
       <Button variant="secondary" className="mt-6" onClick={onReset}>
         Send another

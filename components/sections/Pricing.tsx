@@ -23,7 +23,7 @@ const tiers: Tier[] = [
     features: [
       "1 parcel handling fee",
       "Email + WhatsApp updates",
-      "Activation fee credited",
+      "€10 activation deducted",
     ],
     cta: "Get started",
   },
@@ -34,7 +34,7 @@ const tiers: Tier[] = [
     features: [
       "Everything in Single",
       "Consolidation across orders",
-      "Priority WhatsApp support",
+      "Lower per-parcel rate",
     ],
     cta: "Bundle 5",
   },
@@ -45,9 +45,9 @@ const tiers: Tier[] = [
     best: true,
     highlight: true,
     features: [
+      "Everything in Single",
+      "Consolidation across orders",
       "Best per-parcel rate",
-      "Up to 10 content photos",
-      "Loss coverage available",
     ],
     cta: "Bundle 10",
   },
@@ -119,8 +119,9 @@ export function Pricing() {
         </div>
 
         <p className="mt-10 text-center text-xs text-white/45">
-          A parcel = up to 5 kg and 60×40×40 cm. Larger parcels incur a
-          surcharge — see{" "}
+          A parcel = up to 5 kg and 60×40×40 cm. Let us know in advance if a
+          parcel may exceed either limit to avoid a €15 handling surcharge —
+          see{" "}
           <a
             href="/terms#sec-5-2"
             className="underline underline-offset-2 hover:text-white"

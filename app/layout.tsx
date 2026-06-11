@@ -19,7 +19,7 @@ const jetbrains = JetBrains_Mono({
 const SITE_URL = "https://italparcel.com";
 const TITLE = "ItalParcel — Your Italian address. Anywhere in the world.";
 const DESCRIPTION =
-  "ItalParcel receives, consolidates and forwards your Italian parcels worldwide. Transparent pricing from €17. Locker pickup, customs prep, optional loss coverage.";
+  "ItalParcel receives, consolidates and forwards your Italian parcels worldwide. Transparent two-step pricing, locker pickup, customs prep done right.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: TITLE,
     description:
-      "Receive, consolidate, and forward your Italian parcels worldwide. From €17.",
+      "Receive, consolidate, and forward your Italian parcels worldwide.",
     url: SITE_URL,
     siteName: "ItalParcel",
     locale: "en_US",
@@ -158,9 +158,9 @@ const serviceJsonLd = {
   areaServed: "Worldwide",
   offers: {
     "@type": "Offer",
-    price: "17",
+    price: "10",
     priceCurrency: "EUR",
-    description: "Activation fee credited toward first parcel",
+    description: "€10 activation fee, deducted from the final total",
     url: `${SITE_URL}/#pricing`,
   },
 };

@@ -2,24 +2,24 @@ export type Faq = { q: string; a: string };
 
 export const FAQS: Faq[] = [
   {
-    q: "What counts as 'one parcel'?",
-    a: "A parcel is a single shipment up to 5 kg and 60×40×40 cm. If the parcel exceeds either limit, a handling surcharge applies per our published price list (see T&C §5.2). Carrier shipping is quoted separately based on final weight and dimensions, including volumetric weight.",
+    q: "What counts as one parcel?",
+    a: "A parcel is a single shipment up to 5 kg and 60×40×40 cm. If you think a parcel may exceed either limit, please let us know in advance to avoid a €15 handling surcharge (see T&C §5.2).",
   },
   {
     q: "What can I ship through ItalParcel?",
-    a: "Most legal goods. We don't accept prohibited or restricted items, counterfeits, or anything subject to undisclosed restrictions. Some categories (electronics, used or collectible items, high-value goods) may be excluded from optional loss coverage — we flag this in your final quote.",
+    a: "Most everyday goods. Some categories can't travel with us at all — alcohol, perishables, weapons, medicines, dangerous goods and more. Check the Prohibited items page (linked in the footer) before ordering; it forms an integral part of our Terms & Conditions.",
   },
   {
     q: "How do payments work?",
-    a: "An activation fee equal to one parcel (€17) is paid in advance and credited toward your first shipment. We accept SEPA (including SEPA Instant), card payments (credit, debit, prepaid), Apple Pay, Google Pay, and Revolut Pay via a secure payment link. All amounts are in Euros.",
+    a: "Payments happen in two steps. After your first quote, you pay a €10 activation fee to get started — don't worry, it's not an extra cost: it comes off your final bill, which covers shipping plus our handling fee. Here's an example: you ask us to ship a t-shirt to the USA, and we quote €30 for shipping plus a €17 handling fee for one parcel. You pay €10 now to get started; then, before we ship, you settle the balance — €47 in total (€30 + €17), less the €10 you've already paid, so €37. We accept SEPA (including SEPA Instant), card payments (credit, debit, prepaid), Apple Pay, Google Pay and Revolut Pay, all via a secure payment link. Amounts are in euros.",
   },
   {
-    q: "Can you collect from InPost / Amazon Hub / a locker?",
-    a: "Yes. Share the pickup code (QR, PIN, OTP) within 24 hours of the operator's notification and we'll collect on your behalf. Note that lockers hold parcels for limited windows (InPost: 7 days max) — late codes can render collection impossible.",
+    q: "Can you collect parcels from pickup points?",
+    a: "Yes — just request it, and depending on the carrier, we'll give you the available pickup points or lockers where we can collect your parcels. You'll then need to forward us the pickup codes (QR code, PIN or OTP) as soon as you get them — lockers only hold parcels for a limited time, so late codes can make collection impossible.",
   },
   {
     q: "What happens if my parcel gets lost?",
-    a: "If you activated loss coverage before shipment, request a claim in writing (email, SMS, WhatsApp) within 24 working hours of the carrier's loss notification or the missed delivery date. The declared value caps reimbursement, subject to the broker/carrier's terms. Without coverage, only the carrier's minimum statutory liability applies.",
+    a: "Your parcels travel with professional, tracked carriers, which carry the minimum liability required by law. If a parcel is lost in transit, let us know as soon as you realise it and we'll open or assist with a claim to the carrier on your behalf. Any compensation follows the carrier's own terms and limits. Carriers' claim deadlines are short, so the sooner you tell us, the better.",
   },
   {
     q: "Will I owe customs duties?",
@@ -27,7 +27,7 @@ export const FAQS: Faq[] = [
   },
   {
     q: "How fast do you respond?",
-    a: "We respond within 36 hours on business days (Mon–Fri, Italian holidays excluded), and most of the time the same day. WhatsApp is the fastest channel — we don't take phone calls.",
+    a: "We reply within 36 working hours (Mon–Fri, Italian holidays excluded), and most of the time the same day. WhatsApp is the fastest channel — we don't take phone calls.",
   },
   {
     q: "Where are you based?",

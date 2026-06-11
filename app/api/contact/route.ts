@@ -64,7 +64,7 @@ export async function POST(request: Request) {
     "",
     "— Acceptance record —",
     `T&C + Privacy: ${data.acceptTerms ? "accepted" : "—"}`,
-    `Clauses 3.2(b), 3.10, 4.5, 5.9, 8.2: ${
+    `Clauses 3.2(b), 3.10, 4.5, 5.9, 7.3, 8.2: ${
       data.acceptClauses ? "approved" : "—"
     }`,
     `At: ${acceptedAt}`,
@@ -100,7 +100,7 @@ export async function POST(request: Request) {
       </td></tr>
       <tr><td style="padding:20px 0;border-top:1px solid #e7e5de;color:#6b7280;font-size:12px;">
         <strong style="color:#0b0f14;">Acceptance record</strong><br/>
-        T&amp;C + Privacy accepted &middot; clauses 3.2(b), 3.10, 4.5, 5.9, 8.2 approved<br/>
+        T&amp;C + Privacy accepted &middot; clauses 3.2(b), 3.10, 4.5, 5.9, 7.3, 8.2 approved<br/>
         IP: ${escapeHtml(ip)} &middot; ${escapeHtml(ua)}
       </td></tr>
     </table>

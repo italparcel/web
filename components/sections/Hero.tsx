@@ -7,7 +7,7 @@ import {
   useScroll,
   useTransform,
 } from "framer-motion";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/Button";
 
@@ -52,8 +52,7 @@ export function Hero() {
               className="mt-8 max-w-lg text-base leading-relaxed text-fg-muted md:text-lg"
             >
               We receive your Italian parcels, inspect them, repack them,
-              consolidate, and forward them worldwide. From{" "}
-              <span className="font-mono text-fg">€17</span>.
+              consolidate, and forward them worldwide.
             </motion.p>
 
             <motion.div
@@ -77,7 +76,7 @@ export function Hero() {
               transition={{ duration: 0.6, delay: 0.95 }}
               className="mt-14 flex flex-wrap items-center gap-x-8 gap-y-3 border-t border-border pt-6 text-xs text-fg-subtle"
             >
-              <Stat label="Activation" value="€17" hint="credited" />
+              <Stat label="Activation" value="€10" hint="deducted from your total" />
               <Stat label="Best per parcel" value="€9.50" hint="on Bundle 10" />
               <Stat label="From" value="Trento · IT" />
             </motion.div>

@@ -231,17 +231,20 @@ function ArtFrame({ children }: { children: React.ReactNode }) {
       <div className="absolute inset-0 grid place-items-center p-10">
         {children}
       </div>
-      <span className="absolute left-4 top-4 font-mono text-[10px] uppercase tracking-[0.22em] text-fg-subtle">
-        Fig.
-      </span>
     </div>
   );
 }
 
 function ActivateArt() {
+  const fields = [
+    { label: "NAME", fill: 120 },
+    { label: "DESTINATION", fill: 150 },
+    { label: "ITEMS TO SHIP", fill: 95 },
+  ];
   return (
     <ArtFrame>
       <svg viewBox="0 0 380 280" className="h-full w-auto" aria-hidden>
+        {/* request form card */}
         <rect
           x="40"
           y="30"
@@ -251,159 +254,155 @@ function ActivateArt() {
           fill="#ffffff"
           stroke="#d6d3ca"
         />
-        {/* header */}
+
+        {/* header — a new inquiry */}
         <text
           x="60"
-          y="62"
+          y="58"
           fontFamily="ui-monospace, monospace"
-          fontSize="9"
-          fill="#9ca3af"
+          fontSize="11"
+          fill="#0b0f14"
           letterSpacing="2"
         >
-          INQUIRY ·  №&#160;001
+          NEW INQUIRY
         </text>
-        <line x1="60" y1="78" x2="320" y2="78" stroke="#e7e5de" />
-
-        {/* form fields */}
-        {[110, 140, 170, 200].map((y, i) => (
-          <g key={y}>
-            <rect
-              x="60"
-              y={y - 12}
-              width="60"
-              height="8"
-              rx="2"
-              fill="#0b0f14"
-              opacity="0.55"
-            />
-            <motion.rect
-              x="60"
-              y={y}
-              width="220"
-              height="14"
-              rx="3"
-              fill="#f3eee2"
-              stroke="#e7e5de"
-              initial={{ scaleX: 0 }}
-              animate={{ scaleX: 1 }}
-              transition={{
-                duration: 0.5,
-                delay: 0.2 + i * 0.18,
-                ease: [0.16, 1, 0.3, 1],
-              }}
-              style={{ transformOrigin: "60px center" }}
-            />
-            <motion.rect
-              x="64"
-              y={y + 4}
-              width={[110, 80, 140, 60][i]}
-              height="6"
-              rx="2"
-              fill="#0b0f14"
-              opacity="0.85"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.85 }}
-              transition={{ duration: 0.3, delay: 0.5 + i * 0.18 }}
-            />
-          </g>
-        ))}
-
-        {/* footer signed */}
         <motion.g
-          initial={{ opacity: 0, scale: 0.8 }}
+          initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4, delay: 1.2 }}
+          transition={{ duration: 0.4, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+          style={{ transformOrigin: "310px 52px" }}
         >
-          <circle cx="300" cy="220" r="22" fill="#d97706" />
+          <circle cx="310" cy="52" r="12" fill="#d97706" />
           <path
-            d="M 290 220 L 297 227 L 312 213"
+            d="M 310 46 L 310 58 M 304 52 L 316 52"
             stroke="#fff"
-            strokeWidth="3"
-            fill="none"
+            strokeWidth="2"
             strokeLinecap="round"
-            strokeLinejoin="round"
           />
         </motion.g>
-        <line x1="60" y1="230" x2="240" y2="230" stroke="#d6d3ca" />
-        <text
-          x="60"
-          y="244"
-          fontFamily="ui-monospace, monospace"
-          fontSize="8"
-          fill="#9ca3af"
-          letterSpacing="1.5"
+        <line x1="60" y1="70" x2="320" y2="70" stroke="#e7e5de" />
+
+        {/* labeled fields */}
+        {fields.map((f, i) => {
+          const labelY = 92 + i * 38;
+          const inputY = 98 + i * 38;
+          return (
+            <g key={f.label}>
+              <text
+                x="60"
+                y={labelY}
+                fontFamily="ui-monospace, monospace"
+                fontSize="8"
+                fill="#9ca3af"
+                letterSpacing="1.5"
+              >
+                {f.label}
+              </text>
+              <rect
+                x="60"
+                y={inputY}
+                width="220"
+                height="18"
+                rx="3"
+                fill="#f3eee2"
+                stroke="#e7e5de"
+              />
+              <motion.rect
+                x="66"
+                y={inputY + 6}
+                width={f.fill}
+                height="6"
+                rx="2"
+                fill="#0b0f14"
+                opacity="0.8"
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{
+                  duration: 0.5,
+                  delay: 0.3 + i * 0.18,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+                style={{ transformOrigin: "66px center" }}
+              />
+            </g>
+          );
+        })}
+
+        {/* submit button */}
+        <motion.g
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, delay: 1.1, ease: [0.16, 1, 0.3, 1] }}
+          style={{ transformOrigin: "170px 220px" }}
         >
-          ITALPARCEL · CONFIRMED
-        </text>
+          <rect x="60" y="206" width="220" height="28" rx="6" fill="#d97706" />
+          <text
+            x="170"
+            y="224"
+            textAnchor="middle"
+            fontFamily="ui-monospace, monospace"
+            fontSize="10"
+            fill="#ffffff"
+            letterSpacing="1.5"
+          >
+            SEND REQUEST
+          </text>
+        </motion.g>
       </svg>
     </ArtFrame>
   );
 }
 
 function ReceiveArt() {
+  const smallBoxes = [
+    { x: 68, fill: "#d97706", delay: 0.1 },
+    { x: 163, fill: "#0f766e", delay: 0.25 },
+    { x: 258, fill: "#0b0f14", delay: 0.4 },
+  ];
+  const arrows = [
+    { d: "M 95 90 Q 120 150 168 176", delay: 0.7 },
+    { d: "M 190 90 L 190 174", delay: 0.85 },
+    { d: "M 285 90 Q 260 150 212 176", delay: 1.0 },
+  ];
   return (
     <ArtFrame>
       <svg viewBox="0 0 380 280" className="h-full w-auto" aria-hidden>
-        {/* incoming arrows */}
-        {[
-          { x1: 30, y1: 50, x2: 110, y2: 110, delay: 0.0 },
-          { x1: 350, y1: 60, x2: 270, y2: 110, delay: 0.15 },
-          { x1: 30, y1: 230, x2: 110, y2: 170, delay: 0.3 },
-        ].map((a, i) => (
-          <motion.line
-            key={i}
-            x1={a.x1}
-            y1={a.y1}
-            x2={a.x2}
-            y2={a.y2}
-            stroke="#9ca3af"
-            strokeWidth="1.2"
-            strokeDasharray="3 4"
-            strokeLinecap="round"
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: 1, opacity: 1 }}
-            transition={{ duration: 0.7, delay: a.delay }}
-          />
-        ))}
+        {/* caption */}
+        <text
+          x="190"
+          y="30"
+          textAnchor="middle"
+          fontFamily="ui-monospace, monospace"
+          fontSize="8"
+          fill="#9ca3af"
+          letterSpacing="2"
+        >
+          SEVERAL ORDERS
+        </text>
 
-        {/* incoming parcels */}
-        {[
-          { x: 80, y: 90, fill: "#d97706", delay: 0.5 },
-          { x: 240, y: 90, fill: "#0f766e", delay: 0.65 },
-          { x: 80, y: 150, fill: "#0b0f14", delay: 0.8 },
-        ].map((p, i) => (
+        {/* incoming small boxes */}
+        {smallBoxes.map((b, i) => (
           <motion.g
             key={i}
-            initial={{ opacity: 0, scale: 0.6 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{
-              duration: 0.4,
-              delay: p.delay,
-              ease: [0.16, 1, 0.3, 1],
-            }}
+            initial={{ opacity: 0, scale: 0.6, y: -8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: b.delay, ease: [0.16, 1, 0.3, 1] }}
           >
-            <rect
-              x={p.x}
-              y={p.y}
-              width="60"
-              height="40"
-              rx="4"
-              fill={p.fill}
-            />
+            <rect x={b.x} y="46" width="54" height="38" rx="4" fill={b.fill} />
             <line
-              x1={p.x}
-              y1={p.y + 22}
-              x2={p.x + 60}
-              y2={p.y + 22}
+              x1={b.x}
+              y1="65"
+              x2={b.x + 54}
+              y2="65"
               stroke="#fff"
               strokeOpacity="0.35"
               strokeWidth="2"
             />
             <line
-              x1={p.x + 30}
-              y1={p.y}
-              x2={p.x + 30}
-              y2={p.y + 40}
+              x1={b.x + 27}
+              y1="46"
+              x2={b.x + 27}
+              y2="84"
               stroke="#fff"
               strokeOpacity="0.35"
               strokeWidth="2"
@@ -411,106 +410,73 @@ function ReceiveArt() {
           </motion.g>
         ))}
 
-        {/* consolidation arrow — curves into the top of the CONSOLIDATED box */}
-        <motion.path
-          d="M 140 175 Q 215 175 215 200"
-          stroke="#d97706"
-          strokeWidth="1.4"
-          fill="none"
-          strokeLinecap="round"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: 1 }}
-          transition={{ duration: 0.8, delay: 1.2 }}
-        />
-        <motion.path
-          d="M 209 192 L 215 200 L 221 192"
+        {/* converging arrows */}
+        {arrows.map((a, i) => (
+          <motion.path
+            key={i}
+            d={a.d}
+            stroke="#d97706"
+            strokeWidth="1.4"
+            fill="none"
+            strokeLinecap="round"
+            initial={{ pathLength: 0, opacity: 0 }}
+            animate={{ pathLength: 1, opacity: 1 }}
+            transition={{ duration: 0.6, delay: a.delay }}
+          />
+        ))}
+        <motion.g
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3, delay: 1.5 }}
           stroke="#d97706"
           strokeWidth="1.4"
           fill="none"
           strokeLinecap="round"
           strokeLinejoin="round"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3, delay: 2.0 }}
-        />
+        >
+          <path d="M 162 170 L 168 177 L 174 170" />
+          <path d="M 184 168 L 190 175 L 196 168" />
+          <path d="M 206 170 L 212 177 L 218 170" />
+        </motion.g>
 
-        {/* consolidated parcel */}
+        {/* single consolidated box */}
         <motion.g
           initial={{ opacity: 0, scale: 0.6, y: 8 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 1.5 }}
+          transition={{ duration: 0.5, delay: 1.6, ease: [0.16, 1, 0.3, 1] }}
+          style={{ transformOrigin: "190px 211px" }}
         >
-          <rect
-            x="170"
-            y="200"
-            width="90"
-            height="58"
-            rx="6"
-            fill="#0b0f14"
-          />
+          <rect x="130" y="178" width="120" height="66" rx="8" fill="#0b0f14" />
           <line
-            x1="170"
-            y1="232"
-            x2="260"
-            y2="232"
+            x1="130"
+            y1="211"
+            x2="250"
+            y2="211"
             stroke="#fff"
             strokeOpacity="0.45"
             strokeWidth="3"
           />
           <line
-            x1="215"
-            y1="200"
-            x2="215"
-            y2="258"
+            x1="190"
+            y1="178"
+            x2="190"
+            y2="244"
             stroke="#fff"
             strokeOpacity="0.45"
             strokeWidth="3"
           />
           <text
-            x="215"
-            y="235"
+            x="190"
+            y="216"
             textAnchor="middle"
             fontFamily="ui-monospace, monospace"
-            fontSize="7"
+            fontSize="10"
             fill="#fafaf7"
             letterSpacing="1.5"
           >
-            CONSOLIDATED
+            1 PARCEL
           </text>
         </motion.g>
-
-        {/* annotations */}
-        <text
-          x="20"
-          y="35"
-          fontFamily="ui-monospace, monospace"
-          fontSize="7"
-          fill="#9ca3af"
-          letterSpacing="1.5"
-        >
-          SELLER A
-        </text>
-        <text
-          x="340"
-          y="45"
-          textAnchor="end"
-          fontFamily="ui-monospace, monospace"
-          fontSize="7"
-          fill="#9ca3af"
-          letterSpacing="1.5"
-        >
-          SELLER B
-        </text>
-        <text
-          x="20"
-          y="252"
-          fontFamily="ui-monospace, monospace"
-          fontSize="7"
-          fill="#9ca3af"
-          letterSpacing="1.5"
-        >
-          SELLER C
-        </text>
       </svg>
     </ArtFrame>
   );

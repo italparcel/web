@@ -7,7 +7,6 @@ import {
   ScrollText,
   MessagesSquare,
   Sparkles,
-  ArrowUpRight,
 } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { SectionHeader } from "../ui/SectionHeader";
@@ -131,10 +130,6 @@ function Card({
         className
       )}
     >
-      <ArrowUpRight
-        size={16}
-        className="absolute right-5 top-5 text-current opacity-30 transition group-hover:rotate-45 group-hover:opacity-100"
-      />
       {children}
     </article>
   );

@@ -86,7 +86,7 @@ export function Footer() {
 
         <div className="mt-12 flex flex-col gap-2 border-t border-border pt-6 text-xs text-fg-subtle md:flex-row md:items-center md:justify-between">
           <p>
-            © {year} ItalParcel di Samuel Borghesi · VAT IT&nbsp;02818050227 ·
+            © {year}{" "}ItalParcel di Samuel Borghesi · VAT IT&nbsp;02818050227 ·
             Italy
           </p>
         </div>

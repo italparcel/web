@@ -52,8 +52,9 @@ export function Features() {
           </Reveal>
 
           <Reveal delay={0.06} className="md:col-span-3">
-            <Card>
-              <CardBody>
+            <Card className="relative overflow-hidden border-fg bg-bg">
+              <CardArtDots />
+              <CardBody className="relative">
                 <CardIcon>
                   <Lock size={18} />
                 </CardIcon>
@@ -68,8 +69,9 @@ export function Features() {
           </Reveal>
 
           <Reveal delay={0.1} className="md:col-span-3">
-            <Card>
-              <CardBody>
+            <Card className="relative overflow-hidden border-fg bg-bg">
+              <CardArtDots />
+              <CardBody className="relative">
                 <CardIcon>
                   <ScrollText size={18} />
                 </CardIcon>
@@ -83,8 +85,9 @@ export function Features() {
           </Reveal>
 
           <Reveal delay={0.14} className="md:col-span-3">
-            <Card>
-              <CardBody>
+            <Card className="relative overflow-hidden border-fg bg-bg">
+              <CardArtDots />
+              <CardBody className="relative">
                 <CardIcon>
                   <Camera size={18} />
                 </CardIcon>
@@ -238,54 +241,119 @@ function CardArtRepack() {
           </pattern>
         </defs>
         <rect width="400" height="400" fill="url(#grid-bg)" />
+
+        {/* incoming parcels */}
+        {[
+          { x: 90, y: 120, seamY: 141, fill: "#d97706", opacity: 1 },
+          { x: 170, y: 110, seamY: 131, fill: "#fafaf7", opacity: 0.9 },
+          { x: 250, y: 120, seamY: 141, fill: "#0f766e", opacity: 1 },
+        ].map((b, i) => (
+          <motion.g
+            key={i}
+            initial={reduce ? false : { opacity: 0, y: -10 }}
+            whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5, delay: i * 0.12, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <rect
+              x={b.x}
+              y={b.y}
+              width="60"
+              height="42"
+              rx="8"
+              fill={b.fill}
+              opacity={b.opacity}
+            />
+            <line
+              x1={b.x}
+              y1={b.seamY}
+              x2={b.x + 60}
+              y2={b.seamY}
+              stroke="#0b0f14"
+              strokeOpacity="0.2"
+              strokeWidth="2.5"
+            />
+          </motion.g>
+        ))}
+
+        {/* converging arrows */}
+        {[
+          {
+            d: "M 120 168 Q 150 205 180 236",
+            head: "M 174 230 L 180 238 L 186 230",
+            delay: 0.5,
+          },
+          {
+            d: "M 200 158 L 200 236",
+            head: "M 194 230 L 200 238 L 206 230",
+            delay: 0.62,
+          },
+          {
+            d: "M 280 168 Q 250 205 220 236",
+            head: "M 214 230 L 220 238 L 226 230",
+            delay: 0.74,
+          },
+        ].map((a, i) => (
+          <g key={i}>
+            <motion.path
+              d={a.d}
+              stroke="#fafaf7"
+              strokeOpacity="0.85"
+              strokeWidth="2.5"
+              fill="none"
+              strokeLinecap="round"
+              initial={reduce ? false : { pathLength: 0, opacity: 0 }}
+              whileInView={reduce ? undefined : { pathLength: 1, opacity: 1 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.6, delay: a.delay }}
+            />
+            <motion.path
+              d={a.head}
+              stroke="#fafaf7"
+              strokeOpacity="0.85"
+              strokeWidth="2.5"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              initial={reduce ? false : { opacity: 0 }}
+              whileInView={reduce ? undefined : { opacity: 1 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.3, delay: a.delay + 0.45 }}
+            />
+          </g>
+        ))}
+
+        {/* consolidated parcel */}
         <motion.g
-          initial={reduce ? false : { y: 12, opacity: 0 }}
-          whileInView={reduce ? undefined : { y: 0, opacity: 1 }}
+          initial={reduce ? false : { opacity: 0, y: 12 }}
+          whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-50px" }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.55, delay: 1.05, ease: [0.16, 1, 0.3, 1] }}
         >
-          <rect x="100" y="170" width="120" height="90" rx="10" fill="#d97706" />
-          <rect
-            x="120"
-            y="120"
-            width="120"
-            height="90"
-            rx="10"
-            fill="#fafaf7"
-            opacity="0.9"
-          />
-          <rect x="80" y="220" width="120" height="90" rx="10" fill="#0f766e" />
+          <rect x="128" y="240" width="144" height="96" rx="12" fill="#d97706" />
           <line
-            x1="100"
-            y1="215"
-            x2="220"
-            y2="215"
+            x1="128"
+            y1="288"
+            x2="272"
+            y2="288"
             stroke="#0b0f14"
-            strokeOpacity="0.25"
-            strokeWidth="3"
+            strokeOpacity="0.22"
+            strokeWidth="3.5"
           />
           <line
-            x1="120"
-            y1="165"
-            x2="240"
-            y2="165"
-            stroke="#0b0f14"
-            strokeOpacity="0.15"
-            strokeWidth="3"
-          />
-          <line
-            x1="80"
-            y1="265"
+            x1="200"
+            y1="240"
             x2="200"
-            y2="265"
+            y2="336"
             stroke="#0b0f14"
-            strokeOpacity="0.25"
-            strokeWidth="3"
+            strokeOpacity="0.22"
+            strokeWidth="3.5"
           />
         </motion.g>
-        <Sparkle x={260} y={140} delay={0.2} />
-        <Sparkle x={70} y={300} delay={0.6} />
-        <Sparkle x={310} y={310} delay={1.0} />
+
+        <Sparkle x={210} y={80} delay={0.3} />
+        <Sparkle x={340} y={200} delay={0.8} />
+        <Sparkle x={78} y={300} delay={1.2} />
       </svg>
     </div>
   );

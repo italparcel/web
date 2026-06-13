@@ -739,10 +739,10 @@ function ShipArt() {
 function TrackArt() {
   const events = [
     { x: 50, label: "Picked up", state: "done" },
-    { x: 110, label: "Repacked", state: "done" },
-    { x: 170, label: "Departed", state: "done" },
-    { x: 230, label: "In transit", state: "active" },
-    { x: 290, label: "Delivered", state: "pending" },
+    { x: 120, label: "Repacked", state: "done" },
+    { x: 190, label: "Departed", state: "done" },
+    { x: 260, label: "In transit", state: "active" },
+    { x: 330, label: "Delivered", state: "pending" },
   ] as const;
 
   return (
@@ -752,7 +752,7 @@ function TrackArt() {
         <line
           x1="50"
           y1="140"
-          x2="290"
+          x2="330"
           y2="140"
           stroke="#e7e5de"
           strokeWidth="2"
@@ -760,7 +760,7 @@ function TrackArt() {
         <motion.line
           x1="50"
           y1="140"
-          x2="230"
+          x2="260"
           y2="140"
           stroke="#0b0f14"
           strokeWidth="2"
@@ -840,7 +840,7 @@ function TrackArt() {
           TRENTO
         </text>
         <text
-          x="290"
+          x="330"
           y="110"
           textAnchor="middle"
           fontFamily="ui-monospace, monospace"

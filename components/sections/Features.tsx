@@ -221,7 +221,7 @@ function CardArtRepack() {
   return (
     <div
       aria-hidden
-      className="pointer-events-none absolute -right-10 -bottom-10 h-[22rem] w-[22rem]"
+      className="pointer-events-none absolute -right-10 -bottom-10 hidden h-[22rem] w-[22rem] md:block"
     >
       <svg viewBox="0 0 400 400" className="h-full w-full">
         <defs>

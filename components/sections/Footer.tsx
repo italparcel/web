@@ -89,7 +89,6 @@ export function Footer() {
             © {year} ItalParcel di Samuel Borghesi · VAT IT&nbsp;02818050227 ·
             Italy
           </p>
-          <p>Court of Trento — exclusive jurisdiction (T&amp;C §8.2).</p>
         </div>
       </div>
     </footer>

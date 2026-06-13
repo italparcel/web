@@ -100,7 +100,7 @@ export function Features() {
             <Card className="relative overflow-hidden border-fg bg-bg">
               <CardArtDots />
               <CardBody className="relative">
-                <CardIcon className="bg-accent text-white">
+                <CardIcon>
                   <MessagesSquare size={18} />
                 </CardIcon>
                 <CardTitle>Real humans, fast</CardTitle>

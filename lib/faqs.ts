@@ -31,6 +31,6 @@ export const FAQS: Faq[] = [
   },
   {
     q: "Where are you based?",
-    a: "ItalParcel di Samuel Borghesi — VAT IT 02818050227 — operates out of Italy. The Court of Trento has exclusive jurisdiction for disputes (mandatory consumer-protection rules of your country of residence still apply where you qualify as a consumer).",
+    a: "ItalParcel is a company registered in Italy and operating from Northern Italy, in the province of Trento.",
   },
 ];

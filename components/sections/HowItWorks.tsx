@@ -237,9 +237,9 @@ function ArtFrame({ children }: { children: React.ReactNode }) {
 
 function ActivateArt() {
   const fields = [
-    { label: "NAME", fill: 120 },
-    { label: "DESTINATION", fill: 150 },
-    { label: "ITEMS TO SHIP", fill: 95 },
+    { label: "NAME", value: "John Doe" },
+    { label: "DESTINATION", value: "Tokyo, Japan" },
+    { label: "ITEMS TO SHIP", value: "Bialetti moka pot" },
   ];
   return (
     <ArtFrame>
@@ -307,23 +307,18 @@ function ActivateArt() {
                 fill="#f3eee2"
                 stroke="#e7e5de"
               />
-              <motion.rect
-                x="66"
-                y={inputY + 6}
-                width={f.fill}
-                height="6"
-                rx="2"
+              <motion.text
+                x="68"
+                y={inputY + 13}
+                fontFamily="ui-monospace, monospace"
+                fontSize="10"
                 fill="#0b0f14"
-                opacity="0.8"
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: 1 }}
-                transition={{
-                  duration: 0.5,
-                  delay: 0.3 + i * 0.18,
-                  ease: [0.16, 1, 0.3, 1],
-                }}
-                style={{ transformOrigin: "66px center" }}
-              />
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.4, delay: 0.3 + i * 0.18 }}
+              >
+                {f.value}
+              </motion.text>
             </g>
           );
         })}
@@ -360,9 +355,9 @@ function ReceiveArt() {
     { x: 258, fill: "#0b0f14", delay: 0.4 },
   ];
   const arrows = [
-    { d: "M 95 90 Q 120 150 168 176", delay: 0.7 },
-    { d: "M 190 90 L 190 174", delay: 0.85 },
-    { d: "M 285 90 Q 260 150 212 176", delay: 1.0 },
+    { d: "M 95 88 Q 165 138 165 178", delay: 0.7 },
+    { d: "M 190 88 L 190 178", delay: 0.85 },
+    { d: "M 285 88 Q 215 138 215 178", delay: 1.0 },
   ];
   return (
     <ArtFrame>
@@ -370,14 +365,14 @@ function ReceiveArt() {
         {/* caption */}
         <text
           x="190"
-          y="30"
+          y="32"
           textAnchor="middle"
           fontFamily="ui-monospace, monospace"
-          fontSize="8"
-          fill="#9ca3af"
-          letterSpacing="2"
+          fontSize="12"
+          fill="#0b0f14"
+          letterSpacing="0.5"
         >
-          SEVERAL ORDERS
+          Multiple parcels
         </text>
 
         {/* incoming small boxes */}
@@ -434,9 +429,9 @@ function ReceiveArt() {
           strokeLinecap="round"
           strokeLinejoin="round"
         >
-          <path d="M 162 170 L 168 177 L 174 170" />
-          <path d="M 184 168 L 190 175 L 196 168" />
-          <path d="M 206 170 L 212 177 L 218 170" />
+          <path d="M 159 171 L 165 178 L 171 171" />
+          <path d="M 184 171 L 190 178 L 196 171" />
+          <path d="M 209 171 L 215 178 L 221 171" />
         </motion.g>
 
         {/* single consolidated box */}
@@ -467,11 +462,11 @@ function ReceiveArt() {
           />
           <text
             x="190"
-            y="216"
+            y="262"
             textAnchor="middle"
             fontFamily="ui-monospace, monospace"
             fontSize="10"
-            fill="#fafaf7"
+            fill="#0b0f14"
             letterSpacing="1.5"
           >
             1 PARCEL
@@ -616,7 +611,7 @@ function ShipArt() {
 
         {/* hand-off arrow */}
         <motion.path
-          d="M 250 140 L 310 140"
+          d="M 250 140 L 282 140"
           stroke="#0b0f14"
           strokeWidth="1.5"
           strokeLinecap="round"
@@ -625,7 +620,7 @@ function ShipArt() {
           transition={{ duration: 0.7, delay: 1.6 }}
         />
         <motion.path
-          d="M 303 134 L 313 140 L 303 146"
+          d="M 275 134 L 285 140 L 275 146"
           stroke="#0b0f14"
           strokeWidth="1.5"
           strokeLinecap="round"
@@ -636,7 +631,7 @@ function ShipArt() {
           transition={{ duration: 0.3, delay: 2.2 }}
         />
         <text
-          x="280"
+          x="267"
           y="128"
           textAnchor="middle"
           fontFamily="ui-monospace, monospace"
@@ -654,16 +649,16 @@ function ShipArt() {
           transition={{ duration: 0.5, delay: 1.9 }}
         >
           <rect
-            x="265"
-            y="160"
-            width="90"
+            x="288"
+            y="111"
+            width="80"
             height="58"
             rx="6"
             fill="#0b0f14"
           />
           <text
-            x="310"
-            y="184"
+            x="328"
+            y="135"
             textAnchor="middle"
             fontFamily="ui-monospace, monospace"
             fontSize="9"
@@ -674,8 +669,8 @@ function ShipArt() {
             CARRIER
           </text>
           <text
-            x="310"
-            y="205"
+            x="328"
+            y="156"
             textAnchor="middle"
             fontFamily={"var(--font-sans), system-ui"}
             fontSize="16"

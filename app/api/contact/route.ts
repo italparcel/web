@@ -28,6 +28,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
+  // Honeypot: a hidden field real users never see. Bots that auto-fill every
+  // input tend to populate it. We accept the request (200) so they don't learn
+  // they were filtered, but skip validation and sending entirely.
+  if (
+    body &&
+    typeof body === "object" &&
+    typeof (body as Record<string, unknown>).company === "string" &&
+    (body as Record<string, unknown>).company !== ""
+  ) {
+    return NextResponse.json({ ok: true });
+  }
+
   const parsed = contactSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(

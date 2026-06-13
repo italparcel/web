@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
@@ -52,6 +52,7 @@ export function ContactForm() {
   const [status, setStatus] = useState<Status>("idle");
   const [errMsg, setErrMsg] = useState<string | null>(null);
   const channel = watch("channel");
+  const honeypotRef = useRef<HTMLInputElement>(null);
 
   const onSubmit = async (data: ContactInput) => {
     setStatus("submitting");
@@ -60,7 +61,10 @@ export function ContactForm() {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...data,
+          company: honeypotRef.current?.value ?? "",
+        }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -426,6 +430,23 @@ export function ContactForm() {
                         </>
                       )}
                     </Button>
+                  </div>
+
+                  {/* Honeypot — hidden from humans; bots that fill it are
+                      silently dropped server-side. Not part of the schema. */}
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute -left-[9999px] top-0 h-0 w-0 overflow-hidden"
+                  >
+                    <label htmlFor="company">Company (leave this empty)</label>
+                    <input
+                      ref={honeypotRef}
+                      id="company"
+                      name="company"
+                      type="text"
+                      tabIndex={-1}
+                      autoComplete="off"
+                    />
                   </div>
                 </motion.form>
               )}

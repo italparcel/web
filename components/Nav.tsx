@@ -32,6 +32,15 @@ export function Nav() {
     };
   }, [open]);
 
+  const goToContact = () => {
+    const el = document.getElementById("contact");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    } else {
+      window.location.href = "/#contact";
+    }
+  };
+
   return (
     <header
       className={cn(
@@ -77,14 +86,7 @@ export function Nav() {
         </ul>
 
         <div className="hidden md:block">
-          <Button
-            magnetic
-            onClick={() => {
-              document
-                .getElementById("contact")
-                ?.scrollIntoView({ behavior: "smooth" });
-            }}
-          >
+          <Button magnetic onClick={goToContact}>
             Get a quote
           </Button>
         </div>
@@ -126,9 +128,7 @@ export function Nav() {
                   className="w-full"
                   onClick={() => {
                     setOpen(false);
-                    document
-                      .getElementById("contact")
-                      ?.scrollIntoView({ behavior: "smooth" });
+                    goToContact();
                   }}
                 >
                   Get a quote

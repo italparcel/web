@@ -20,13 +20,27 @@ export const CHANNEL_OPTIONS = [
 
 export const contactSchema = z
   .object({
-    name: z.string().trim().min(2, "Please enter your full name."),
-    email: z.string().trim().email("Please enter a valid email address."),
-    phone: z.string().trim().optional().or(z.literal("")),
+    name: z
+      .string()
+      .trim()
+      .min(2, "Please enter your full name.")
+      .max(100, "Please keep your name under 100 characters."),
+    email: z
+      .string()
+      .trim()
+      .email("Please enter a valid email address.")
+      .max(254, "Please keep the email under 254 characters."),
+    phone: z
+      .string()
+      .trim()
+      .max(30, "Please keep the phone number under 30 characters.")
+      .optional()
+      .or(z.literal("")),
     country: z
       .string()
       .trim()
-      .min(2, "Please pick a destination country."),
+      .min(2, "Please pick a destination country.")
+      .max(100, "Please keep the country under 100 characters."),
     address: z
       .string()
       .trim()

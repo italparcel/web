@@ -11,7 +11,7 @@ export const FAQS: Faq[] = [
   },
   {
     q: "How do payments work?",
-    a: "Payments happen in two steps. After your first quote, you pay a €10 activation fee to get started — don't worry, it's not an extra cost: it comes off your final bill, which covers shipping plus our handling fee. Here's an example: you ask us to ship a t-shirt to the USA, and we quote €30 for shipping plus a €17 handling fee for one parcel. You pay €10 now to get started; then, before we ship, you settle the balance — €47 in total (€30 + €17), less the €10 you've already paid, so €37. We accept SEPA (including SEPA Instant), card payments (credit, debit, prepaid), Apple Pay, Google Pay and Revolut Pay, all via a secure payment link. Amounts are in euros.",
+    a: "Payments happen in two steps. After your first quote, you pay a €10 activation fee to get started — don't worry, it's not an extra cost: it comes off your final bill, which covers shipping plus our handling fee.\nHere's an example: you ask us to ship a t-shirt to the USA, and we quote €30 for shipping plus a €17 handling fee for one parcel. You pay €10 now to get started; then, before we ship, you settle the balance — €47 in total (€30 + €17), less the €10 you've already paid, so €37. We accept SEPA (including SEPA Instant), card payments (credit, debit, prepaid), Apple Pay, Google Pay and Revolut Pay, all via a secure payment link. Amounts are in euros.",
   },
   {
     q: "Can you collect parcels from pickup points?",
@@ -19,7 +19,7 @@ export const FAQS: Faq[] = [
   },
   {
     q: "What happens if my parcel gets lost?",
-    a: "Your parcels travel with professional, tracked carriers, which carry the minimum liability required by law. If a parcel is lost in transit, let us know as soon as you realise it and we'll open or assist with a claim to the carrier on your behalf. Any compensation follows the carrier's own terms and limits. Carriers' claim deadlines are short, so the sooner you tell us, the better.",
+    a: "Your parcels travel with professional, tracked carriers, which carry the minimum liability required by law.\nIf a parcel is lost in transit, let us know as soon as you realise it and we'll open or assist with a claim to the carrier on your behalf. Any compensation follows the carrier's own terms and limits. Carriers' claim deadlines are short, so the sooner you tell us, the better.",
   },
   {
     q: "Will I owe customs duties?",
@@ -31,6 +31,6 @@ export const FAQS: Faq[] = [
   },
   {
     q: "Where are you based?",
-    a: "ItalParcel di Samuel Borghesi — VAT IT 02818050227 — operates out of Italy. The Court of Trento has exclusive jurisdiction for disputes (mandatory consumer-protection rules of your country of residence still apply where you qualify as a consumer).",
+    a: "ItalParcel is a company registered in Italy and operating from Northern Italy, in the province of Trento.",
   },
 ];

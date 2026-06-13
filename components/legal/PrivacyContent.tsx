@@ -13,8 +13,8 @@ type SecData = { id: string; number: string; title: L; paras: L[] };
 
 const TITLE: L = { en: "Privacy Policy", it: "Informativa sulla Privacy" };
 const UPDATED: L = {
-  en: "Last update: 20 May 2026 · Version 1.0 · English version",
-  it: "Ultimo aggiornamento: 20 maggio 2026 · Versione 1.0 · Versione italiana",
+  en: "Last update: 13 June 2026 · Version 1.1 · English version",
+  it: "Ultimo aggiornamento: 13 giugno 2026 · Versione 1.1 · Versione italiana",
 };
 
 const INTRO: L = {
@@ -48,8 +48,8 @@ const SECTIONS: SecData[] = [
         it: "2.1 Nell'ambito del Servizio, il Titolare tratta le seguenti categorie di dati personali del Cliente e, ove applicabile, del destinatario indicato dal Cliente:",
       },
       {
-        en: "**(a)** identification and contact data (name, address, e-mail, telephone); **(b)** tax data (tax code, VAT number, billing details); **(c)** operational data (destination address, shipping instructions, tracking references, pickup-point/locker credentials, communications via e-mail, WhatsApp and SMS); **(d)** parcel-content data (description, declared value, proofs of purchase, photos of contents, customs data); **(e)** payment data (data necessary to execute payments; card data are processed directly by payment service providers and are not stored by the Controller); **(f)** browsing data (IP address and data of technical cookies, as described in Section 8).",
-        it: "**(a)** dati identificativi e di contatto (nome, indirizzo, e-mail, telefono); **(b)** dati fiscali (codice fiscale, partita IVA, dati di fatturazione); **(c)** dati operativi (indirizzo di destinazione, istruzioni di spedizione, codici di tracking, credenziali per ritiro presso punti di ritiro/locker, comunicazioni via e-mail, WhatsApp e SMS); **(d)** dati relativi al contenuto dei pacchi (descrizione, valore dichiarato, prove d'acquisto, fotografie del contenuto, dati doganali); **(e)** dati di pagamento (dati necessari all'esecuzione dei pagamenti; i dati delle carte sono trattati direttamente dai prestatori di servizi di pagamento e non sono conservati dal Titolare); **(f)** dati di navigazione (indirizzo IP e dati dei cookie tecnici, come descritto all'articolo 8).",
+        en: "**(a)** identification and contact data (name, address, e-mail, telephone); **(b)** tax data (tax code, VAT number, billing details); **(c)** operational data (destination address, shipping instructions, tracking references, pickup-point/locker credentials, communications via e-mail, WhatsApp and SMS); **(d)** parcel-content data (description, declared value, proofs of purchase, photos of contents, customs data); **(e)** payment data (data necessary to execute payments; card data are processed directly by payment service providers and are not stored by the Controller); **(f)** browsing data (IP address, browser user-agent string, and data of technical cookies, as described in Section 8).",
+        it: "**(a)** dati identificativi e di contatto (nome, indirizzo, e-mail, telefono); **(b)** dati fiscali (codice fiscale, partita IVA, dati di fatturazione); **(c)** dati operativi (indirizzo di destinazione, istruzioni di spedizione, codici di tracking, credenziali per ritiro presso punti di ritiro/locker, comunicazioni via e-mail, WhatsApp e SMS); **(d)** dati relativi al contenuto dei pacchi (descrizione, valore dichiarato, prove d'acquisto, fotografie del contenuto, dati doganali); **(e)** dati di pagamento (dati necessari all'esecuzione dei pagamenti; i dati delle carte sono trattati direttamente dai prestatori di servizi di pagamento e non sono conservati dal Titolare); **(f)** dati di navigazione (indirizzo IP, stringa user-agent del browser e dati dei cookie tecnici, come descritto all'articolo 8).",
       },
     ],
   },
@@ -99,6 +99,10 @@ const SECTIONS: SecData[] = [
       {
         en: "5.1 Personal data may be communicated, for the purposes set out in Section 3, to: carriers, couriers and shipping brokers; pickup-point and locker operators; banks, payment service providers and payment processors; IT and communication service providers acting as data processors under Article 28 GDPR; the Controller's accountants and legal counsel; competent authorities (customs, tax, law-enforcement, judicial, trade-mark owners) where required by law or permitted by the T&C.",
         it: "5.1 I dati personali possono essere comunicati, per le finalità di cui all'articolo 3, a: vettori, corrieri e broker di spedizione; gestori di punti di ritiro e locker; istituti bancari, prestatori di servizi di pagamento e processori di pagamento; fornitori di servizi IT e di comunicazione che agiscono in qualità di responsabili del trattamento ai sensi dell'articolo 28 GDPR; commercialisti e consulenti legali del Titolare; autorità competenti (doganali, fiscali, forze dell'ordine, autorità giudiziarie, titolari di marchi), quando ciò sia richiesto dalla legge o consentito dai T&C.",
+      },
+      {
+        en: "5.2 When the Customer enters a delivery address in the website form, the address text typed is transmitted to the geocoding service Photon, operated by Komoot GmbH (Germany), for the sole purpose of providing address suggestions. Only the address text entered is sent; no other data is transmitted, and this processing does not involve any transfer outside the European Economic Area.",
+        it: "5.2 Quando il Cliente inserisce un indirizzo di consegna nel modulo del sito web, il testo dell'indirizzo digitato è trasmesso al servizio di geocodifica Photon, gestito da Komoot GmbH (Germania), al solo scopo di fornire suggerimenti di indirizzo. Viene inviato esclusivamente il testo dell'indirizzo digitato; nessun altro dato è trasmesso e tale trattamento non comporta alcun trasferimento al di fuori dello Spazio Economico Europeo.",
       },
     ],
   },

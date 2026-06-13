@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "Prohibited Items",
   description:
     "Items ItalParcel cannot handle (English and Italian) — annex to the Terms and Conditions of the parcel forwarding service.",
+  alternates: { canonical: "/prohibited-items" },
 };
 
 export default function ProhibitedItemsPage() {

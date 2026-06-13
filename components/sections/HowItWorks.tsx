@@ -4,18 +4,18 @@ import {
   motion,
   AnimatePresence,
   useScroll,
-  useTransform,
   useMotionValueEvent,
   useReducedMotion,
-  type MotionValue,
 } from "framer-motion";
 import { useRef, useState } from "react";
+import { cn } from "@/lib/cn";
 
 type Step = {
   n: string;
   kicker: string;
   title: string;
-  body: string;
+  body?: string;
+  points?: string[];
   Art: () => React.JSX.Element;
 };
 
@@ -24,28 +24,43 @@ const STEPS: Step[] = [
     n: "01",
     kicker: "Phase 1 — Activation",
     title: "You tell us what's coming.",
-    body: "Fill in the form and we'll get back to you with an estimated total (our fee + shipping). If you like it, pay the €10 activation fee — don't worry, it'll be deducted from the total — and you'll get your Italian address right after payment.",
+    points: [
+      "Fill out the free form with shipping details",
+      "We will contact you with a total quote (fee + shipping cost)",
+      "If you like it, pay the €10 activation fee — don't worry, it'll be deducted from the total — and you will get your Italian address right after payment",
+    ],
     Art: ActivateArt,
   },
   {
     n: "02",
     kicker: "Phase 2 — Reception",
     title: "Sellers ship. We receive.",
-    body: "Order using our address (or a designated pickup point). We receive, open and repack your parcels, and — on request — consolidate them into a single shipment.",
+    points: [
+      "Order your goods using our address / an agreed collection point",
+      "When we receive your shipment, we repack it for its new journey",
+      "We can consolidate multiple shipments into one package, significantly increasing your savings on shipping costs",
+    ],
     Art: ReceiveArt,
   },
   {
     n: "03",
     kicker: "Phase 3 — Quote & ship",
     title: "One quote. Then it flies.",
-    body: "Based on your parcel's actual weight and dimensions, you'll get the final shipping quote. After payment, we hand it to the carrier as soon as possible. (Customers outside the EU will need to provide the information needed for the customs declaration.)",
+    points: [
+      "Based on your parcel's actual weight and dimensions, you will get the final shipping quote",
+      "After payment, we will hand the package to the selected courier as soon as possible",
+      "If your package is headed outside the European Union, you will need to provide us with the necessary information for the customs declaration",
+    ],
     Art: ShipArt,
   },
   {
     n: "04",
     kicker: "Phase 4 — After-care",
     title: "We don't disappear.",
-    body: "Tracking support, customs questions, and claims assistance until the parcel lands, we got you. WhatsApp or email — we reply within 36 working hours.",
+    points: [
+      "For any questions about tracking, customs declarations, or anything else, don't hesitate to contact us",
+      "We always respond within 36 business hours via WhatsApp or email",
+    ],
     Art: TrackArt,
   },
 ];
@@ -87,25 +102,6 @@ function DesktopScroll() {
       style={{ height: `${STEPS.length * 100 + 100}vh` }}
     >
       <div className="sticky top-0 flex h-screen flex-col">
-        {/* Top bar */}
-        <header className="border-b border-border bg-bg/85 backdrop-blur">
-          <div className="container-x flex items-center gap-6 py-5">
-            <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-fg-subtle whitespace-nowrap">
-              How it works
-            </span>
-            <ProgressTrack
-              count={STEPS.length}
-              scrollProgress={scrollYProgress}
-              active={active}
-            />
-            <span className="font-mono text-[11px] tabular-nums text-fg-subtle whitespace-nowrap">
-              {String(active + 1).padStart(2, "0")}{" "}
-              <span className="text-fg-subtle/50">/</span>{" "}
-              {String(STEPS.length).padStart(2, "0")}
-            </span>
-          </div>
-        </header>
-
         {/* Stage */}
         <div className="relative flex-1 overflow-hidden">
           <AnimatePresence mode="wait" initial={false}>
@@ -142,12 +138,13 @@ function StepContent({ step }: { step: Step }) {
           {step.kicker}
         </p>
         <p className="mt-3 font-mono text-xs text-accent">{step.n} / 04</p>
-        <h3 className="display mt-4 text-[clamp(2.25rem,5.5vw,4.5rem)] text-fg">
+        <h3 className="display mt-4 text-balance text-[clamp(2.25rem,5.5vw,4.5rem)] text-fg">
           {step.title}
         </h3>
-        <p className="mt-6 max-w-md text-base leading-relaxed text-fg-muted md:text-lg">
-          {step.body}
-        </p>
+        <StepBody
+          step={step}
+          className="mt-6 max-w-md whitespace-pre-line text-base leading-relaxed md:text-lg"
+        />
       </div>
       <div className="self-center">
         <step.Art />
@@ -156,57 +153,23 @@ function StepContent({ step }: { step: Step }) {
   );
 }
 
-function ProgressTrack({
-  count,
-  scrollProgress,
-  active,
-}: {
-  count: number;
-  scrollProgress: MotionValue<number>;
-  active: number;
-}) {
-  return (
-    <ul className="flex flex-1 items-center gap-2">
-      {Array.from({ length: count }).map((_, i) => (
-        <ProgressSegment
-          key={i}
-          index={i}
-          count={count}
-          scrollProgress={scrollProgress}
-          isActive={i === active}
-        />
-      ))}
-    </ul>
-  );
-}
-
-function ProgressSegment({
-  index,
-  count,
-  scrollProgress,
-  isActive,
-}: {
-  index: number;
-  count: number;
-  scrollProgress: MotionValue<number>;
-  isActive: boolean;
-}) {
-  const start = index / count;
-  const end = (index + 1) / count;
-  const width = useTransform(scrollProgress, [start, end], ["0%", "100%"], {
-    clamp: true,
-  });
-  return (
-    <li className="relative h-px flex-1 bg-border">
-      <motion.div
-        style={{ width }}
-        className={
-          "absolute inset-y-0 left-0 " +
-          (isActive ? "bg-accent" : "bg-fg")
-        }
-      />
-    </li>
-  );
+function StepBody({ step, className }: { step: Step; className?: string }) {
+  if (step.points) {
+    return (
+      <ul className={cn("space-y-3 text-fg-muted", className)}>
+        {step.points.map((point, i) => (
+          <li key={i} className="flex gap-3">
+            <span
+              aria-hidden
+              className="mt-[0.6em] h-1.5 w-1.5 shrink-0 rounded-full bg-fg"
+            />
+            <span>{point}</span>
+          </li>
+        ))}
+      </ul>
+    );
+  }
+  return <p className={cn("text-fg-muted", className)}>{step.body}</p>;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -223,7 +186,7 @@ function Fallback({ className = "" }: { className?: string }) {
         <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-fg-subtle">
           How it works
         </p>
-        <h2 className="display mt-4 text-4xl text-fg">
+        <h2 className="display mt-4 text-balance text-4xl text-fg">
           The service in four phases.
         </h2>
         <ol className="mt-10 space-y-6">
@@ -238,10 +201,8 @@ function Fallback({ className = "" }: { className?: string }) {
                 </p>
                 <p className="font-mono text-xs text-accent">{s.n} / 04</p>
               </div>
-              <h3 className="display mt-3 text-2xl text-fg">{s.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-fg-muted">
-                {s.body}
-              </p>
+              <h3 className="display mt-3 text-balance text-2xl text-fg">{s.title}</h3>
+              <StepBody step={s} className="mt-2 text-sm leading-relaxed" />
             </li>
           ))}
         </ol>
@@ -270,17 +231,20 @@ function ArtFrame({ children }: { children: React.ReactNode }) {
       <div className="absolute inset-0 grid place-items-center p-10">
         {children}
       </div>
-      <span className="absolute left-4 top-4 font-mono text-[10px] uppercase tracking-[0.22em] text-fg-subtle">
-        Fig.
-      </span>
     </div>
   );
 }
 
 function ActivateArt() {
+  const fields = [
+    { label: "NAME", value: "John Doe" },
+    { label: "DESTINATION", value: "Tokyo, Japan" },
+    { label: "ITEMS TO SHIP", value: "Bialetti moka pot" },
+  ];
   return (
     <ArtFrame>
       <svg viewBox="0 0 380 280" className="h-full w-auto" aria-hidden>
+        {/* request form card */}
         <rect
           x="40"
           y="30"
@@ -290,266 +254,275 @@ function ActivateArt() {
           fill="#ffffff"
           stroke="#d6d3ca"
         />
-        {/* header */}
+
+        {/* header — a new inquiry */}
         <text
           x="60"
-          y="62"
+          y="58"
           fontFamily="ui-monospace, monospace"
-          fontSize="9"
-          fill="#9ca3af"
+          fontSize="11"
+          fill="#0b0f14"
           letterSpacing="2"
         >
-          INQUIRY ·  №&#160;001
+          NEW INQUIRY
         </text>
-        <line x1="60" y1="78" x2="320" y2="78" stroke="#e7e5de" />
-
-        {/* form fields */}
-        {[110, 140, 170, 200].map((y, i) => (
-          <g key={y}>
-            <rect
-              x="60"
-              y={y - 12}
-              width="60"
-              height="8"
-              rx="2"
-              fill="#0b0f14"
-              opacity="0.55"
-            />
-            <motion.rect
-              x="60"
-              y={y}
-              width="220"
-              height="14"
-              rx="3"
-              fill="#f3eee2"
-              stroke="#e7e5de"
-              initial={{ scaleX: 0 }}
-              animate={{ scaleX: 1 }}
-              transition={{
-                duration: 0.5,
-                delay: 0.2 + i * 0.18,
-                ease: [0.16, 1, 0.3, 1],
-              }}
-              style={{ transformOrigin: "60px center" }}
-            />
-            <motion.rect
-              x="64"
-              y={y + 4}
-              width={[110, 80, 140, 60][i]}
-              height="6"
-              rx="2"
-              fill="#0b0f14"
-              opacity="0.85"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.85 }}
-              transition={{ duration: 0.3, delay: 0.5 + i * 0.18 }}
-            />
-          </g>
-        ))}
-
-        {/* footer signed */}
         <motion.g
-          initial={{ opacity: 0, scale: 0.8 }}
+          initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4, delay: 1.2 }}
+          transition={{ duration: 0.4, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+          style={{ transformOrigin: "310px 52px" }}
         >
-          <circle cx="300" cy="220" r="22" fill="#d97706" />
+          <circle cx="310" cy="52" r="12" fill="#d97706" />
           <path
-            d="M 290 220 L 297 227 L 312 213"
+            d="M 310 46 L 310 58 M 304 52 L 316 52"
             stroke="#fff"
-            strokeWidth="3"
-            fill="none"
+            strokeWidth="2"
             strokeLinecap="round"
-            strokeLinejoin="round"
           />
         </motion.g>
-        <line x1="60" y1="230" x2="240" y2="230" stroke="#d6d3ca" />
-        <text
-          x="60"
-          y="244"
-          fontFamily="ui-monospace, monospace"
-          fontSize="8"
-          fill="#9ca3af"
-          letterSpacing="1.5"
+        <line x1="60" y1="70" x2="320" y2="70" stroke="#e7e5de" />
+
+        {/* labeled fields */}
+        {fields.map((f, i) => {
+          const labelY = 92 + i * 38;
+          const inputY = 98 + i * 38;
+          return (
+            <g key={f.label}>
+              <text
+                x="60"
+                y={labelY}
+                fontFamily="ui-monospace, monospace"
+                fontSize="8"
+                fill="#9ca3af"
+                letterSpacing="1.5"
+              >
+                {f.label}
+              </text>
+              <rect
+                x="60"
+                y={inputY}
+                width="220"
+                height="18"
+                rx="3"
+                fill="#f3eee2"
+                stroke="#e7e5de"
+              />
+              <motion.text
+                x="68"
+                y={inputY + 13}
+                fontFamily="ui-monospace, monospace"
+                fontSize="10"
+                fill="#0b0f14"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.4, delay: 0.3 + i * 0.18 }}
+              >
+                {f.value}
+              </motion.text>
+            </g>
+          );
+        })}
+
+        {/* submit button */}
+        <motion.g
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, delay: 1.1, ease: [0.16, 1, 0.3, 1] }}
+          style={{ transformOrigin: "170px 220px" }}
         >
-          ITALPARCEL · CONFIRMED
-        </text>
+          <rect x="60" y="206" width="220" height="28" rx="6" fill="#d97706" />
+          <text
+            x="170"
+            y="224"
+            textAnchor="middle"
+            fontFamily="ui-monospace, monospace"
+            fontSize="10"
+            fill="#ffffff"
+            letterSpacing="1.5"
+          >
+            SEND REQUEST
+          </text>
+        </motion.g>
       </svg>
     </ArtFrame>
   );
 }
 
 function ReceiveArt() {
+  const smallBoxes = [
+    { x: 68, fill: "#d97706", delay: 0.1 },
+    { x: 163, fill: "#0f766e", delay: 0.25 },
+    { x: 258, fill: "#0b0f14", delay: 0.4 },
+  ];
+  const arrows = [
+    { d: "M 95 88 Q 165 138 165 178", delay: 0.7 },
+    { d: "M 190 88 L 190 178", delay: 0.85 },
+    { d: "M 285 88 Q 215 138 215 178", delay: 1.0 },
+  ];
   return (
     <ArtFrame>
       <svg viewBox="0 0 380 280" className="h-full w-auto" aria-hidden>
-        {/* incoming arrows */}
-        {[
-          { x1: 30, y1: 50, x2: 110, y2: 110, delay: 0.0 },
-          { x1: 350, y1: 60, x2: 270, y2: 110, delay: 0.15 },
-          { x1: 30, y1: 230, x2: 110, y2: 170, delay: 0.3 },
-        ].map((a, i) => (
-          <motion.line
-            key={i}
-            x1={a.x1}
-            y1={a.y1}
-            x2={a.x2}
-            y2={a.y2}
-            stroke="#9ca3af"
-            strokeWidth="1.2"
-            strokeDasharray="3 4"
-            strokeLinecap="round"
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: 1, opacity: 1 }}
-            transition={{ duration: 0.7, delay: a.delay }}
-          />
-        ))}
+        {/* caption */}
+        <text
+          x="190"
+          y="32"
+          textAnchor="middle"
+          fontFamily="ui-monospace, monospace"
+          fontSize="12"
+          fill="#0b0f14"
+          letterSpacing="0.5"
+        >
+          Multiple parcels
+        </text>
 
-        {/* incoming parcels */}
-        {[
-          { x: 80, y: 90, fill: "#d97706", delay: 0.5 },
-          { x: 240, y: 90, fill: "#0f766e", delay: 0.65 },
-          { x: 80, y: 150, fill: "#0b0f14", delay: 0.8 },
-        ].map((p, i) => (
+        {/* incoming small boxes */}
+        {smallBoxes.map((b, i) => (
           <motion.g
             key={i}
-            initial={{ opacity: 0, scale: 0.6 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{
-              duration: 0.4,
-              delay: p.delay,
-              ease: [0.16, 1, 0.3, 1],
-            }}
+            initial={{ opacity: 0, scale: 0.6, y: -8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: b.delay, ease: [0.16, 1, 0.3, 1] }}
           >
+            {/* box body */}
+            <rect x={b.x} y="46" width="54" height="38" rx="5" fill={b.fill} />
+            {/* packing tape */}
             <rect
-              x={p.x}
-              y={p.y}
-              width="60"
-              height="40"
-              rx="4"
-              fill={p.fill}
+              x={b.x}
+              y="60"
+              width="54"
+              height="8"
+              fill="#ffffff"
+              opacity="0.18"
             />
-            <line
-              x1={p.x}
-              y1={p.y + 22}
-              x2={p.x + 60}
-              y2={p.y + 22}
-              stroke="#fff"
-              strokeOpacity="0.35"
-              strokeWidth="2"
+            {/* shipping label */}
+            <rect
+              x={b.x + 15}
+              y="57"
+              width="24"
+              height="15"
+              rx="1.5"
+              fill="#fafaf7"
             />
-            <line
-              x1={p.x + 30}
-              y1={p.y}
-              x2={p.x + 30}
-              y2={p.y + 40}
-              stroke="#fff"
-              strokeOpacity="0.35"
-              strokeWidth="2"
+            <rect
+              x={b.x + 18}
+              y="60"
+              width="18"
+              height="1.6"
+              fill="#0b0f14"
+              opacity="0.5"
             />
+            <rect
+              x={b.x + 18}
+              y="63"
+              width="11"
+              height="1.6"
+              fill="#0b0f14"
+              opacity="0.5"
+            />
+            <g fill="#0b0f14">
+              <rect x={b.x + 18} y="66" width="1.2" height="4" />
+              <rect x={b.x + 20.5} y="66" width="1.8" height="4" />
+              <rect x={b.x + 23.5} y="66" width="1" height="4" />
+              <rect x={b.x + 25.5} y="66" width="2.2" height="4" />
+              <rect x={b.x + 29} y="66" width="1" height="4" />
+              <rect x={b.x + 31} y="66" width="1.6" height="4" />
+            </g>
           </motion.g>
         ))}
 
-        {/* consolidation arrow — curves into the top of the CONSOLIDATED box */}
-        <motion.path
-          d="M 140 175 Q 215 175 215 200"
-          stroke="#d97706"
-          strokeWidth="1.4"
-          fill="none"
-          strokeLinecap="round"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: 1 }}
-          transition={{ duration: 0.8, delay: 1.2 }}
-        />
-        <motion.path
-          d="M 209 192 L 215 200 L 221 192"
+        {/* converging arrows */}
+        {arrows.map((a, i) => (
+          <motion.path
+            key={i}
+            d={a.d}
+            stroke="#d97706"
+            strokeWidth="1.4"
+            fill="none"
+            strokeLinecap="round"
+            initial={{ pathLength: 0, opacity: 0 }}
+            animate={{ pathLength: 1, opacity: 1 }}
+            transition={{ duration: 0.6, delay: a.delay }}
+          />
+        ))}
+        <motion.g
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3, delay: 1.5 }}
           stroke="#d97706"
           strokeWidth="1.4"
           fill="none"
           strokeLinecap="round"
           strokeLinejoin="round"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3, delay: 2.0 }}
-        />
+        >
+          <path d="M 159 171 L 165 178 L 171 171" />
+          <path d="M 184 171 L 190 178 L 196 171" />
+          <path d="M 209 171 L 215 178 L 221 171" />
+        </motion.g>
 
-        {/* consolidated parcel */}
+        {/* single consolidated box */}
         <motion.g
           initial={{ opacity: 0, scale: 0.6, y: 8 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 1.5 }}
+          transition={{ duration: 0.5, delay: 1.6, ease: [0.16, 1, 0.3, 1] }}
+          style={{ transformOrigin: "190px 211px" }}
         >
+          {/* box body */}
+          <rect x="130" y="178" width="120" height="66" rx="8" fill="#0b0f14" />
+          {/* packing tape */}
           <rect
-            x="170"
-            y="200"
-            width="90"
-            height="58"
-            rx="6"
+            x="130"
+            y="203"
+            width="120"
+            height="14"
+            fill="#ffffff"
+            opacity="0.14"
+          />
+          {/* shipping label */}
+          <rect x="158" y="189" width="64" height="38" rx="2.5" fill="#fafaf7" />
+          <rect
+            x="166"
+            y="196"
+            width="46"
+            height="3"
+            rx="1.5"
             fill="#0b0f14"
+            opacity="0.5"
           />
-          <line
-            x1="170"
-            y1="232"
-            x2="260"
-            y2="232"
-            stroke="#fff"
-            strokeOpacity="0.45"
-            strokeWidth="3"
+          <rect
+            x="166"
+            y="202"
+            width="32"
+            height="3"
+            rx="1.5"
+            fill="#0b0f14"
+            opacity="0.5"
           />
-          <line
-            x1="215"
-            y1="200"
-            x2="215"
-            y2="258"
-            stroke="#fff"
-            strokeOpacity="0.45"
-            strokeWidth="3"
-          />
+          <g fill="#0b0f14">
+            <rect x="166" y="209" width="2.5" height="12" />
+            <rect x="170.5" y="209" width="1.2" height="12" />
+            <rect x="173.5" y="209" width="3.5" height="12" />
+            <rect x="179" y="209" width="1.5" height="12" />
+            <rect x="182.5" y="209" width="1.2" height="12" />
+            <rect x="185.5" y="209" width="2.8" height="12" />
+            <rect x="190.5" y="209" width="1.2" height="12" />
+            <rect x="193.5" y="209" width="2" height="12" />
+            <rect x="197.5" y="209" width="1.2" height="12" />
+            <rect x="200.5" y="209" width="3" height="12" />
+            <rect x="205.5" y="209" width="1.5" height="12" />
+            <rect x="209" y="209" width="1.2" height="12" />
+          </g>
           <text
-            x="215"
-            y="235"
+            x="190"
+            y="262"
             textAnchor="middle"
             fontFamily="ui-monospace, monospace"
-            fontSize="7"
-            fill="#fafaf7"
+            fontSize="10"
+            fill="#0b0f14"
             letterSpacing="1.5"
           >
-            CONSOLIDATED
+            1 PARCEL
           </text>
         </motion.g>
-
-        {/* annotations */}
-        <text
-          x="20"
-          y="35"
-          fontFamily="ui-monospace, monospace"
-          fontSize="7"
-          fill="#9ca3af"
-          letterSpacing="1.5"
-        >
-          SELLER A
-        </text>
-        <text
-          x="340"
-          y="45"
-          textAnchor="end"
-          fontFamily="ui-monospace, monospace"
-          fontSize="7"
-          fill="#9ca3af"
-          letterSpacing="1.5"
-        >
-          SELLER B
-        </text>
-        <text
-          x="20"
-          y="252"
-          fontFamily="ui-monospace, monospace"
-          fontSize="7"
-          fill="#9ca3af"
-          letterSpacing="1.5"
-        >
-          SELLER C
-        </text>
       </svg>
     </ArtFrame>
   );
@@ -689,7 +662,7 @@ function ShipArt() {
 
         {/* hand-off arrow */}
         <motion.path
-          d="M 250 140 L 310 140"
+          d="M 250 140 L 294 140"
           stroke="#0b0f14"
           strokeWidth="1.5"
           strokeLinecap="round"
@@ -698,7 +671,7 @@ function ShipArt() {
           transition={{ duration: 0.7, delay: 1.6 }}
         />
         <motion.path
-          d="M 303 134 L 313 140 L 303 146"
+          d="M 287 134 L 297 140 L 287 146"
           stroke="#0b0f14"
           strokeWidth="1.5"
           strokeLinecap="round"
@@ -709,7 +682,7 @@ function ShipArt() {
           transition={{ duration: 0.3, delay: 2.2 }}
         />
         <text
-          x="280"
+          x="267"
           y="128"
           textAnchor="middle"
           fontFamily="ui-monospace, monospace"
@@ -727,16 +700,16 @@ function ShipArt() {
           transition={{ duration: 0.5, delay: 1.9 }}
         >
           <rect
-            x="265"
-            y="160"
-            width="90"
+            x="300"
+            y="111"
+            width="76"
             height="58"
             rx="6"
             fill="#0b0f14"
           />
           <text
-            x="310"
-            y="184"
+            x="338"
+            y="135"
             textAnchor="middle"
             fontFamily="ui-monospace, monospace"
             fontSize="9"
@@ -747,8 +720,8 @@ function ShipArt() {
             CARRIER
           </text>
           <text
-            x="310"
-            y="205"
+            x="338"
+            y="156"
             textAnchor="middle"
             fontFamily={"var(--font-sans), system-ui"}
             fontSize="16"
@@ -766,10 +739,10 @@ function ShipArt() {
 function TrackArt() {
   const events = [
     { x: 50, label: "Picked up", state: "done" },
-    { x: 110, label: "Repacked", state: "done" },
-    { x: 170, label: "Carrier", state: "done" },
-    { x: 230, label: "Transit", state: "active" },
-    { x: 290, label: "Delivered", state: "pending" },
+    { x: 120, label: "Repacked", state: "done" },
+    { x: 190, label: "Departed", state: "done" },
+    { x: 260, label: "In transit", state: "active" },
+    { x: 330, label: "Delivered", state: "pending" },
   ] as const;
 
   return (
@@ -779,7 +752,7 @@ function TrackArt() {
         <line
           x1="50"
           y1="140"
-          x2="290"
+          x2="330"
           y2="140"
           stroke="#e7e5de"
           strokeWidth="2"
@@ -787,7 +760,7 @@ function TrackArt() {
         <motion.line
           x1="50"
           y1="140"
-          x2="230"
+          x2="260"
           y2="140"
           stroke="#0b0f14"
           strokeWidth="2"
@@ -867,7 +840,7 @@ function TrackArt() {
           TRENTO
         </text>
         <text
-          x="290"
+          x="330"
           y="110"
           textAnchor="middle"
           fontFamily="ui-monospace, monospace"

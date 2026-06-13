@@ -8,10 +8,10 @@ import { Button } from "./ui/Button";
 import { cn } from "@/lib/cn";
 
 const links = [
-  { href: "#how", label: "How it works" },
-  { href: "#pricing", label: "Pricing" },
-  { href: "#features", label: "Why us" },
-  { href: "#faq", label: "FAQ" },
+  { href: "/#how", label: "How it works" },
+  { href: "/#pricing", label: "Pricing" },
+  { href: "/#features", label: "Why us" },
+  { href: "/#faq", label: "FAQ" },
 ];
 
 export function Nav() {
@@ -32,6 +32,15 @@ export function Nav() {
     };
   }, [open]);
 
+  const goToContact = () => {
+    const el = document.getElementById("contact");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    } else {
+      window.location.href = "/#contact";
+    }
+  };
+
   return (
     <header
       className={cn(
@@ -46,7 +55,7 @@ export function Nav() {
         className="container-x flex h-16 items-center justify-between"
       >
         <a
-          href="#top"
+          href="/"
           aria-label="ItalParcel — home"
           className="group inline-flex items-center gap-2.5 font-semibold tracking-tight"
         >
@@ -77,14 +86,7 @@ export function Nav() {
         </ul>
 
         <div className="hidden md:block">
-          <Button
-            magnetic
-            onClick={() => {
-              document
-                .getElementById("contact")
-                ?.scrollIntoView({ behavior: "smooth" });
-            }}
-          >
+          <Button magnetic onClick={goToContact}>
             Get a quote
           </Button>
         </div>
@@ -126,9 +128,7 @@ export function Nav() {
                   className="w-full"
                   onClick={() => {
                     setOpen(false);
-                    document
-                      .getElementById("contact")
-                      ?.scrollIntoView({ behavior: "smooth" });
+                    goToContact();
                   }}
                 >
                   Get a quote

@@ -32,7 +32,7 @@ export function buildWhatsAppMessage(data: ContactInput): string {
     `Items to ship:\n${data.itemDescription}`,
     data.notes ? `\nAdditional notes:\n${data.notes}` : null,
     "",
-    "I have accepted the Terms & Conditions and the Privacy Policy, and I specifically approve clauses 3.2(b), 3.10, 4.5, 5.9 and 8.2 (Italian Civil Code arts. 1341 and 1342).",
+    "I have accepted the Terms & Conditions and the Privacy Policy, and I specifically approve clauses 3.2(b), 3.10, 4.5, 5.9, 7.3 and 8.2 (Italian Civil Code arts. 1341 and 1342).",
   ].filter(Boolean) as string[];
 
   return lines.join("\n");

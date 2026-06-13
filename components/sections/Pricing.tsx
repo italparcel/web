@@ -89,7 +89,7 @@ export function Pricing() {
 
       <div className="container-x relative">
         <Reveal>
-          <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-white/55">
+          <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-white/70">
             Pricing
           </p>
         </Reveal>
@@ -99,7 +99,7 @@ export function Pricing() {
             <h2 className="display text-4xl text-white md:text-6xl lg:text-7xl">
               Pay only when we
               <br />
-              <span className="display-light text-white/55">take charge.</span>
+              <span className="display-light text-white/70">take charge.</span>
             </h2>
           </Reveal>
           <Reveal delay={0.1}>
@@ -118,7 +118,7 @@ export function Pricing() {
           ))}
         </div>
 
-        <p className="mt-10 text-center text-xs text-white/45">
+        <p className="mt-10 text-center text-xs text-white/70">
           A parcel = up to 5 kg and 60×40×40 cm. Let us know in advance if a
           parcel may exceed either limit to avoid a €15 handling surcharge —
           see{" "}
@@ -166,7 +166,7 @@ function TierCard({ tier }: { tier: Tier }) {
           : "border-white/10 bg-white/[0.03] hover:border-white/30"
       )}
     >
-      <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-white/55">
+      <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-white/70">
         {tier.parcels}
       </p>
 
@@ -176,7 +176,7 @@ function TierCard({ tier }: { tier: Tier }) {
         ) : (
           <>
             <AnimatedPrice value={tier.price} />
-            <span className="text-sm text-white/45">total</span>
+            <span className="text-sm text-white/70">total</span>
           </>
         )}
       </div>

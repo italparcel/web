@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
     "ItalParcel Privacy Policy (English and Italian) — how we collect, use and protect personal data in accordance with the GDPR.",
+  alternates: { canonical: "/privacy" },
 };
 
 export default function PrivacyPage() {

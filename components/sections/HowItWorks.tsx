@@ -383,25 +383,50 @@ function ReceiveArt() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.4, delay: b.delay, ease: [0.16, 1, 0.3, 1] }}
           >
-            <rect x={b.x} y="46" width="54" height="38" rx="4" fill={b.fill} />
-            <line
-              x1={b.x}
-              y1="65"
-              x2={b.x + 54}
-              y2="65"
-              stroke="#fff"
-              strokeOpacity="0.35"
-              strokeWidth="2"
+            {/* box body */}
+            <rect x={b.x} y="46" width="54" height="38" rx="5" fill={b.fill} />
+            {/* packing tape */}
+            <rect
+              x={b.x}
+              y="60"
+              width="54"
+              height="8"
+              fill="#ffffff"
+              opacity="0.18"
             />
-            <line
-              x1={b.x + 27}
-              y1="46"
-              x2={b.x + 27}
-              y2="84"
-              stroke="#fff"
-              strokeOpacity="0.35"
-              strokeWidth="2"
+            {/* shipping label */}
+            <rect
+              x={b.x + 15}
+              y="57"
+              width="24"
+              height="15"
+              rx="1.5"
+              fill="#fafaf7"
             />
+            <rect
+              x={b.x + 18}
+              y="60"
+              width="18"
+              height="1.6"
+              fill="#0b0f14"
+              opacity="0.5"
+            />
+            <rect
+              x={b.x + 18}
+              y="63"
+              width="11"
+              height="1.6"
+              fill="#0b0f14"
+              opacity="0.5"
+            />
+            <g fill="#0b0f14">
+              <rect x={b.x + 18} y="66" width="1.2" height="4" />
+              <rect x={b.x + 20.5} y="66" width="1.8" height="4" />
+              <rect x={b.x + 23.5} y="66" width="1" height="4" />
+              <rect x={b.x + 25.5} y="66" width="2.2" height="4" />
+              <rect x={b.x + 29} y="66" width="1" height="4" />
+              <rect x={b.x + 31} y="66" width="1.6" height="4" />
+            </g>
           </motion.g>
         ))}
 
@@ -441,25 +466,51 @@ function ReceiveArt() {
           transition={{ duration: 0.5, delay: 1.6, ease: [0.16, 1, 0.3, 1] }}
           style={{ transformOrigin: "190px 211px" }}
         >
+          {/* box body */}
           <rect x="130" y="178" width="120" height="66" rx="8" fill="#0b0f14" />
-          <line
-            x1="130"
-            y1="211"
-            x2="250"
-            y2="211"
-            stroke="#fff"
-            strokeOpacity="0.45"
-            strokeWidth="3"
+          {/* packing tape */}
+          <rect
+            x="130"
+            y="203"
+            width="120"
+            height="14"
+            fill="#ffffff"
+            opacity="0.14"
           />
-          <line
-            x1="190"
-            y1="178"
-            x2="190"
-            y2="244"
-            stroke="#fff"
-            strokeOpacity="0.45"
-            strokeWidth="3"
+          {/* shipping label */}
+          <rect x="158" y="189" width="64" height="38" rx="2.5" fill="#fafaf7" />
+          <rect
+            x="166"
+            y="196"
+            width="46"
+            height="3"
+            rx="1.5"
+            fill="#0b0f14"
+            opacity="0.5"
           />
+          <rect
+            x="166"
+            y="202"
+            width="32"
+            height="3"
+            rx="1.5"
+            fill="#0b0f14"
+            opacity="0.5"
+          />
+          <g fill="#0b0f14">
+            <rect x="166" y="209" width="2.5" height="12" />
+            <rect x="170.5" y="209" width="1.2" height="12" />
+            <rect x="173.5" y="209" width="3.5" height="12" />
+            <rect x="179" y="209" width="1.5" height="12" />
+            <rect x="182.5" y="209" width="1.2" height="12" />
+            <rect x="185.5" y="209" width="2.8" height="12" />
+            <rect x="190.5" y="209" width="1.2" height="12" />
+            <rect x="193.5" y="209" width="2" height="12" />
+            <rect x="197.5" y="209" width="1.2" height="12" />
+            <rect x="200.5" y="209" width="3" height="12" />
+            <rect x="205.5" y="209" width="1.5" height="12" />
+            <rect x="209" y="209" width="1.2" height="12" />
+          </g>
           <text
             x="190"
             y="262"
@@ -611,7 +662,7 @@ function ShipArt() {
 
         {/* hand-off arrow */}
         <motion.path
-          d="M 250 140 L 282 140"
+          d="M 250 140 L 294 140"
           stroke="#0b0f14"
           strokeWidth="1.5"
           strokeLinecap="round"
@@ -620,7 +671,7 @@ function ShipArt() {
           transition={{ duration: 0.7, delay: 1.6 }}
         />
         <motion.path
-          d="M 275 134 L 285 140 L 275 146"
+          d="M 287 134 L 297 140 L 287 146"
           stroke="#0b0f14"
           strokeWidth="1.5"
           strokeLinecap="round"
@@ -649,15 +700,15 @@ function ShipArt() {
           transition={{ duration: 0.5, delay: 1.9 }}
         >
           <rect
-            x="288"
+            x="300"
             y="111"
-            width="80"
+            width="76"
             height="58"
             rx="6"
             fill="#0b0f14"
           />
           <text
-            x="328"
+            x="338"
             y="135"
             textAnchor="middle"
             fontFamily="ui-monospace, monospace"
@@ -669,7 +720,7 @@ function ShipArt() {
             CARRIER
           </text>
           <text
-            x="328"
+            x="338"
             y="156"
             textAnchor="middle"
             fontFamily={"var(--font-sans), system-ui"}
@@ -689,8 +740,8 @@ function TrackArt() {
   const events = [
     { x: 50, label: "Picked up", state: "done" },
     { x: 110, label: "Repacked", state: "done" },
-    { x: 170, label: "Carrier", state: "done" },
-    { x: 230, label: "Transit", state: "active" },
+    { x: 170, label: "Departed", state: "done" },
+    { x: 230, label: "In transit", state: "active" },
     { x: 290, label: "Delivered", state: "pending" },
   ] as const;
 

@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "Terms & Conditions",
   description:
     "ItalParcel Terms and Conditions (English and Italian) — the rules that govern the parcel forwarding service offered by ItalParcel di Samuel Borghesi.",
+  alternates: { canonical: "/terms" },
 };
 
 export default function TermsPage() {

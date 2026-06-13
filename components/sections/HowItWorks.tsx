@@ -58,8 +58,8 @@ const STEPS: Step[] = [
     kicker: "Phase 4 — After-care",
     title: "We don't disappear.",
     points: [
-      "For any questions about tracking, customs declarations, or anything else, don't hesitate to contact us.",
-      "We always respond within 36 business hours via WhatsApp or email.",
+      "For any questions about tracking, customs declarations, or anything else, don't hesitate to contact us",
+      "We always respond within 36 business hours via WhatsApp or email",
     ],
     Art: TrackArt,
   },

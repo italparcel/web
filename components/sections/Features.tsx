@@ -42,9 +42,10 @@ export function Features() {
                 </CardIcon>
                 <CardTitle dark>Repack &amp; consolidate</CardTitle>
                 <CardCopy dark>
-                  We open and document every parcel, then repack it to carrier
-                  specifications. Several orders can ship as a single parcel,
-                  cutting your shipping cost.
+                  We open and repackage every parcel. If you are receiving
+                  multiple shipments, we can consolidate multiple items into a
+                  single package and help you save significantly on shipping
+                  costs.
                 </CardCopy>
               </CardBody>
             </Card>
@@ -58,8 +59,9 @@ export function Features() {
                 </CardIcon>
                 <CardTitle>Locker &amp; pickup-point collection</CardTitle>
                 <CardCopy>
-                  InPost · Amazon Hub · Poste Locker · carrier pickup points.
-                  Send us the code, we collect on your behalf.
+                  We offer a wide selection of lockers where we can collect
+                  your parcels. Just send us the pickup codes, and we will
+                  handle the rest!
                 </CardCopy>
               </CardBody>
             </Card>
@@ -73,8 +75,8 @@ export function Features() {
                 </CardIcon>
                 <CardTitle>Customs prep, done right</CardTitle>
                 <CardCopy>
-                  For non-EU destinations we prepare the export documentation
-                  from your data. We act as exporter.
+                  For non-EU destinations, we prepare export documentation
+                  based on the information you provide. We act as exporters.
                 </CardCopy>
               </CardBody>
             </Card>

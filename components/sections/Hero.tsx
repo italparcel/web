@@ -25,7 +25,7 @@ export function Hero() {
     <section
       id="top"
       ref={ref}
-      className="relative isolate overflow-hidden pt-32 pb-20 md:pt-40 md:pb-28"
+      className="relative isolate overflow-hidden pt-28 pb-16 md:pt-32 md:pb-24"
     >
       <BackgroundLayer />
 
@@ -34,7 +34,7 @@ export function Hero() {
           <div>
             <motion.h1
               style={reduce ? undefined : { y: headlineY }}
-              className="display text-balance text-[clamp(3rem,8.5vw,7rem)] text-fg"
+              className="display text-balance text-[clamp(3rem,7.5vw,6rem)] text-fg"
             >
               <Line delay={0.08}>Your Italian</Line>
               <Line delay={0.22}>

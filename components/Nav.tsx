@@ -8,10 +8,10 @@ import { Button } from "./ui/Button";
 import { cn } from "@/lib/cn";
 
 const links = [
-  { href: "#how", label: "How it works" },
-  { href: "#pricing", label: "Pricing" },
-  { href: "#features", label: "Why us" },
-  { href: "#faq", label: "FAQ" },
+  { href: "/#how", label: "How it works" },
+  { href: "/#pricing", label: "Pricing" },
+  { href: "/#features", label: "Why us" },
+  { href: "/#faq", label: "FAQ" },
 ];
 
 export function Nav() {
@@ -46,7 +46,7 @@ export function Nav() {
         className="container-x flex h-16 items-center justify-between"
       >
         <a
-          href="#top"
+          href="/"
           aria-label="ItalParcel — home"
           className="group inline-flex items-center gap-2.5 font-semibold tracking-tight"
         >

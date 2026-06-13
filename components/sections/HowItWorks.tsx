@@ -25,8 +25,9 @@ const STEPS: Step[] = [
     kicker: "Phase 1 — Activation",
     title: "You tell us what's coming.",
     points: [
-      "Fill in the form and we'll get back to you with an estimated total (our fee + shipping).",
-      "If you like it, pay the €10 activation fee — don't worry, it'll be deducted from the total — and you'll get your Italian address right after payment.",
+      "Fill out the free form with shipping details",
+      "We will contact you with a total quote (fee + shipping cost)",
+      "If you like it, pay the €10 activation fee — don't worry, it'll be deducted from the total — and you will get your Italian address right after payment",
     ],
     Art: ActivateArt,
   },
@@ -34,21 +35,32 @@ const STEPS: Step[] = [
     n: "02",
     kicker: "Phase 2 — Reception",
     title: "Sellers ship. We receive.",
-    body: "Order using our address (or a designated pickup point). We receive, open and repack your parcels, and — on request — consolidate them into a single shipment.",
+    points: [
+      "Order your goods using our address / an agreed collection point",
+      "When we receive your shipment, we repack it for its new journey",
+      "We can consolidate multiple shipments into one package, significantly increasing your savings on shipping costs",
+    ],
     Art: ReceiveArt,
   },
   {
     n: "03",
     kicker: "Phase 3 — Quote & ship",
     title: "One quote. Then it flies.",
-    body: "Based on your parcel's actual weight and dimensions, you'll get the final shipping quote.\nAfter payment, we hand it to the carrier as soon as possible. (Customers outside the EU will need to provide the information needed for the customs declaration.)",
+    points: [
+      "Based on your parcel's actual weight and dimensions, you will get the final shipping quote",
+      "After payment, we will hand the package to the selected courier as soon as possible",
+      "If your package is headed outside the European Union, you will need to provide us with the necessary information for the customs declaration",
+    ],
     Art: ShipArt,
   },
   {
     n: "04",
     kicker: "Phase 4 — After-care",
     title: "We don't disappear.",
-    body: "Tracking support, customs questions, and claims assistance until the parcel lands, we got you. WhatsApp or email — we reply within 36 working hours.",
+    points: [
+      "For any questions about tracking, customs declarations, or anything else, don't hesitate to contact us.",
+      "We always respond within 36 business hours via WhatsApp or email.",
+    ],
     Art: TrackArt,
   },
 ];

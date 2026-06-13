@@ -8,12 +8,14 @@ import {
   useReducedMotion,
 } from "framer-motion";
 import { useRef, useState } from "react";
+import { cn } from "@/lib/cn";
 
 type Step = {
   n: string;
   kicker: string;
   title: string;
-  body: string;
+  body?: string;
+  points?: string[];
   Art: () => React.JSX.Element;
 };
 
@@ -22,7 +24,10 @@ const STEPS: Step[] = [
     n: "01",
     kicker: "Phase 1 — Activation",
     title: "You tell us what's coming.",
-    body: "Fill in the form and we'll get back to you with an estimated total (our fee + shipping).\nIf you like it, pay the €10 activation fee — don't worry, it'll be deducted from the total — and you'll get your Italian address right after payment.",
+    points: [
+      "Fill in the form and we'll get back to you with an estimated total (our fee + shipping).",
+      "If you like it, pay the €10 activation fee — don't worry, it'll be deducted from the total — and you'll get your Italian address right after payment.",
+    ],
     Art: ActivateArt,
   },
   {
@@ -36,7 +41,7 @@ const STEPS: Step[] = [
     n: "03",
     kicker: "Phase 3 — Quote & ship",
     title: "One quote. Then it flies.",
-    body: "Based on your parcel's actual weight and dimensions, you'll get the final shipping quote. After payment, we hand it to the carrier as soon as possible. (Customers outside the EU will need to provide the information needed for the customs declaration.)",
+    body: "Based on your parcel's actual weight and dimensions, you'll get the final shipping quote.\nAfter payment, we hand it to the carrier as soon as possible. (Customers outside the EU will need to provide the information needed for the customs declaration.)",
     Art: ShipArt,
   },
   {
@@ -124,15 +129,35 @@ function StepContent({ step }: { step: Step }) {
         <h3 className="display mt-4 text-balance text-[clamp(2.25rem,5.5vw,4.5rem)] text-fg">
           {step.title}
         </h3>
-        <p className="mt-6 max-w-md whitespace-pre-line text-base leading-relaxed text-fg-muted md:text-lg">
-          {step.body}
-        </p>
+        <StepBody
+          step={step}
+          className="mt-6 max-w-md whitespace-pre-line text-base leading-relaxed md:text-lg"
+        />
       </div>
       <div className="self-center">
         <step.Art />
       </div>
     </div>
   );
+}
+
+function StepBody({ step, className }: { step: Step; className?: string }) {
+  if (step.points) {
+    return (
+      <ul className={cn("space-y-3 text-fg-muted", className)}>
+        {step.points.map((point, i) => (
+          <li key={i} className="flex gap-3">
+            <span
+              aria-hidden
+              className="mt-[0.6em] h-1.5 w-1.5 shrink-0 rounded-full bg-fg"
+            />
+            <span>{point}</span>
+          </li>
+        ))}
+      </ul>
+    );
+  }
+  return <p className={cn("text-fg-muted", className)}>{step.body}</p>;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -165,9 +190,7 @@ function Fallback({ className = "" }: { className?: string }) {
                 <p className="font-mono text-xs text-accent">{s.n} / 04</p>
               </div>
               <h3 className="display mt-3 text-balance text-2xl text-fg">{s.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-fg-muted">
-                {s.body}
-              </p>
+              <StepBody step={s} className="mt-2 text-sm leading-relaxed" />
             </li>
           ))}
         </ol>

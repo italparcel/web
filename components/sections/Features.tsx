@@ -279,7 +279,7 @@ function CardArtRepack() {
         {/* converging arrows */}
         {[
           {
-            d: "M 120 168 Q 150 205 180 236",
+            d: "M 120 168 Q 180 205 180 236",
             head: "M 174 230 L 180 238 L 186 230",
             delay: 0.5,
           },
@@ -289,7 +289,7 @@ function CardArtRepack() {
             delay: 0.62,
           },
           {
-            d: "M 280 168 Q 250 205 220 236",
+            d: "M 280 168 Q 220 205 220 236",
             head: "M 214 230 L 220 238 L 226 230",
             delay: 0.74,
           },

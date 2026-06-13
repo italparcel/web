@@ -4,10 +4,8 @@ import {
   motion,
   AnimatePresence,
   useScroll,
-  useTransform,
   useMotionValueEvent,
   useReducedMotion,
-  type MotionValue,
 } from "framer-motion";
 import { useRef, useState } from "react";
 
@@ -87,25 +85,6 @@ function DesktopScroll() {
       style={{ height: `${STEPS.length * 100 + 100}vh` }}
     >
       <div className="sticky top-0 flex h-screen flex-col">
-        {/* Top bar */}
-        <header className="border-b border-border bg-bg/85 backdrop-blur">
-          <div className="container-x flex items-center gap-6 py-5">
-            <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-fg-subtle whitespace-nowrap">
-              How it works
-            </span>
-            <ProgressTrack
-              count={STEPS.length}
-              scrollProgress={scrollYProgress}
-              active={active}
-            />
-            <span className="font-mono text-[11px] tabular-nums text-fg-subtle whitespace-nowrap">
-              {String(active + 1).padStart(2, "0")}{" "}
-              <span className="text-fg-subtle/50">/</span>{" "}
-              {String(STEPS.length).padStart(2, "0")}
-            </span>
-          </div>
-        </header>
-
         {/* Stage */}
         <div className="relative flex-1 overflow-hidden">
           <AnimatePresence mode="wait" initial={false}>
@@ -153,59 +132,6 @@ function StepContent({ step }: { step: Step }) {
         <step.Art />
       </div>
     </div>
-  );
-}
-
-function ProgressTrack({
-  count,
-  scrollProgress,
-  active,
-}: {
-  count: number;
-  scrollProgress: MotionValue<number>;
-  active: number;
-}) {
-  return (
-    <ul className="flex flex-1 items-center gap-2">
-      {Array.from({ length: count }).map((_, i) => (
-        <ProgressSegment
-          key={i}
-          index={i}
-          count={count}
-          scrollProgress={scrollProgress}
-          isActive={i === active}
-        />
-      ))}
-    </ul>
-  );
-}
-
-function ProgressSegment({
-  index,
-  count,
-  scrollProgress,
-  isActive,
-}: {
-  index: number;
-  count: number;
-  scrollProgress: MotionValue<number>;
-  isActive: boolean;
-}) {
-  const start = index / count;
-  const end = (index + 1) / count;
-  const width = useTransform(scrollProgress, [start, end], ["0%", "100%"], {
-    clamp: true,
-  });
-  return (
-    <li className="relative h-px flex-1 bg-border">
-      <motion.div
-        style={{ width }}
-        className={
-          "absolute inset-y-0 left-0 " +
-          (isActive ? "bg-accent" : "bg-fg")
-        }
-      />
-    </li>
   );
 }
 

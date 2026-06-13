@@ -51,8 +51,7 @@ export function Hero() {
               transition={{ duration: 0.6, delay: 0.6 }}
               className="mt-8 max-w-lg text-base leading-relaxed text-fg-muted md:text-lg"
             >
-              We receive your Italian parcels, inspect them, repack them,
-              consolidate, and forward them worldwide.
+              Parcel forwarding from Italy. Made easy.
             </motion.p>
 
             <motion.div

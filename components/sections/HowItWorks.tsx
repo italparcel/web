@@ -22,7 +22,7 @@ const STEPS: Step[] = [
     n: "01",
     kicker: "Phase 1 — Activation",
     title: "You tell us what's coming.",
-    body: "Fill in the form and we'll get back to you with an estimated total (our fee + shipping). If you like it, pay the €10 activation fee — don't worry, it'll be deducted from the total — and you'll get your Italian address right after payment.",
+    body: "Fill in the form and we'll get back to you with an estimated total (our fee + shipping).\nIf you like it, pay the €10 activation fee — don't worry, it'll be deducted from the total — and you'll get your Italian address right after payment.",
     Art: ActivateArt,
   },
   {
@@ -124,7 +124,7 @@ function StepContent({ step }: { step: Step }) {
         <h3 className="display mt-4 text-balance text-[clamp(2.25rem,5.5vw,4.5rem)] text-fg">
           {step.title}
         </h3>
-        <p className="mt-6 max-w-md text-base leading-relaxed text-fg-muted md:text-lg">
+        <p className="mt-6 max-w-md whitespace-pre-line text-base leading-relaxed text-fg-muted md:text-lg">
           {step.body}
         </p>
       </div>

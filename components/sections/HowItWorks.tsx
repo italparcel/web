@@ -121,7 +121,7 @@ function StepContent({ step }: { step: Step }) {
           {step.kicker}
         </p>
         <p className="mt-3 font-mono text-xs text-accent">{step.n} / 04</p>
-        <h3 className="display mt-4 text-[clamp(2.25rem,5.5vw,4.5rem)] text-fg">
+        <h3 className="display mt-4 text-balance text-[clamp(2.25rem,5.5vw,4.5rem)] text-fg">
           {step.title}
         </h3>
         <p className="mt-6 max-w-md text-base leading-relaxed text-fg-muted md:text-lg">
@@ -149,7 +149,7 @@ function Fallback({ className = "" }: { className?: string }) {
         <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-fg-subtle">
           How it works
         </p>
-        <h2 className="display mt-4 text-4xl text-fg">
+        <h2 className="display mt-4 text-balance text-4xl text-fg">
           The service in four phases.
         </h2>
         <ol className="mt-10 space-y-6">
@@ -164,7 +164,7 @@ function Fallback({ className = "" }: { className?: string }) {
                 </p>
                 <p className="font-mono text-xs text-accent">{s.n} / 04</p>
               </div>
-              <h3 className="display mt-3 text-2xl text-fg">{s.title}</h3>
+              <h3 className="display mt-3 text-balance text-2xl text-fg">{s.title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-fg-muted">
                 {s.body}
               </p>

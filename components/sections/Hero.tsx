@@ -34,7 +34,7 @@ export function Hero() {
           <div>
             <motion.h1
               style={reduce ? undefined : { y: headlineY }}
-              className="display text-[clamp(3rem,8.5vw,7rem)] text-fg"
+              className="display text-balance text-[clamp(3rem,8.5vw,7rem)] text-fg"
             >
               <Line delay={0.08}>Your Italian</Line>
               <Line delay={0.22}>

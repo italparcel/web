@@ -68,13 +68,15 @@ const STEPS: Step[] = [
 export function HowItWorks() {
   const reduce = useReducedMotion();
 
-  if (reduce) return <Fallback />;
-
+  // Single anchor target so `#how` resolves to the visible content on every
+  // viewport. The desktop scroll stage is display:none on phones, so it can't
+  // be an anchor target there — the id must live on a wrapper that always has
+  // a layout box.
   return (
-    <>
-      <DesktopScroll />
-      <Fallback className="md:hidden" />
-    </>
+    <section id="how" className="relative">
+      {!reduce && <DesktopScroll />}
+      <Fallback className={reduce ? "" : "md:hidden"} />
+    </section>
   );
 }
 
@@ -95,8 +97,7 @@ function DesktopScroll() {
   });
 
   return (
-    <section
-      id="how"
+    <div
       ref={ref}
       className="relative hidden md:block"
       style={{ height: `${STEPS.length * 100 + 100}vh` }}
@@ -126,7 +127,7 @@ function DesktopScroll() {
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -178,10 +179,7 @@ function StepBody({ step, className }: { step: Step; className?: string }) {
 
 function Fallback({ className = "" }: { className?: string }) {
   return (
-    <section
-      id="how"
-      className={"relative border-t border-border py-20 " + className}
-    >
+    <div className={"relative border-t border-border py-20 " + className}>
       <div className="container-x">
         <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-fg-subtle">
           How it works
@@ -207,7 +205,7 @@ function Fallback({ className = "" }: { className?: string }) {
           ))}
         </ol>
       </div>
-    </section>
+    </div>
   );
 }
 

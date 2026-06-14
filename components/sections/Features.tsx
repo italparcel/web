@@ -28,7 +28,6 @@ export function Features() {
               </span>
             </>
           }
-          description="Every parcel documented. Every fee itemized. Every step on the record."
           align="left"
         />
 

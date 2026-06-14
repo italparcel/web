@@ -104,8 +104,9 @@ export function Pricing() {
           </Reveal>
           <Reveal delay={0.1}>
             <p className="max-w-sm text-sm leading-relaxed text-white/60 md:text-base">
-              One transparent fee for our handling. Carrier shipping is quoted
-              separately, after we've weighed and measured your parcel.
+              One transparent fee for our handling.
+              <br />
+              Shipping cost is quoted separately.
             </p>
           </Reveal>
         </div>

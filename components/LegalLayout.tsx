@@ -154,8 +154,8 @@ export function Sub({
  * for every bilingual paragraph.
  */
 export function Rich({ text }: { text: string }) {
-  // Bind the last 3 words (>=3-word widow rule) before tokenizing. NBSP doesn't
-  // touch the `**bold**` / `[label](href)` delimiters, so parsing is unaffected.
+  // Tidy widows + sentence starts before tokenizing. NBSP only replaces spaces,
+  // so the `**bold**` / `[label](href)` delimiters are untouched and still parse.
   const parts = noWidows(text).split(/(\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\))/g);
   return (
     <p>

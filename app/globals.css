@@ -71,6 +71,17 @@ html, body {
   color: #fff;
 }
 
+/* Site-wide line wrapping. `:where()` keeps specificity at 0 so Tailwind
+   utilities (e.g. text-balance, text-nowrap) still override per-element.
+   This is the canonical fix for orphan/widow words — prefer it over manual
+   <br>/&nbsp; in prose. */
+:where(p, li, dd, dt, blockquote, figcaption) {
+  text-wrap: pretty;
+}
+:where(h1, h2, h3, h4, h5, h6) {
+  text-wrap: balance;
+}
+
 /* Display utility — Bricolage Grotesque tuned for big type */
 .display {
   font-family: var(--font-sans);

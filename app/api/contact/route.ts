@@ -120,6 +120,17 @@ export async function POST(request: Request) {
 
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
+    // In production a missing key means the inquiry would be lost silently —
+    // fail loudly so the form surfaces an error instead of dropping the lead.
+    if (process.env.NODE_ENV === "production") {
+      console.error(
+        "[contact] RESEND_API_KEY missing in production — inquiry not sent."
+      );
+      return NextResponse.json(
+        { error: "Could not send email. Please try again." },
+        { status: 500 }
+      );
+    }
     console.warn(
       "[contact] RESEND_API_KEY not set — logging inquiry instead of emailing.\n",
       text

@@ -32,6 +32,17 @@ export function Nav() {
     };
   }, [open]);
 
+  // Close the mobile menu when the viewport grows to desktop, otherwise the
+  // body scroll-lock above would stay applied while the panel is hidden.
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const onChange = (e: MediaQueryListEvent) => {
+      if (e.matches) setOpen(false);
+    };
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
   const goToContact = () => {
     const el = document.getElementById("contact");
     if (el) {

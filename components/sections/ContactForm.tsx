@@ -51,12 +51,20 @@ export function ContactForm() {
 
   const [status, setStatus] = useState<Status>("idle");
   const [errMsg, setErrMsg] = useState<string | null>(null);
+  // When the user picks WhatsApp we keep the deep link so the SuccessCard can
+  // open it from a real click — window.open after an await is blocked on iOS.
+  const [waLink, setWaLink] = useState<string | null>(null);
   const channel = watch("channel");
   const honeypotRef = useRef<HTMLInputElement>(null);
 
   const onSubmit = async (data: ContactInput) => {
     setStatus("submitting");
     setErrMsg(null);
+
+    const isWhatsApp = data.channel === "whatsapp";
+    // Build from the submitted snapshot now (reset() clears the form fields).
+    const link = isWhatsApp ? buildWhatsAppLink(data) : null;
+
     try {
       const res = await fetch("/api/contact", {
         method: "POST",
@@ -70,12 +78,18 @@ export function ContactForm() {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error || "Submission failed");
       }
-      if (data.channel === "whatsapp") {
-        window.open(buildWhatsAppLink(data), "_blank", "noopener,noreferrer");
-      }
+      setWaLink(link);
       setStatus("success");
       reset();
     } catch (e) {
+      // For WhatsApp the emailed copy is secondary — don't block the user from
+      // reaching WhatsApp just because that copy failed to send.
+      if (isWhatsApp) {
+        setWaLink(link);
+        setStatus("success");
+        reset();
+        return;
+      }
       setStatus("error");
       setErrMsg(e instanceof Error ? e.message : "Something went wrong.");
     }
@@ -100,7 +114,13 @@ export function ContactForm() {
           <Reveal>
             <AnimatePresence mode="wait">
               {status === "success" ? (
-                <SuccessCard onReset={() => setStatus("idle")} channel={channel} />
+                <SuccessCard
+                  onReset={() => {
+                    setStatus("idle");
+                    setWaLink(null);
+                  }}
+                  waLink={waLink}
+                />
               ) : (
                 <motion.form
                   key="form"
@@ -307,6 +327,7 @@ export function ContactForm() {
                           <Link
                             href="/terms"
                             target="_blank"
+                            rel="noopener noreferrer"
                             className="font-medium text-fg underline underline-offset-2 hover:text-accent"
                           >
                             Terms &amp; Conditions
@@ -315,6 +336,7 @@ export function ContactForm() {
                           <Link
                             href="/privacy"
                             target="_blank"
+                            rel="noopener noreferrer"
                             className="font-medium text-fg underline underline-offset-2 hover:text-accent"
                           >
                             Privacy Policy
@@ -340,6 +362,7 @@ export function ContactForm() {
                           <Link
                             href="/terms#sec-3-2"
                             target="_blank"
+                            rel="noopener noreferrer"
                             className="text-fg underline underline-offset-2 hover:text-accent"
                           >
                             3.2(b)
@@ -348,6 +371,7 @@ export function ContactForm() {
                           <Link
                             href="/terms#sec-3-10"
                             target="_blank"
+                            rel="noopener noreferrer"
                             className="text-fg underline underline-offset-2 hover:text-accent"
                           >
                             3.10
@@ -356,6 +380,7 @@ export function ContactForm() {
                           <Link
                             href="/terms#sec-4-5"
                             target="_blank"
+                            rel="noopener noreferrer"
                             className="text-fg underline underline-offset-2 hover:text-accent"
                           >
                             4.5
@@ -364,6 +389,7 @@ export function ContactForm() {
                           <Link
                             href="/terms#sec-5-9"
                             target="_blank"
+                            rel="noopener noreferrer"
                             className="text-fg underline underline-offset-2 hover:text-accent"
                           >
                             5.9
@@ -372,6 +398,7 @@ export function ContactForm() {
                           <Link
                             href="/terms#sec-7-3"
                             target="_blank"
+                            rel="noopener noreferrer"
                             className="text-fg underline underline-offset-2 hover:text-accent"
                           >
                             7.3
@@ -380,6 +407,7 @@ export function ContactForm() {
                           <Link
                             href="/terms#sec-8-2"
                             target="_blank"
+                            rel="noopener noreferrer"
                             className="text-fg underline underline-offset-2 hover:text-accent"
                           >
                             8.2
@@ -507,10 +535,10 @@ function ChannelOption({
 
 function SuccessCard({
   onReset,
-  channel,
+  waLink,
 }: {
   onReset: () => void;
-  channel: ContactInput["channel"];
+  waLink: string | null;
 }) {
   return (
     <motion.div
@@ -530,13 +558,25 @@ function SuccessCard({
       </motion.div>
       <h3 className="mt-5 display text-3xl">Got it.</h3>
       <p className="mt-2 text-sm text-fg-muted">
-        {channel === "whatsapp"
+        {waLink
           ? "Your message is on its way via WhatsApp. We've logged an email copy on our end too."
           : "We will reply within 36 working hours."}
       </p>
-      <Button variant="secondary" className="mt-6" onClick={onReset}>
-        Send another
-      </Button>
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+        {waLink && (
+          <Button
+            onClick={() =>
+              window.open(waLink, "_blank", "noopener,noreferrer")
+            }
+          >
+            Open WhatsApp
+            <MessageCircle size={16} />
+          </Button>
+        )}
+        <Button variant="secondary" onClick={onReset}>
+          Send another
+        </Button>
+      </div>
     </motion.div>
   );
 }

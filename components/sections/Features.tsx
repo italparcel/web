@@ -42,10 +42,11 @@ export function Features() {
                 </CardIcon>
                 <CardTitle dark>Repack &amp; consolidate</CardTitle>
                 <CardCopy dark>
-                  We open and repackage every parcel. If you are receiving
-                  multiple shipments, we can consolidate multiple items into a
-                  single package and help you save significantly on shipping
-                  costs.
+                  We open and repackage every parcel.
+                  <br />
+                  If you are receiving multiple shipments, we can consolidate
+                  multiple items into a single package and help you save
+                  significantly on shipping costs.
                 </CardCopy>
               </CardBody>
             </Card>

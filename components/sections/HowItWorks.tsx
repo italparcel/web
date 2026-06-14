@@ -200,7 +200,7 @@ function Fallback({ className = "" }: { className?: string }) {
                 <p className="font-mono text-xs text-accent">{s.n} / 04</p>
               </div>
               <h3 className="display mt-3 text-balance text-2xl text-fg">{s.title}</h3>
-              <StepBody step={s} className="mt-2 text-sm leading-relaxed" />
+              <StepBody step={s} className="mt-4 text-sm leading-relaxed" />
             </li>
           ))}
         </ol>

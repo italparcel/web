@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
@@ -31,6 +31,108 @@ import { cn } from "@/lib/cn";
 
 type Status = "idle" | "submitting" | "success" | "error";
 
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+const TURNSTILE_SCRIPT_SRC =
+  "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+const TURNSTILE_SCRIPT_MATCH =
+  'script[src^="https://challenges.cloudflare.com/turnstile/v0/api.js"]';
+
+type TurnstileOptions = {
+  sitekey: string;
+  callback?: (token: string) => void;
+  "expired-callback"?: () => void;
+  "error-callback"?: () => void;
+};
+
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (el: HTMLElement, opts: TurnstileOptions) => string;
+      reset: (id?: string) => void;
+      remove: (id?: string) => void;
+    };
+  }
+}
+
+/**
+ * Cloudflare Turnstile, rendered explicitly so it can be reset after each
+ * submit. Renders nothing when no site key is configured (e.g. local dev),
+ * keeping the form usable without the captcha.
+ */
+function TurnstileWidget({
+  onVerify,
+  onExpire,
+  resetSignal,
+}: {
+  onVerify: (token: string) => void;
+  onExpire: () => void;
+  resetSignal: number;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const widgetIdRef = useRef<string | null>(null);
+  const onVerifyRef = useRef(onVerify);
+  const onExpireRef = useRef(onExpire);
+  onVerifyRef.current = onVerify;
+  onExpireRef.current = onExpire;
+
+  useEffect(() => {
+    const siteKey = TURNSTILE_SITE_KEY;
+    if (!siteKey) return;
+    let cancelled = false;
+
+    const render = () => {
+      if (
+        cancelled ||
+        !window.turnstile ||
+        !containerRef.current ||
+        widgetIdRef.current !== null
+      ) {
+        return;
+      }
+      widgetIdRef.current = window.turnstile.render(containerRef.current, {
+        sitekey: siteKey,
+        callback: (token) => onVerifyRef.current(token),
+        "expired-callback": () => onExpireRef.current(),
+        "error-callback": () => onExpireRef.current(),
+      });
+    };
+
+    if (window.turnstile) {
+      render();
+    } else {
+      const existing =
+        document.querySelector<HTMLScriptElement>(TURNSTILE_SCRIPT_MATCH);
+      if (existing) {
+        existing.addEventListener("load", render, { once: true });
+      } else {
+        const script = document.createElement("script");
+        script.src = TURNSTILE_SCRIPT_SRC;
+        script.async = true;
+        script.defer = true;
+        script.addEventListener("load", render, { once: true });
+        document.head.appendChild(script);
+      }
+    }
+
+    return () => {
+      cancelled = true;
+      if (widgetIdRef.current !== null && window.turnstile) {
+        window.turnstile.remove(widgetIdRef.current);
+        widgetIdRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (resetSignal > 0 && widgetIdRef.current !== null && window.turnstile) {
+      window.turnstile.reset(widgetIdRef.current);
+    }
+  }, [resetSignal]);
+
+  if (!TURNSTILE_SITE_KEY) return null;
+  return <div ref={containerRef} className="min-h-[65px]" />;
+}
+
 export function ContactForm() {
   const {
     register,
@@ -51,12 +153,23 @@ export function ContactForm() {
 
   const [status, setStatus] = useState<Status>("idle");
   const [errMsg, setErrMsg] = useState<string | null>(null);
+  // When the user picks WhatsApp we keep the deep link so the SuccessCard can
+  // open it from a real click — window.open after an await is blocked on iOS.
+  const [waLink, setWaLink] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
+  const turnstileEnabled = Boolean(TURNSTILE_SITE_KEY);
   const channel = watch("channel");
   const honeypotRef = useRef<HTMLInputElement>(null);
 
   const onSubmit = async (data: ContactInput) => {
     setStatus("submitting");
     setErrMsg(null);
+
+    const isWhatsApp = data.channel === "whatsapp";
+    // Build from the submitted snapshot now (reset() clears the form fields).
+    const link = isWhatsApp ? buildWhatsAppLink(data) : null;
+
     try {
       const res = await fetch("/api/contact", {
         method: "POST",
@@ -64,20 +177,32 @@ export function ContactForm() {
         body: JSON.stringify({
           ...data,
           company: honeypotRef.current?.value ?? "",
+          turnstileToken: turnstileToken ?? "",
         }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error || "Submission failed");
       }
-      if (data.channel === "whatsapp") {
-        window.open(buildWhatsAppLink(data), "_blank", "noopener,noreferrer");
-      }
+      setWaLink(link);
       setStatus("success");
       reset();
     } catch (e) {
+      // For WhatsApp the emailed copy is secondary — don't block the user from
+      // reaching WhatsApp just because that copy failed to send.
+      if (isWhatsApp) {
+        setWaLink(link);
+        setStatus("success");
+        reset();
+        return;
+      }
       setStatus("error");
       setErrMsg(e instanceof Error ? e.message : "Something went wrong.");
+    } finally {
+      // The Turnstile token is single-use — clear it and reset the widget so
+      // the next attempt gets a fresh challenge.
+      setTurnstileToken(null);
+      setTurnstileResetKey((k) => k + 1);
     }
   };
 
@@ -100,7 +225,13 @@ export function ContactForm() {
           <Reveal>
             <AnimatePresence mode="wait">
               {status === "success" ? (
-                <SuccessCard onReset={() => setStatus("idle")} channel={channel} />
+                <SuccessCard
+                  onReset={() => {
+                    setStatus("idle");
+                    setWaLink(null);
+                  }}
+                  waLink={waLink}
+                />
               ) : (
                 <motion.form
                   key="form"
@@ -307,6 +438,7 @@ export function ContactForm() {
                           <Link
                             href="/terms"
                             target="_blank"
+                            rel="noopener noreferrer"
                             className="font-medium text-fg underline underline-offset-2 hover:text-accent"
                           >
                             Terms &amp; Conditions
@@ -315,6 +447,7 @@ export function ContactForm() {
                           <Link
                             href="/privacy"
                             target="_blank"
+                            rel="noopener noreferrer"
                             className="font-medium text-fg underline underline-offset-2 hover:text-accent"
                           >
                             Privacy Policy
@@ -340,6 +473,7 @@ export function ContactForm() {
                           <Link
                             href="/terms#sec-3-2"
                             target="_blank"
+                            rel="noopener noreferrer"
                             className="text-fg underline underline-offset-2 hover:text-accent"
                           >
                             3.2(b)
@@ -348,6 +482,7 @@ export function ContactForm() {
                           <Link
                             href="/terms#sec-3-10"
                             target="_blank"
+                            rel="noopener noreferrer"
                             className="text-fg underline underline-offset-2 hover:text-accent"
                           >
                             3.10
@@ -356,6 +491,7 @@ export function ContactForm() {
                           <Link
                             href="/terms#sec-4-5"
                             target="_blank"
+                            rel="noopener noreferrer"
                             className="text-fg underline underline-offset-2 hover:text-accent"
                           >
                             4.5
@@ -364,6 +500,7 @@ export function ContactForm() {
                           <Link
                             href="/terms#sec-5-9"
                             target="_blank"
+                            rel="noopener noreferrer"
                             className="text-fg underline underline-offset-2 hover:text-accent"
                           >
                             5.9
@@ -372,6 +509,7 @@ export function ContactForm() {
                           <Link
                             href="/terms#sec-7-3"
                             target="_blank"
+                            rel="noopener noreferrer"
                             className="text-fg underline underline-offset-2 hover:text-accent"
                           >
                             7.3
@@ -380,6 +518,7 @@ export function ContactForm() {
                           <Link
                             href="/terms#sec-8-2"
                             target="_blank"
+                            rel="noopener noreferrer"
                             className="text-fg underline underline-offset-2 hover:text-accent"
                           >
                             8.2
@@ -403,6 +542,12 @@ export function ContactForm() {
                     </p>
                   )}
 
+                  <TurnstileWidget
+                    onVerify={(token) => setTurnstileToken(token)}
+                    onExpire={() => setTurnstileToken(null)}
+                    resetSignal={turnstileResetKey}
+                  />
+
                   <div className="flex items-center justify-between gap-4 pt-2">
                     <p className="text-xs text-fg-subtle">
                       We reply within 36 working hours.
@@ -411,7 +556,11 @@ export function ContactForm() {
                       type="submit"
                       size="lg"
                       magnetic
-                      disabled={!isValid || status === "submitting"}
+                      disabled={
+                        !isValid ||
+                        status === "submitting" ||
+                        (turnstileEnabled && !turnstileToken)
+                      }
                     >
                       {status === "submitting" ? (
                         <>
@@ -507,10 +656,10 @@ function ChannelOption({
 
 function SuccessCard({
   onReset,
-  channel,
+  waLink,
 }: {
   onReset: () => void;
-  channel: ContactInput["channel"];
+  waLink: string | null;
 }) {
   return (
     <motion.div
@@ -530,13 +679,25 @@ function SuccessCard({
       </motion.div>
       <h3 className="mt-5 display text-3xl">Got it.</h3>
       <p className="mt-2 text-sm text-fg-muted">
-        {channel === "whatsapp"
+        {waLink
           ? "Your message is on its way via WhatsApp. We've logged an email copy on our end too."
           : "We will reply within 36 working hours."}
       </p>
-      <Button variant="secondary" className="mt-6" onClick={onReset}>
-        Send another
-      </Button>
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+        {waLink && (
+          <Button
+            onClick={() =>
+              window.open(waLink, "_blank", "noopener,noreferrer")
+            }
+          >
+            Open WhatsApp
+            <MessageCircle size={16} />
+          </Button>
+        )}
+        <Button variant="secondary" onClick={onReset}>
+          Send another
+        </Button>
+      </div>
     </motion.div>
   );
 }

@@ -29,7 +29,6 @@ export const metadata: Metadata = {
   },
   description: DESCRIPTION,
   applicationName: "ItalParcel",
-  generator: "Next.js",
   keywords: [
     "parcel forwarding Italy",
     "Italian package forwarding",

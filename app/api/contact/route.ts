@@ -56,6 +56,34 @@ export async function POST(request: Request) {
   const ua = request.headers.get("user-agent") ?? "unknown";
   const acceptedAt = new Date().toISOString();
 
+  // Cloudflare Turnstile. The token is sent outside the zod schema, so read it
+  // from the raw body. In production verification is always mandatory; in dev
+  // it is skipped when no secret is configured so the local form still works.
+  const turnstileSecret = process.env.TURNSTILE_SECRET_KEY;
+  if (turnstileSecret) {
+    const token =
+      body && typeof body === "object"
+        ? (body as Record<string, unknown>).turnstileToken
+        : undefined;
+    const verified = await verifyTurnstile(
+      turnstileSecret,
+      typeof token === "string" ? token : "",
+      ip
+    );
+    if (!verified) {
+      return NextResponse.json(
+        { error: "Captcha verification failed. Please try again." },
+        { status: 403 }
+      );
+    }
+  } else if (process.env.NODE_ENV === "production") {
+    console.error("[contact] TURNSTILE_SECRET_KEY missing in production.");
+    return NextResponse.json(
+      { error: "Captcha verification unavailable. Please try again later." },
+      { status: 500 }
+    );
+  }
+
   const subject = `New inquiry — ${data.name} (${PARCEL_LABELS[data.parcels]})`;
 
   const text = [
@@ -120,6 +148,17 @@ export async function POST(request: Request) {
 
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
+    // In production a missing key means the inquiry would be lost silently —
+    // fail loudly so the form surfaces an error instead of dropping the lead.
+    if (process.env.NODE_ENV === "production") {
+      console.error(
+        "[contact] RESEND_API_KEY missing in production — inquiry not sent."
+      );
+      return NextResponse.json(
+        { error: "Could not send email. Please try again." },
+        { status: 500 }
+      );
+    }
     console.warn(
       "[contact] RESEND_API_KEY not set — logging inquiry instead of emailing.\n",
       text
@@ -151,6 +190,29 @@ export async function POST(request: Request) {
       { error: "Could not send email. Please try again." },
       { status: 502 }
     );
+  }
+}
+
+async function verifyTurnstile(
+  secret: string,
+  token: string,
+  remoteip: string
+): Promise<boolean> {
+  if (!token) return false;
+  try {
+    const res = await fetch(
+      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ secret, response: token, remoteip }),
+      }
+    );
+    const json = (await res.json()) as { success?: boolean };
+    return json.success === true;
+  } catch (e) {
+    console.error("[contact] turnstile verify error:", e);
+    return false;
   }
 }
 

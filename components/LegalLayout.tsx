@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
+import { noWidows } from "@/lib/typography";
 
 type TocItem = { id: string; label: string };
 
@@ -153,7 +154,9 @@ export function Sub({
  * for every bilingual paragraph.
  */
 export function Rich({ text }: { text: string }) {
-  const parts = text.split(/(\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\))/g);
+  // Bind the last 3 words (>=3-word widow rule) before tokenizing. NBSP doesn't
+  // touch the `**bold**` / `[label](href)` delimiters, so parsing is unaffected.
+  const parts = noWidows(text).split(/(\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\))/g);
   return (
     <p>
       {parts.map((part, i) => {

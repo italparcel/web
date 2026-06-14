@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Reveal } from "./Reveal";
+import { noWidows } from "@/lib/typography";
 
 type Props = {
   eyebrow?: string;
@@ -35,7 +36,7 @@ export function SectionHeader({
             (align === "center" ? "mx-auto" : "")
           }
         >
-          {description}
+          {typeof description === "string" ? noWidows(description) : description}
         </p>
       )}
     </Reveal>

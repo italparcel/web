@@ -10,6 +10,7 @@ import {
 import { ArrowRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/Button";
+import { noWidows } from "@/lib/typography";
 
 export function Hero() {
   const reduce = useReducedMotion();
@@ -51,7 +52,7 @@ export function Hero() {
               transition={{ duration: 0.6, delay: 0.6 }}
               className="mt-8 max-w-lg text-base leading-relaxed text-fg-muted md:text-lg"
             >
-              Parcel forwarding from Italy. Made easy.
+              {noWidows("Parcel forwarding from Italy. Made easy.")}
             </motion.p>
 
             <motion.div

@@ -7,6 +7,7 @@ import { SectionHeader } from "../ui/SectionHeader";
 import { Reveal } from "../ui/Reveal";
 import { cn } from "@/lib/cn";
 import { FAQS } from "@/lib/faqs";
+import { noWidows } from "@/lib/typography";
 
 export function FAQ() {
   return (
@@ -52,7 +53,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
         className="flex w-full items-center justify-between gap-6 p-6 text-left transition hover:bg-fg/[0.02]"
       >
         <span className="text-base font-medium tracking-tight text-fg md:text-lg">
-          {q}
+          {noWidows(q)}
         </span>
         <span
           className={cn(
@@ -73,7 +74,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
             className="overflow-hidden"
           >
             <p className="px-6 pb-6 whitespace-pre-line text-sm leading-relaxed text-fg-muted">
-              {a}
+              {noWidows(a)}
             </p>
           </motion.div>
         )}

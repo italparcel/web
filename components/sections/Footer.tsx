@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Mail, MessageCircle } from "lucide-react";
 import { WHATSAPP_DISPLAY, WHATSAPP_NUMBER } from "@/lib/whatsapp";
+import { noWidows } from "@/lib/typography";
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -23,8 +24,9 @@ export function Footer() {
               </span>
             </div>
             <p className="mt-4 max-w-sm text-sm text-fg-muted">
-              Your Italian address for parcels you want forwarded worldwide.
-              Run from Trento, Italy.
+              {noWidows(
+                "Your Italian address for parcels you want forwarded worldwide. Run from Trento, Italy."
+              )}
             </p>
           </div>
 

@@ -12,6 +12,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { SectionHeader } from "../ui/SectionHeader";
 import { Reveal } from "../ui/Reveal";
 import { cn } from "@/lib/cn";
+import { noWidows } from "@/lib/typography";
 
 export function Features() {
   return (
@@ -41,11 +42,11 @@ export function Features() {
                 </CardIcon>
                 <CardTitle dark>Repack &amp; consolidate</CardTitle>
                 <CardCopy dark>
-                  We open and repackage every parcel.{" "}
+                  {noWidows("We open and repackage every parcel.")}{" "}
                   <span className="block md:inline">
-                    If you are receiving multiple shipments, we can consolidate
-                    multiple items into a single package and help you save
-                    significantly on shipping costs.
+                    {noWidows(
+                      "If you are receiving multiple shipments, we can consolidate multiple items into a single package and help you save significantly on shipping costs."
+                    )}
                   </span>
                 </CardCopy>
               </CardBody>
@@ -61,10 +62,13 @@ export function Features() {
                 </CardIcon>
                 <CardTitle>Locker &amp; pickup-point collection</CardTitle>
                 <CardCopy>
-                  We offer a wide selection of lockers where we can collect
-                  your parcels.{" "}
+                  {noWidows(
+                    "We offer a wide selection of lockers where we can collect your parcels."
+                  )}{" "}
                   <span className="block md:inline">
-                    Just send us the pickup codes, and we will handle the rest!
+                    {noWidows(
+                      "Just send us the pickup codes, and we will handle the rest!"
+                    )}
                   </span>
                 </CardCopy>
               </CardBody>
@@ -80,9 +84,12 @@ export function Features() {
                 </CardIcon>
                 <CardTitle>Customs prep, done right</CardTitle>
                 <CardCopy>
-                  For non-EU destinations, we prepare export documentation
-                  based on the information you provide.{" "}
-                  <span className="block md:inline">We act as exporters.</span>
+                  {noWidows(
+                    "For non-EU destinations, we prepare export documentation based on the information you provide."
+                  )}{" "}
+                  <span className="block md:inline">
+                    {noWidows("We act as exporters.")}
+                  </span>
                 </CardCopy>
               </CardBody>
             </Card>
@@ -97,8 +104,9 @@ export function Features() {
                 </CardIcon>
                 <CardTitle>Up to 3 photos, free of charge</CardTitle>
                 <CardCopy>
-                  Up to 3 high-resolution photos of your parcel&apos;s contents
-                  on request — free of charge, before you approve the shipment.
+                  {noWidows(
+                    "Up to 3 high-resolution photos of your parcel's contents on request — free of charge, before you approve the shipment."
+                  )}
                 </CardCopy>
               </CardBody>
             </Card>
@@ -113,8 +121,9 @@ export function Features() {
                 </CardIcon>
                 <CardTitle>Real humans, fast</CardTitle>
                 <CardCopy>
-                  Email or WhatsApp. We reply within 36 working hours — often
-                  within the hour.
+                  {noWidows(
+                    "Email or WhatsApp. We reply within 36 working hours — often within the hour."
+                  )}
                 </CardCopy>
               </CardBody>
             </Card>

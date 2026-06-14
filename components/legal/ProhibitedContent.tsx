@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Ban } from "lucide-react";
 import { LegalLayout, Rich, type LegalLang } from "@/components/LegalLayout";
+import { noWidows } from "@/lib/typography";
 
 type L = { en: string; it: string };
 type Item = { category: L; description: L };
@@ -164,7 +165,7 @@ export function ProhibitedContent() {
                 {item.category[lang]}
               </h2>
               <p className="mt-1 text-sm leading-relaxed text-fg-muted">
-                {item.description[lang]}
+                {noWidows(item.description[lang])}
               </p>
             </div>
           </li>

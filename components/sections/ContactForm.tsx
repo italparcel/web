@@ -28,6 +28,7 @@ import { Checkbox } from "../ui/Checkbox";
 import { SectionHeader } from "../ui/SectionHeader";
 import { Reveal } from "../ui/Reveal";
 import { cn } from "@/lib/cn";
+import { noWidows } from "@/lib/typography";
 
 type Status = "idle" | "submitting" | "success" | "error";
 
@@ -405,7 +406,7 @@ export function ContactForm() {
 
                   <div className="flex items-center justify-between gap-4 pt-2">
                     <p className="text-xs text-fg-subtle">
-                      We reply within 36 working hours.
+                      {noWidows("We reply within 36 working hours.")}
                     </p>
                     <Button
                       type="submit"
@@ -531,8 +532,10 @@ function SuccessCard({
       <h3 className="mt-5 display text-3xl">Got it.</h3>
       <p className="mt-2 text-sm text-fg-muted">
         {channel === "whatsapp"
-          ? "Your message is on its way via WhatsApp. We've logged an email copy on our end too."
-          : "We will reply within 36 working hours."}
+          ? noWidows(
+              "Your message is on its way via WhatsApp. We've logged an email copy on our end too."
+            )
+          : noWidows("We will reply within 36 working hours.")}
       </p>
       <Button variant="secondary" className="mt-6" onClick={onReset}>
         Send another

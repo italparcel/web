@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Check, ArrowRight } from "lucide-react";
 import { Reveal } from "../ui/Reveal";
 import { cn } from "@/lib/cn";
+import { noWidows } from "@/lib/typography";
 
 type Tier = {
   parcels: string;
@@ -104,8 +105,10 @@ export function Pricing() {
           </Reveal>
           <Reveal delay={0.1}>
             <p className="max-w-sm text-sm leading-relaxed text-white/60 md:text-base">
-              One transparent fee for our handling.
-              <span className="block">Shipping cost is quoted separately.</span>
+              {noWidows("One transparent fee for our handling.")}
+              <span className="block">
+                {noWidows("Shipping cost is quoted separately.")}
+              </span>
             </p>
           </Reveal>
         </div>
@@ -128,7 +131,7 @@ export function Pricing() {
           >
             T&amp;C §5.2
           </a>
-          . Shipping cost is quoted separately.
+          . {noWidows("Shipping cost is quoted separately.")}
         </p>
       </div>
     </section>

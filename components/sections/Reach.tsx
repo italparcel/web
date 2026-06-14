@@ -3,6 +3,7 @@
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
 import { Reveal } from "../ui/Reveal";
+import { noWidows } from "@/lib/typography";
 
 type City = {
   name: string;
@@ -120,9 +121,9 @@ export function Reach() {
           </Reveal>
           <Reveal delay={0.15}>
             <p className="max-w-sm text-sm leading-relaxed text-white/60 md:text-base">
-              We work with every major Italian carrier and broker. If a parcel
-              can leave Italy, we'll get it there — from Brooklyn to Sydney,
-              from Tokyo to Trento.
+              {noWidows(
+                "We work with every major Italian carrier and broker. If a parcel can leave Italy, we'll get it there — from Brooklyn to Sydney, from Tokyo to Trento."
+              )}
             </p>
           </Reveal>
         </div>

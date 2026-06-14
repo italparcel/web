@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
+import { noWidows } from "@/lib/typography";
 
 export function Statement() {
   const reduce = useReducedMotion();
@@ -73,7 +74,7 @@ function Item({ kicker, body }: { kicker: string; body: string }) {
         {kicker}
       </p>
       <p className="mt-3 text-sm leading-relaxed text-fg-muted md:text-base">
-        {body}
+        {noWidows(body)}
       </p>
     </div>
   );

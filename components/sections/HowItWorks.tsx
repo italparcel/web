@@ -7,8 +7,13 @@ import {
   useMotionValueEvent,
   useReducedMotion,
 } from "framer-motion";
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
+
+// How long each intermediate phase is held while the stage "catches up" to a
+// fast scroll. Big enough that every phase is actually seen, small enough that
+// the catch-up still feels responsive.
+const STEP_ADVANCE_MS = 150;
 
 type Step = {
   n: string;
@@ -85,14 +90,48 @@ function DesktopScroll() {
     offset: ["start start", "end end"],
   });
   const [active, setActive] = useState(0);
+  const [target, setTarget] = useState(0);
+  const activeRef = useRef(0);
+  const targetRef = useRef(0);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Step `active` toward `target` one phase at a time. Reading from refs (not
+  // closed-over state) keeps the chain correct even while the scroll position
+  // keeps moving the target underneath us.
+  const tick = useCallback(() => {
+    const a = activeRef.current;
+    const t = targetRef.current;
+    if (a === t) {
+      timerRef.current = null;
+      return;
+    }
+    const next = a + (t > a ? 1 : -1);
+    activeRef.current = next;
+    setActive(next);
+    timerRef.current = setTimeout(tick, STEP_ADVANCE_MS);
+  }, []);
 
   useMotionValueEvent(scrollYProgress, "change", (v) => {
     const next = Math.min(
       STEPS.length - 1,
       Math.max(0, Math.floor(v * STEPS.length + 0.0001))
     );
-    if (next !== active) setActive(next);
+    targetRef.current = next;
+    setTarget((t) => (t === next ? t : next));
+    // Kick off the catch-up immediately (first phase changes with no delay);
+    // any further phases are then spaced out by STEP_ADVANCE_MS so none are
+    // skipped, even on a fast flick or scrollbar drag.
+    if (timerRef.current === null && next !== activeRef.current) tick();
   });
+
+  useEffect(
+    () => () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    },
+    []
+  );
+
+  const marching = active !== target;
 
   return (
     <section
@@ -103,13 +142,16 @@ function DesktopScroll() {
       <div className="sticky top-0 flex h-screen flex-col">
         {/* Stage */}
         <div className="relative flex-1 overflow-hidden">
-          <AnimatePresence mode="wait" initial={false}>
+          <AnimatePresence initial={false}>
             <motion.div
               key={active}
               initial={{ opacity: 0, y: 32 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -32 }}
-              transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+              transition={{
+                duration: marching ? 0.3 : 0.55,
+                ease: [0.16, 1, 0.3, 1],
+              }}
               className="absolute inset-0 flex items-center"
             >
               <StepContent step={STEPS[active]} />

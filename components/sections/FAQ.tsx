@@ -1,7 +1,8 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { Fragment, useState } from "react";
+import Link from "next/link";
 import { Plus } from "lucide-react";
 import { SectionHeader } from "../ui/SectionHeader";
 import { Reveal } from "../ui/Reveal";
@@ -31,7 +32,13 @@ export function FAQ() {
           <Reveal>
             <ul className="divide-y divide-border rounded-2xl border border-border bg-bg-elev">
               {FAQS.map((f, i) => (
-                <FaqItem key={i} q={f.q} a={f.a} mobileBreaks={f.mobileBreaks} />
+                <FaqItem
+                  key={i}
+                  q={f.q}
+                  a={f.a}
+                  mobileBreaks={f.mobileBreaks}
+                  links={f.links}
+                />
               ))}
             </ul>
           </Reveal>
@@ -41,39 +48,94 @@ export function FAQ() {
   );
 }
 
-// Inserts a mobile-only line break before each configured phrase, so a sentence
-// can start on a fresh line on phones without forcing the same break on desktop
-// (and without altering the answer string used for structured data).
+// Renders a plain answer string with two enhancements, neither of which touches
+// the source string (kept clean for structured data): a mobile-only line break
+// before each `mobileBreaks` phrase, and an inline link for each `links` phrase
+// (shown on every viewport).
 function AnswerBody({
   text,
   mobileBreaks,
+  links,
 }: {
   text: string;
   mobileBreaks?: string[];
+  links?: { text: string; href: string }[];
 }) {
-  if (!mobileBreaks?.length) return <>{text}</>;
+  if (!mobileBreaks?.length && !links?.length) return <>{text}</>;
 
-  const parts: React.ReactNode[] = [];
+  // Split into segments, inserting a mobile-only <br> before each phrase.
+  const segments: React.ReactNode[] = [];
   let rest = text;
-  mobileBreaks.forEach((phrase, i) => {
+  (mobileBreaks ?? []).forEach((phrase, i) => {
     const idx = rest.indexOf(phrase);
     if (idx <= 0) return;
-    parts.push(rest.slice(0, idx));
-    parts.push(<br key={`mb-${i}`} className="md:hidden" />);
+    segments.push(rest.slice(0, idx));
+    segments.push(<br key={`mb-${i}`} className="md:hidden" />);
     rest = rest.slice(idx);
   });
-  parts.push(rest);
-  return <>{parts}</>;
+  segments.push(rest);
+
+  if (!links?.length) return <>{segments}</>;
+
+  // Turn configured phrases into links within each text segment.
+  return (
+    <>
+      {segments.map((seg, i) =>
+        typeof seg === "string" ? (
+          <Fragment key={`seg-${i}`}>{linkify(seg, links)}</Fragment>
+        ) : (
+          seg
+        )
+      )}
+    </>
+  );
+}
+
+function linkify(
+  text: string,
+  links: { text: string; href: string }[]
+): React.ReactNode[] {
+  let nodes: React.ReactNode[] = [text];
+  links.forEach((link, li) => {
+    const next: React.ReactNode[] = [];
+    nodes.forEach((node, ni) => {
+      if (typeof node !== "string") {
+        next.push(node);
+        return;
+      }
+      const idx = node.indexOf(link.text);
+      if (idx === -1) {
+        next.push(node);
+        return;
+      }
+      if (idx > 0) next.push(node.slice(0, idx));
+      next.push(
+        <Link
+          key={`lnk-${li}-${ni}`}
+          href={link.href}
+          className="font-medium text-fg underline underline-offset-2 hover:text-accent"
+        >
+          {link.text}
+        </Link>
+      );
+      const after = node.slice(idx + link.text.length);
+      if (after) next.push(after);
+    });
+    nodes = next;
+  });
+  return nodes;
 }
 
 function FaqItem({
   q,
   a,
   mobileBreaks,
+  links,
 }: {
   q: string;
   a: string;
   mobileBreaks?: string[];
+  links?: { text: string; href: string }[];
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -106,7 +168,7 @@ function FaqItem({
             className="overflow-hidden"
           >
             <p className="px-6 pb-6 whitespace-pre-line text-sm leading-relaxed text-fg-muted">
-              <AnswerBody text={a} mobileBreaks={mobileBreaks} />
+              <AnswerBody text={a} mobileBreaks={mobileBreaks} links={links} />
             </p>
           </motion.div>
         )}

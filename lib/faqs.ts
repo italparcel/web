@@ -4,16 +4,22 @@ export type Faq = {
   // Phrases that should start on a fresh line on mobile only (the answer text
   // itself is left untouched so structured data / schema stay clean).
   mobileBreaks?: string[];
+  // In-text phrases to turn into links (shown on every viewport; the answer
+  // string stays plain so structured data / schema stay clean).
+  links?: { text: string; href: string }[];
 };
 
 export const FAQS: Faq[] = [
   {
     q: "What counts as one parcel?",
     a: "A parcel is a single shipment up to 5 kg and 60×40×40 cm. If you think a parcel may exceed either limit, please let us know in advance to avoid a €15 handling surcharge (see T&C §5.2).",
+    mobileBreaks: ["If you think a parcel may"],
   },
   {
     q: "What can I ship through ItalParcel?",
-    a: "Most everyday goods. Some categories can't travel with us at all — alcohol, perishables, weapons, medicines, dangerous goods and more. Check the Prohibited items page (linked in the footer) before ordering; it forms an integral part of our Terms & Conditions.",
+    a: "Most everyday goods. Some categories can't travel with us at all — alcohol, perishables, weapons, medicines, dangerous goods and more. Check the Prohibited items page before ordering; it forms an integral part of our Terms & Conditions.",
+    mobileBreaks: ["Check the Prohibited items page"],
+    links: [{ text: "Prohibited items page", href: "/prohibited-items" }],
   },
   {
     q: "How do payments work?",

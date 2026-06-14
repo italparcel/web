@@ -68,13 +68,13 @@ const STEPS: Step[] = [
 export function HowItWorks() {
   const reduce = useReducedMotion();
 
-  if (reduce) return <Fallback />;
+  if (reduce) return <Fallback id="how" />;
 
   return (
-    <>
+    <div id="how">
       <DesktopScroll />
       <Fallback className="md:hidden" />
-    </>
+    </div>
   );
 }
 
@@ -96,7 +96,6 @@ function DesktopScroll() {
 
   return (
     <section
-      id="how"
       ref={ref}
       className="relative hidden md:block"
       style={{ height: `${STEPS.length * 100 + 100}vh` }}
@@ -176,10 +175,10 @@ function StepBody({ step, className }: { step: Step; className?: string }) {
    Mobile / reduced-motion fallback
    ───────────────────────────────────────────────────────────── */
 
-function Fallback({ className = "" }: { className?: string }) {
+function Fallback({ id, className = "" }: { id?: string; className?: string }) {
   return (
     <section
-      id="how"
+      id={id}
       className={"relative border-t border-border py-20 " + className}
     >
       <div className="container-x">

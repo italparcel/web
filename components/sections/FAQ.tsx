@@ -31,7 +31,7 @@ export function FAQ() {
           <Reveal>
             <ul className="divide-y divide-border rounded-2xl border border-border bg-bg-elev">
               {FAQS.map((f, i) => (
-                <FaqItem key={i} q={f.q} a={f.a} />
+                <FaqItem key={i} q={f.q} a={f.a} mobileBreaks={f.mobileBreaks} />
               ))}
             </ul>
           </Reveal>
@@ -41,7 +41,40 @@ export function FAQ() {
   );
 }
 
-function FaqItem({ q, a }: { q: string; a: string }) {
+// Inserts a mobile-only line break before each configured phrase, so a sentence
+// can start on a fresh line on phones without forcing the same break on desktop
+// (and without altering the answer string used for structured data).
+function AnswerBody({
+  text,
+  mobileBreaks,
+}: {
+  text: string;
+  mobileBreaks?: string[];
+}) {
+  if (!mobileBreaks?.length) return <>{text}</>;
+
+  const parts: React.ReactNode[] = [];
+  let rest = text;
+  mobileBreaks.forEach((phrase, i) => {
+    const idx = rest.indexOf(phrase);
+    if (idx <= 0) return;
+    parts.push(rest.slice(0, idx));
+    parts.push(<br key={`mb-${i}`} className="md:hidden" />);
+    rest = rest.slice(idx);
+  });
+  parts.push(rest);
+  return <>{parts}</>;
+}
+
+function FaqItem({
+  q,
+  a,
+  mobileBreaks,
+}: {
+  q: string;
+  a: string;
+  mobileBreaks?: string[];
+}) {
   const [open, setOpen] = useState(false);
   return (
     <li>
@@ -73,7 +106,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
             className="overflow-hidden"
           >
             <p className="px-6 pb-6 whitespace-pre-line text-sm leading-relaxed text-fg-muted">
-              {a}
+              <AnswerBody text={a} mobileBreaks={mobileBreaks} />
             </p>
           </motion.div>
         )}

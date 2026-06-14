@@ -41,10 +41,11 @@ export function Features() {
                 </CardIcon>
                 <CardTitle dark>Repack &amp; consolidate</CardTitle>
                 <CardCopy dark>
-                  We open and repackage every parcel. If you are receiving
-                  multiple shipments, we can consolidate multiple items into a
-                  single package and help you save significantly on shipping
-                  costs.
+                  We open and repackage every parcel.{" "}
+                  <br className="md:hidden" />
+                  If you are receiving multiple shipments, we can consolidate
+                  multiple items into a single package and help you save
+                  significantly on shipping costs.
                 </CardCopy>
               </CardBody>
             </Card>
@@ -60,8 +61,9 @@ export function Features() {
                 <CardTitle>Locker &amp; pickup-point collection</CardTitle>
                 <CardCopy>
                   We offer a wide selection of lockers where we can collect
-                  your parcels. Just send us the pickup codes, and we will
-                  handle the rest!
+                  your parcels.{" "}
+                  <br className="md:hidden" />
+                  Just send us the pickup codes, and we will handle the rest!
                 </CardCopy>
               </CardBody>
             </Card>
@@ -77,7 +79,9 @@ export function Features() {
                 <CardTitle>Customs prep, done right</CardTitle>
                 <CardCopy>
                   For non-EU destinations, we prepare export documentation
-                  based on the information you provide. We act as exporters.
+                  based on the information you provide.{" "}
+                  <br className="md:hidden" />
+                  We act as exporters.
                 </CardCopy>
               </CardBody>
             </Card>

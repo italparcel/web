@@ -71,6 +71,32 @@ html, body {
   color: #fff;
 }
 
+/* ─────────────────────────────────────────────────────────────
+   Text wrapping & readability — applied globally so every page
+   and component stays consistent.
+
+   `text-wrap: pretty` on flowing copy avoids a single orphan word
+   stranded on the last line; `text-wrap: balance` evens out short,
+   heading-length blocks across their lines. Both are progressive
+   enhancements: browsers without support silently fall back to
+   normal wrapping, so nothing breaks. `text-wrap` is inherited, so
+   setting it on headings also covers their styled child spans.
+
+   `overflow-wrap: break-word` is a safety net so very long unbroken
+   tokens (URLs, codes) wrap instead of forcing horizontal scroll
+   on narrow screens. */
+:where(p, li, dd, dt, blockquote, figcaption) {
+  text-wrap: pretty;
+}
+
+:where(h1, h2, h3, h4, h5, h6) {
+  text-wrap: balance;
+}
+
+:where(p, li, h1, h2, h3, h4, h5, h6) {
+  overflow-wrap: break-word;
+}
+
 /* Display utility — Bricolage Grotesque tuned for big type */
 .display {
   font-family: var(--font-sans);

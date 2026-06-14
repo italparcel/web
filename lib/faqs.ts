@@ -4,6 +4,8 @@ export type Faq = {
   // Phrases that should start on a fresh line on mobile only (the answer text
   // itself is left untouched so structured data / schema stay clean).
   mobileBreaks?: string[];
+  // Phrases that should start on a fresh line on every viewport (incl. desktop).
+  breaks?: string[];
   // In-text phrases to turn into links (shown on every viewport; the answer
   // string stays plain so structured data / schema stay clean).
   links?: { text: string; href: string }[];
@@ -14,6 +16,7 @@ export const FAQS: Faq[] = [
     q: "What counts as one parcel?",
     a: "A parcel is a single shipment up to 5 kg and 60×40×40 cm. If you think a parcel may exceed either limit, please let us know in advance to avoid a €15 handling surcharge (see T&C §5.2).",
     mobileBreaks: ["If you think a parcel may"],
+    links: [{ text: "see T&C §5.2", href: "/terms#sec-5-2" }],
   },
   {
     q: "What can I ship through ItalParcel?",
@@ -24,7 +27,7 @@ export const FAQS: Faq[] = [
   {
     q: "How do payments work?",
     a: "Payments happen in two steps. After your first quote, you pay a €10 activation fee to get started — don't worry, it's not an extra cost: it comes off your final bill, which covers shipping plus our handling fee.\nHere's an example: you ask us to ship a t-shirt to the USA, and we quote €30 for shipping plus a €17 handling fee for one parcel. You pay €10 now to get started; then, before we ship, you settle the balance — €47 in total (€30 + €17), less the €10 you've already paid, so €37. We accept SEPA (including SEPA Instant), card payments (credit, debit, prepaid), Apple Pay, Google Pay and Revolut Pay, all via a secure payment link. Amounts are in euros.",
-    mobileBreaks: ["We accept SEPA"],
+    breaks: ["We accept SEPA"],
   },
   {
     q: "Can you collect parcels from pickup points?",

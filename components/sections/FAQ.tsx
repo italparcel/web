@@ -37,6 +37,7 @@ export function FAQ() {
                   q={f.q}
                   a={f.a}
                   mobileBreaks={f.mobileBreaks}
+                  breaks={f.breaks}
                   links={f.links}
                 />
               ))}
@@ -48,32 +49,48 @@ export function FAQ() {
   );
 }
 
-// Renders a plain answer string with two enhancements, neither of which touches
-// the source string (kept clean for structured data): a mobile-only line break
-// before each `mobileBreaks` phrase, and an inline link for each `links` phrase
-// (shown on every viewport).
+// Renders a plain answer string with enhancements that never touch the source
+// string (kept clean for structured data): a line break before each phrase —
+// mobile-only for `mobileBreaks`, every viewport for `breaks` — and an inline
+// link for each `links` phrase.
 function AnswerBody({
   text,
   mobileBreaks,
+  breaks,
   links,
 }: {
   text: string;
   mobileBreaks?: string[];
+  breaks?: string[];
   links?: { text: string; href: string }[];
 }) {
-  if (!mobileBreaks?.length && !links?.length) return <>{text}</>;
+  if (!mobileBreaks?.length && !breaks?.length && !links?.length)
+    return <>{text}</>;
 
-  // Split into segments, inserting a mobile-only <br> before each phrase.
+  // Resolve every break phrase to its position, order them, then split the text
+  // inserting a <br> before each (mobile-only or all-viewport).
+  const markers = [
+    ...(breaks ?? []).map((phrase) => ({ phrase, mobileOnly: false })),
+    ...(mobileBreaks ?? []).map((phrase) => ({ phrase, mobileOnly: true })),
+  ]
+    .map((m) => ({ ...m, idx: text.indexOf(m.phrase) }))
+    .filter((m) => m.idx > 0)
+    .sort((a, b) => a.idx - b.idx);
+
   const segments: React.ReactNode[] = [];
-  let rest = text;
-  (mobileBreaks ?? []).forEach((phrase, i) => {
-    const idx = rest.indexOf(phrase);
-    if (idx <= 0) return;
-    segments.push(rest.slice(0, idx));
-    segments.push(<br key={`mb-${i}`} className="md:hidden" />);
-    rest = rest.slice(idx);
+  let cursor = 0;
+  markers.forEach((m, i) => {
+    segments.push(text.slice(cursor, m.idx));
+    segments.push(
+      m.mobileOnly ? (
+        <br key={`mb-${i}`} className="md:hidden" />
+      ) : (
+        <br key={`br-${i}`} />
+      )
+    );
+    cursor = m.idx;
   });
-  segments.push(rest);
+  segments.push(text.slice(cursor));
 
   if (!links?.length) return <>{segments}</>;
 
@@ -130,11 +147,13 @@ function FaqItem({
   q,
   a,
   mobileBreaks,
+  breaks,
   links,
 }: {
   q: string;
   a: string;
   mobileBreaks?: string[];
+  breaks?: string[];
   links?: { text: string; href: string }[];
 }) {
   const [open, setOpen] = useState(false);
@@ -168,7 +187,12 @@ function FaqItem({
             className="overflow-hidden"
           >
             <p className="px-6 pb-6 whitespace-pre-line text-sm leading-relaxed text-fg-muted">
-              <AnswerBody text={a} mobileBreaks={mobileBreaks} links={links} />
+              <AnswerBody
+                text={a}
+                mobileBreaks={mobileBreaks}
+                breaks={breaks}
+                links={links}
+              />
             </p>
           </motion.div>
         )}

@@ -28,7 +28,6 @@ export function Features() {
               </span>
             </>
           }
-          description="Every parcel documented. Every fee itemized. Every step on the record."
           align="left"
         />
 
@@ -42,10 +41,12 @@ export function Features() {
                 </CardIcon>
                 <CardTitle dark>Repack &amp; consolidate</CardTitle>
                 <CardCopy dark>
-                  We open and repackage every parcel. If you are receiving
-                  multiple shipments, we can consolidate multiple items into a
-                  single package and help you save significantly on shipping
-                  costs.
+                  We open and repackage every parcel.{" "}
+                  <span className="block md:inline">
+                    If you are receiving multiple shipments, we can consolidate
+                    multiple items into a single package and help you save
+                    significantly on shipping costs.
+                  </span>
                 </CardCopy>
               </CardBody>
             </Card>
@@ -61,8 +62,10 @@ export function Features() {
                 <CardTitle>Locker &amp; pickup-point collection</CardTitle>
                 <CardCopy>
                   We offer a wide selection of lockers where we can collect
-                  your parcels. Just send us the pickup codes, and we will
-                  handle the rest!
+                  your parcels.{" "}
+                  <span className="block md:inline">
+                    Just send us the pickup codes, and we will handle the rest!
+                  </span>
                 </CardCopy>
               </CardBody>
             </Card>
@@ -78,7 +81,8 @@ export function Features() {
                 <CardTitle>Customs prep, done right</CardTitle>
                 <CardCopy>
                   For non-EU destinations, we prepare export documentation
-                  based on the information you provide. We act as exporters.
+                  based on the information you provide.{" "}
+                  <span className="block md:inline">We act as exporters.</span>
                 </CardCopy>
               </CardBody>
             </Card>

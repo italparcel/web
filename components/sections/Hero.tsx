@@ -223,12 +223,12 @@ function ShipmentCard() {
           </div>
 
           {/* Route — fixed-height columns, single-line text, so rotating city never reflows */}
-          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-4 px-6 pt-7 pb-3">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 px-4 pt-7 pb-3 md:gap-4 md:px-6">
             <div className="min-w-0">
               <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-fg-subtle">
                 From
               </p>
-              <p className="mt-1.5 display truncate whitespace-nowrap text-xl leading-none md:text-2xl">
+              <p className="mt-1.5 display truncate whitespace-nowrap text-lg leading-none md:text-2xl">
                 Trento
               </p>
               <p className="mt-1.5 truncate whitespace-nowrap font-mono text-[11px] text-fg-subtle">
@@ -236,7 +236,7 @@ function ShipmentCard() {
               </p>
             </div>
 
-            <div className="flex flex-col items-center gap-1.5 px-1">
+            <div className="flex flex-col items-center gap-1.5 px-0 md:px-1">
               <RouteArc />
             </div>
 
@@ -252,7 +252,7 @@ function ShipmentCard() {
                     animate={reduce ? undefined : { y: 0, opacity: 1 }}
                     exit={reduce ? undefined : { y: "-100%", opacity: 0 }}
                     transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-                    className="absolute inset-0 display truncate whitespace-nowrap text-xl leading-none md:text-2xl"
+                    className="absolute inset-0 display truncate whitespace-nowrap text-lg leading-none md:text-2xl"
                   >
                     {s.city}
                   </motion.p>
@@ -276,7 +276,7 @@ function ShipmentCard() {
           </div>
 
           {/* Footer detail row */}
-          <div className="grid grid-cols-3 gap-3 border-t border-border bg-bg/40 px-6 py-4">
+          <div className="grid grid-cols-3 gap-2 border-t border-border bg-bg/40 px-4 py-4 md:gap-3 md:px-6">
             <Detail k="Weight" v={s.weight} />
             <Detail k="Carrier" v={s.carrier} animate />
             <Detail k="ETA" v={s.eta} animate />
@@ -292,9 +292,7 @@ function RouteArc() {
   return (
     <svg
       viewBox="0 0 110 28"
-      width="110"
-      height="28"
-      className="text-accent"
+      className="h-[17px] w-[68px] text-accent md:h-7 md:w-[110px]"
       aria-hidden
     >
       <motion.path
@@ -337,14 +335,14 @@ function Detail({
               animate={reduce ? undefined : { y: 0, opacity: 1 }}
               exit={reduce ? undefined : { y: "-100%", opacity: 0 }}
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute inset-0 truncate whitespace-nowrap font-mono text-xs text-fg"
+              className="absolute inset-0 truncate whitespace-nowrap font-mono text-[11px] text-fg md:text-xs"
             >
               {v}
             </motion.p>
           </AnimatePresence>
         </div>
       ) : (
-        <p className="mt-1 truncate whitespace-nowrap font-mono text-xs text-fg">
+        <p className="mt-1 truncate whitespace-nowrap font-mono text-[11px] text-fg md:text-xs">
           {v}
         </p>
       )}

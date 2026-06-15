@@ -6,6 +6,7 @@ import {
   useScroll,
   useMotionValueEvent,
   useReducedMotion,
+  useInView,
 } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
@@ -89,6 +90,14 @@ function DesktopScroll() {
     target: ref,
     offset: ["start start", "end end"],
   });
+  // Hold the stage empty until the section actually scrolls into view. The
+  // page mounts this component while it's still below the fold, so without
+  // this gate `AnimatePresence initial={false}` would render step 0 in its
+  // finished state and its entrance animation would never be seen on the way
+  // down (it only replayed when scrolling back up and remounting). `useInView`
+  // is false on first render and flips true on intersection, so step 0 now
+  // animates exactly when it appears — same as steps 02–04.
+  const inView = useInView(ref, { once: true });
   const [active, setActive] = useState(0);
   const [target, setTarget] = useState(0);
   const activeRef = useRef(0);
@@ -143,19 +152,21 @@ function DesktopScroll() {
         {/* Stage */}
         <div className="relative flex-1 overflow-hidden">
           <AnimatePresence initial={false}>
-            <motion.div
-              key={active}
-              initial={{ opacity: 0, y: 32 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -32 }}
-              transition={{
-                duration: marching ? 0.3 : 0.55,
-                ease: [0.16, 1, 0.3, 1],
-              }}
-              className="absolute inset-0 flex items-center"
-            >
-              <StepContent step={STEPS[active]} />
-            </motion.div>
+            {inView && (
+              <motion.div
+                key={active}
+                initial={{ opacity: 0, y: 32 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -32 }}
+                transition={{
+                  duration: marching ? 0.3 : 0.55,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+                className="absolute inset-0 flex items-center"
+              >
+                <StepContent step={STEPS[active]} />
+              </motion.div>
+            )}
           </AnimatePresence>
 
           {/* Scroll hint */}

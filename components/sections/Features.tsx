@@ -314,7 +314,7 @@ function CardArtRepack() {
       {/* consolidation illustration, contained in the lower-right */}
       <div
         aria-hidden
-        className="pointer-events-none absolute bottom-6 right-6 hidden h-[16rem] w-[16rem] md:block"
+        className="pointer-events-none absolute bottom-6 right-6 hidden h-[13rem] w-[13rem] md:block"
       >
         <svg viewBox="0 0 300 300" className="h-full w-full">
           {/* incoming, individually labeled parcels */}

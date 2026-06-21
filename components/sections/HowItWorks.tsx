@@ -486,18 +486,18 @@ function ActivateArt() {
           </motion.g>
         </motion.g>
 
-        {/* pointer that moves in and clicks the button */}
+        {/* pointer that moves in, clicks, then vanishes on the spot */}
         <motion.g
           initial={{ opacity: 0, x: 250, y: 256 }}
           animate={{
-            opacity: [0, 1, 1, 1, 1, 0],
-            x: [250, 250, 178, 178, 178, 204],
-            y: [256, 256, 226, 230, 226, 244],
+            opacity: [0, 1, 1, 1, 0],
+            x: [250, 250, 178, 178, 178],
+            y: [256, 256, 226, 230, 230],
           }}
           transition={{
             duration: 1.7,
             delay: 1.3,
-            times: [0, 0.08, 0.55, 0.66, 0.78, 1],
+            times: [0, 0.08, 0.5, 0.66, 0.74],
             ease: "easeInOut",
           }}
         >
@@ -518,29 +518,16 @@ function ReceiveArt() {
   return (
     <ArtFrame>
       <svg viewBox="0 0 380 280" className="h-full w-auto" aria-hidden>
-        {/* caption */}
-        <text
-          x="190"
-          y="36"
-          textAnchor="middle"
-          fontFamily="ui-monospace, monospace"
-          fontSize="11"
-          fill="#0b0f14"
-          letterSpacing="0.5"
-        >
-          From seller to your door
-        </text>
-
         {/* route guides */}
-        <line x1="100" y1="148" x2="150" y2="148" stroke="#d6d3ca" strokeWidth="1.4" strokeDasharray="2 5" />
-        <line x1="230" y1="148" x2="288" y2="148" stroke="#d6d3ca" strokeWidth="1.4" strokeDasharray="2 5" />
+        <line x1="108" y1="150" x2="146" y2="150" stroke="#d6d3ca" strokeWidth="1.4" strokeDasharray="2 5" />
+        <line x1="234" y1="150" x2="266" y2="150" stroke="#d6d3ca" strokeWidth="1.4" strokeDasharray="2 5" />
 
         {/* route trails, traced as each parcel travels */}
         <motion.line
-          x1="100"
-          y1="148"
-          x2="150"
-          y2="148"
+          x1="108"
+          y1="150"
+          x2="146"
+          y2="150"
           stroke="#d97706"
           strokeWidth="2"
           strokeLinecap="round"
@@ -549,10 +536,10 @@ function ReceiveArt() {
           transition={{ duration: 1, delay: 0.95 }}
         />
         <motion.line
-          x1="230"
-          y1="148"
-          x2="288"
-          y2="148"
+          x1="234"
+          y1="150"
+          x2="266"
+          y2="150"
           stroke="#d97706"
           strokeWidth="2"
           strokeLinecap="round"
@@ -567,47 +554,51 @@ function ReceiveArt() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
         >
-          {/* scalloped awning */}
-          <rect x="38" y="104" width="64" height="12" fill="#d97706" />
-          <path d="M 38 116 q 8 9 16 0 q 8 9 16 0 q 8 9 16 0 q 8 9 16 0" fill="#d97706" />
           {/* shop body */}
-          <rect x="42" y="120" width="56" height="58" rx="2" fill="#ffffff" stroke="#d6d3ca" />
+          <rect x="44" y="113" width="60" height="67" rx="3" fill="#ffffff" stroke="#d6d3ca" strokeWidth="1.5" />
           {/* display window with goods */}
-          <rect x="48" y="128" width="24" height="26" rx="1.5" fill="#eef5f3" stroke="#e7e5de" />
-          <rect x="52" y="140" width="6" height="11" fill="#cdd9d6" />
-          <rect x="61" y="135" width="6" height="16" fill="#cdd9d6" />
+          <rect x="51" y="124" width="29" height="32" rx="2" fill="#eef5f3" stroke="#e7e5de" />
+          <rect x="56" y="139" width="8" height="17" fill="#bcccc8" />
+          <rect x="67" y="133" width="8" height="23" fill="#bcccc8" />
           {/* door */}
-          <rect x="78" y="146" width="15" height="32" fill="#f3eee2" stroke="#e7e5de" />
-          <circle cx="81" cy="163" r="1.4" fill="#9ca3af" />
-          <text x="70" y="202" textAnchor="middle" fontFamily="ui-monospace, monospace" fontSize="10" fill="#9ca3af" letterSpacing="1.5">
+          <rect x="85" y="150" width="17" height="30" rx="1" fill="#f3eee2" stroke="#e7e5de" />
+          <circle cx="89" cy="166" r="1.6" fill="#9ca3af" />
+          {/* scalloped awning, overhanging the storefront */}
+          <rect x="38" y="96" width="72" height="13" rx="1" fill="#d97706" />
+          <path d="M 38 109 q 9 10 18 0 q 9 10 18 0 q 9 10 18 0 q 9 10 18 0" fill="#d97706" />
+          <text x="74" y="212" textAnchor="middle" fontFamily="ui-monospace, monospace" fontSize="10.5" fill="#9ca3af" letterSpacing="1.5">
             SELLER
           </text>
         </motion.g>
 
-        {/* ItalParcel — a warehouse / depot */}
+        {/* ItalParcel — a light-bodied warehouse with a dark roof */}
         <motion.g
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
         >
-          {/* gable roof + body */}
-          <polygon points="146,124 190,106 234,124" fill="#0b0f14" />
-          <rect x="152" y="124" width="76" height="54" fill="#0b0f14" />
+          {/* body */}
+          <rect x="150" y="112" width="80" height="68" rx="3" fill="#ffffff" stroke="#d6d3ca" strokeWidth="1.5" />
+          {/* gable roof */}
+          <polygon points="142,114 190,86 238,114" fill="#0b0f14" />
           {/* side windows */}
-          <rect x="158" y="138" width="11" height="11" rx="1" fill="#fafaf7" opacity="0.16" />
-          <rect x="211" y="138" width="11" height="11" rx="1" fill="#fafaf7" opacity="0.16" />
+          <rect x="158" y="124" width="13" height="13" rx="1.5" fill="#eef5f3" stroke="#e7e5de" />
+          <rect x="209" y="124" width="13" height="13" rx="1.5" fill="#eef5f3" stroke="#e7e5de" />
           {/* roll-up loading dock */}
-          <rect x="176" y="136" width="28" height="42" rx="1" fill="#fafaf7" opacity="0.16" />
-          <g stroke="#0b0f14" strokeOpacity="0.45" strokeWidth="1">
-            <line x1="176" y1="146" x2="204" y2="146" />
-            <line x1="176" y1="154" x2="204" y2="154" />
-            <line x1="176" y1="162" x2="204" y2="162" />
-            <line x1="176" y1="170" x2="204" y2="170" />
+          <rect x="174" y="128" width="32" height="52" rx="1.5" fill="#ece9e1" stroke="#d6d3ca" />
+          <g stroke="#c7c2b4" strokeWidth="1.2">
+            <line x1="176" y1="139" x2="204" y2="139" />
+            <line x1="176" y1="150" x2="204" y2="150" />
+            <line x1="176" y1="161" x2="204" y2="161" />
+            <line x1="176" y1="172" x2="204" y2="172" />
           </g>
-          {/* brand badge on the roof */}
-          <circle cx="190" cy="118" r="9" fill="#d97706" />
-          <path d="M 190 113 L 190 123 M 185 118 L 195 118" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" />
-          <text x="190" y="202" textAnchor="middle" fontFamily="ui-monospace, monospace" fontSize="10" fill="#9ca3af" letterSpacing="1.5">
+          {/* brand badge on the roof — a little parcel */}
+          <circle cx="190" cy="96" r="12" fill="#d97706" />
+          <g stroke="#ffffff" strokeWidth="1.6" fill="none" strokeLinejoin="round" strokeLinecap="round">
+            <rect x="184.5" y="91" width="11" height="10" rx="1.5" />
+            <line x1="184.5" y1="96" x2="195.5" y2="96" />
+          </g>
+          <text x="190" y="212" textAnchor="middle" fontFamily="ui-monospace, monospace" fontSize="10.5" fill="#9ca3af" letterSpacing="1.5">
             ITALPARCEL
           </text>
         </motion.g>
@@ -615,27 +606,27 @@ function ReceiveArt() {
         {/* warehouse intake — a scan sweep + pulse as the parcel arrives */}
         <motion.line
           x1="156"
-          y1="130"
+          y1="124"
           x2="224"
-          y2="130"
+          y2="124"
           stroke="#d97706"
           strokeWidth="1.6"
           strokeLinecap="round"
           initial={{ opacity: 0 }}
-          animate={{ opacity: [0, 0.9, 0], y: [0, 44, 44] }}
+          animate={{ opacity: [0, 0.9, 0], y: [0, 52, 52] }}
           transition={{ duration: 0.6, delay: 1.9, ease: "easeInOut" }}
         />
         <motion.circle
           cx="190"
-          cy="118"
-          r="9"
+          cy="96"
+          r="12"
           fill="none"
           stroke="#d97706"
           strokeWidth="2"
           initial={{ opacity: 0.5, scale: 1 }}
           animate={{ opacity: 0, scale: 2.4 }}
           transition={{ duration: 0.7, delay: 1.95, ease: "easeOut" }}
-          style={{ transformOrigin: "190px 118px" }}
+          style={{ transformOrigin: "190px 96px" }}
         />
 
         {/* destination — recipient's home */}
@@ -644,38 +635,39 @@ function ReceiveArt() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
         >
-          <polygon points="286,128 310,108 334,128" fill="#0f766e" />
-          <rect x="292" y="128" width="36" height="44" fill="#ffffff" stroke="#d6d3ca" />
-          <rect x="296" y="135" width="9" height="9" fill="#eef5f3" stroke="#e7e5de" />
-          <rect x="304" y="150" width="13" height="22" fill="#f3eee2" stroke="#e7e5de" />
-          <text x="310" y="202" textAnchor="middle" fontFamily="ui-monospace, monospace" fontSize="9.5" fill="#9ca3af" letterSpacing="1">
+          <rect x="278" y="118" width="56" height="62" rx="3" fill="#ffffff" stroke="#d6d3ca" strokeWidth="1.5" />
+          <polygon points="270,120 306,90 342,120" fill="#0f766e" />
+          <rect x="286" y="128" width="13" height="13" rx="1.5" fill="#eef5f3" stroke="#e7e5de" />
+          <rect x="300" y="148" width="18" height="32" rx="1" fill="#f3eee2" stroke="#e7e5de" />
+          <circle cx="304" cy="164" r="1.6" fill="#9ca3af" />
+          <text x="306" y="212" textAnchor="middle" fontFamily="ui-monospace, monospace" fontSize="10" fill="#9ca3af" letterSpacing="1">
             DESTINATION
           </text>
         </motion.g>
 
         {/* parcel: seller → warehouse */}
         <motion.g
-          initial={{ opacity: 0, x: 100, y: 148 }}
-          animate={{ opacity: [0, 1, 1, 0], x: [100, 110, 142, 150] }}
+          initial={{ opacity: 0, x: 108, y: 150 }}
+          animate={{ opacity: [0, 1, 1, 0], x: [108, 116, 140, 146] }}
           transition={{ duration: 1, delay: 0.95, times: [0, 0.12, 0.82, 1], ease: "easeInOut" }}
         >
-          <rect x="-10" y="-8" width="20" height="16" rx="2.5" fill="#d97706" />
-          <rect x="-4" y="-4.5" width="10" height="9" rx="1" fill="#fafaf7" opacity="0.9" />
+          <rect x="-11" y="-9" width="22" height="18" rx="3" fill="#d97706" />
+          <rect x="-4.5" y="-5" width="12" height="10" rx="1" fill="#fafaf7" opacity="0.9" />
         </motion.g>
 
         {/* parcel: warehouse → destination (re-packed, re-shipped) */}
         <motion.g
-          initial={{ opacity: 0, x: 230, y: 148 }}
-          animate={{ opacity: [0, 1, 1, 0], x: [230, 240, 280, 288] }}
+          initial={{ opacity: 0, x: 234, y: 150 }}
+          animate={{ opacity: [0, 1, 1, 0], x: [234, 242, 260, 266] }}
           transition={{ duration: 1, delay: 2.3, times: [0, 0.12, 0.82, 1], ease: "easeInOut" }}
         >
-          <rect x="-10" y="-8" width="20" height="16" rx="2.5" fill="#0b0f14" />
-          <rect x="-4" y="-4.5" width="10" height="9" rx="1" fill="#fafaf7" opacity="0.9" />
+          <rect x="-11" y="-9" width="22" height="18" rx="3" fill="#0b0f14" />
+          <rect x="-4.5" y="-5" width="12" height="10" rx="1" fill="#fafaf7" opacity="0.9" />
         </motion.g>
 
         {/* arrowheads at each leg's end */}
         <motion.path
-          d="M 144 142 L 150 148 L 144 154"
+          d="M 140 144 L 146 150 L 140 156"
           stroke="#d97706"
           strokeWidth="1.8"
           fill="none"
@@ -686,7 +678,7 @@ function ReceiveArt() {
           transition={{ duration: 0.3, delay: 1.8 }}
         />
         <motion.path
-          d="M 282 142 L 288 148 L 282 154"
+          d="M 260 144 L 266 150 L 260 156"
           stroke="#d97706"
           strokeWidth="1.8"
           fill="none"
@@ -702,13 +694,13 @@ function ReceiveArt() {
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4, delay: 3.35, ease: [0.34, 1.45, 0.5, 1] }}
-          style={{ transformOrigin: "310px 94px" }}
+          style={{ transformOrigin: "306px 74px" }}
         >
-          <circle cx="310" cy="94" r="10" fill="#0f766e" />
+          <circle cx="306" cy="74" r="12" fill="#0f766e" />
           <path
-            d="M 305 94 l 3.2 3.4 l 6.3 -7.2"
+            d="M 300 74 l 4 4 l 8 -9"
             stroke="#ffffff"
-            strokeWidth="2.2"
+            strokeWidth="2.4"
             fill="none"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -722,7 +714,7 @@ function ReceiveArt() {
 function ShipArt() {
   const rows = [
     { label: "Handling", value: "€17.00" },
-    { label: "Shipping · DHL", value: "€30.00" },
+    { label: "Shipping · UPS", value: "€30.00" },
     { label: "Activation credit", value: "−€10.00" },
   ];
   return (
@@ -802,23 +794,11 @@ function ShipArt() {
           </motion.text>
         </motion.g>
 
-        {/* hand-off to the carrier */}
-        <text
-          x="262"
-          y="120"
-          textAnchor="middle"
-          fontFamily="ui-monospace, monospace"
-          fontSize="9.5"
-          fill="#9ca3af"
-          letterSpacing="1.5"
-        >
-          HAND-OFF
-        </text>
+        {/* hand-off line to the carrier */}
         <motion.path
-          d="M 240 140 L 286 140"
+          d="M 250 140 L 286 140"
           stroke="#0b0f14"
           strokeWidth="1.6"
-          strokeLinecap="round"
           initial={{ pathLength: 0 }}
           animate={{ pathLength: 1 }}
           transition={{ duration: 0.7, delay: 1.6 }}
@@ -863,7 +843,7 @@ function ShipArt() {
             fill="#fafaf7"
             fontWeight="600"
           >
-            DHL
+            UPS
           </text>
         </motion.g>
       </svg>

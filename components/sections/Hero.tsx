@@ -10,6 +10,7 @@ import {
 import { ArrowRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/Button";
+import { cn } from "@/lib/cn";
 
 export function Hero() {
   const reduce = useReducedMotion();
@@ -161,6 +162,7 @@ function BackgroundLayer() {
    ───────────────────────────────────────────────────────────── */
 
 type Shipment = {
+  code: string;
   city: string;
   country: string;
   postcode: string;
@@ -170,15 +172,43 @@ type Shipment = {
 };
 
 const SHIPMENTS: Shipment[] = [
-  { city: "Tokyo", country: "JP", postcode: "100-0001", carrier: "DHL Express", weight: "2.1 kg", eta: "Sat · May 14" },
-  { city: "Sydney", country: "AU", postcode: "2000", carrier: "DHL Express", weight: "3.4 kg", eta: "Mon · May 16" },
-  { city: "New York", country: "US", postcode: "10001", carrier: "UPS", weight: "1.8 kg", eta: "Thu · May 12" },
-  { city: "London", country: "UK", postcode: "EC1A", carrier: "DHL Express", weight: "0.9 kg", eta: "Fri · May 13" },
-  { city: "Berlin", country: "DE", postcode: "10117", carrier: "BRT", weight: "5.2 kg", eta: "Sat · May 14" },
-  { city: "São Paulo", country: "BR", postcode: "01310", carrier: "DHL Express", weight: "4.0 kg", eta: "Tue · May 17" },
-  { city: "Seoul", country: "KR", postcode: "04524", carrier: "DHL Express", weight: "2.6 kg", eta: "Sun · May 15" },
-  { city: "Dubai", country: "AE", postcode: "00000", carrier: "DHL Express", weight: "1.4 kg", eta: "Fri · May 13" },
+  { code: "8472-EW", city: "Tokyo", country: "JP", postcode: "100-0001", carrier: "DPD", weight: "2.1 kg", eta: "Sat · May 14" },
+  { code: "5391-KT", city: "Sydney", country: "AU", postcode: "2000", carrier: "UPS Express", weight: "3.4 kg", eta: "Mon · May 16" },
+  { code: "6207-QL", city: "New York", country: "US", postcode: "10001", carrier: "FedEx", weight: "1.8 kg", eta: "Thu · May 12" },
+  { code: "7048-RJ", city: "London", country: "UK", postcode: "EC1A", carrier: "FedEx", weight: "0.9 kg", eta: "Fri · May 13" },
+  { code: "3315-MC", city: "Berlin", country: "DE", postcode: "10117", carrier: "DPD", weight: "5.2 kg", eta: "Sat · May 14" },
+  { code: "4926-PD", city: "São Paulo", country: "BR", postcode: "01310", carrier: "DPD", weight: "4.0 kg", eta: "Tue · May 17" },
+  { code: "5573-HB", city: "Seoul", country: "KR", postcode: "04524", carrier: "UPS Express", weight: "2.6 kg", eta: "Sun · May 15" },
+  { code: "6841-NV", city: "Dubai", country: "AE", postcode: "00000", carrier: "UPS Express", weight: "1.4 kg", eta: "Fri · May 13" },
 ];
+
+/* One rotating value. EVERY animated field in the card goes through this, so
+   they all share the exact same crossfade (same duration, curve, no per-field
+   delay) and — since they all read from the same `s` and re-render together —
+   they change in the SAME instant. The live value stays in normal flow
+   (popLayout pops only the OUTGOING copy to position:absolute), so it keeps its
+   natural text baseline: no fixed-height / overflow wrapper to lift it off the
+   adjacent label's baseline. */
+function Rolling({ value, className }: { value: string; className?: string }) {
+  const reduce = useReducedMotion();
+  if (reduce) return <span className={className}>{value}</span>;
+  return (
+    <span className={cn("relative whitespace-nowrap", className)}>
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.span
+          key={value}
+          className="inline-block"
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        >
+          {value}
+        </motion.span>
+      </AnimatePresence>
+    </span>
+  );
+}
 
 function ShipmentCard() {
   const reduce = useReducedMotion();
@@ -213,16 +243,20 @@ function ShipmentCard() {
               <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-fg-subtle">
                 Shipment
               </span>
-              <span className="font-mono text-sm tabular-nums text-fg">
-                №&nbsp;8472-EW
-              </span>
+              {/* code rotates with the shipment, sharing the "Shipment"
+                  baseline because Rolling keeps the live value in normal flow */}
+              <Rolling
+                value={`№ ${s.code}`}
+                className="inline-block font-mono text-sm tabular-nums text-fg"
+              />
             </div>
             <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-fg-subtle">
               In transit
             </span>
           </div>
 
-          {/* Route — fixed-height columns, single-line text, so rotating city never reflows */}
+          {/* Route — fixed grid columns + single-line values, so the rotating
+              city / CAP never reflow the arc */}
           <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 px-4 pt-7 pb-3 md:gap-4 md:px-6">
             <div className="min-w-0">
               <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-fg-subtle">
@@ -232,7 +266,7 @@ function ShipmentCard() {
                 Trento
               </p>
               <p className="mt-1.5 truncate whitespace-nowrap font-mono text-[11px] text-fg-subtle">
-                IT · 38121
+                IT · 38023
               </p>
             </div>
 
@@ -244,42 +278,22 @@ function ShipmentCard() {
               <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-fg-subtle">
                 To
               </p>
-              <div className="relative mt-1.5 h-[1.5rem] overflow-hidden md:h-[1.75rem]">
-                <AnimatePresence mode="wait" initial={false}>
-                  <motion.p
-                    key={"city-" + s.city}
-                    initial={reduce ? false : { y: "100%", opacity: 0 }}
-                    animate={reduce ? undefined : { y: 0, opacity: 1 }}
-                    exit={reduce ? undefined : { y: "-100%", opacity: 0 }}
-                    transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-                    className="absolute inset-0 display truncate whitespace-nowrap text-lg leading-none md:text-2xl"
-                  >
-                    {s.city}
-                  </motion.p>
-                </AnimatePresence>
-              </div>
-              <div className="relative mt-1.5 h-[0.95rem] overflow-hidden">
-                <AnimatePresence mode="wait" initial={false}>
-                  <motion.p
-                    key={"meta-" + s.city}
-                    initial={reduce ? false : { y: "100%", opacity: 0 }}
-                    animate={reduce ? undefined : { y: 0, opacity: 1 }}
-                    exit={reduce ? undefined : { y: "-100%", opacity: 0 }}
-                    transition={{ duration: 0.45, delay: 0.04, ease: [0.16, 1, 0.3, 1] }}
-                    className="absolute inset-0 truncate whitespace-nowrap font-mono text-[11px] text-fg-subtle"
-                  >
-                    {s.country} · {s.postcode}
-                  </motion.p>
-                </AnimatePresence>
-              </div>
+              <Rolling
+                value={s.city}
+                className="mt-1.5 block display text-lg leading-none md:text-2xl"
+              />
+              <Rolling
+                value={`${s.country} · ${s.postcode}`}
+                className="mt-1.5 block font-mono text-[11px] text-fg-subtle"
+              />
             </div>
           </div>
 
           {/* Footer detail row */}
           <div className="grid grid-cols-3 gap-2 border-t border-border bg-bg/40 px-4 py-4 md:gap-3 md:px-6">
             <Detail k="Weight" v={s.weight} />
-            <Detail k="Carrier" v={s.carrier} animate />
-            <Detail k="ETA" v={s.eta} animate />
+            <Detail k="Carrier" v={s.carrier} />
+            <Detail k="ETA" v={s.eta} />
           </div>
         </div>
       </div>
@@ -311,41 +325,16 @@ function RouteArc() {
   );
 }
 
-function Detail({
-  k,
-  v,
-  animate,
-}: {
-  k: string;
-  v: string;
-  animate?: boolean;
-}) {
-  const reduce = useReducedMotion();
+function Detail({ k, v }: { k: string; v: string }) {
   return (
     <div className="min-w-0">
       <p className="truncate font-mono text-[10px] uppercase tracking-[0.16em] text-fg-subtle">
         {k}
       </p>
-      {animate ? (
-        <div className="relative mt-1 h-[0.9rem] overflow-hidden">
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.p
-              key={v}
-              initial={reduce ? false : { y: "100%", opacity: 0 }}
-              animate={reduce ? undefined : { y: 0, opacity: 1 }}
-              exit={reduce ? undefined : { y: "-100%", opacity: 0 }}
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute inset-0 truncate whitespace-nowrap font-mono text-[11px] text-fg md:text-xs"
-            >
-              {v}
-            </motion.p>
-          </AnimatePresence>
-        </div>
-      ) : (
-        <p className="mt-1 truncate whitespace-nowrap font-mono text-[11px] text-fg md:text-xs">
-          {v}
-        </p>
-      )}
+      <Rolling
+        value={v}
+        className="mt-1 block font-mono text-[11px] text-fg md:text-xs"
+      />
     </div>
   );
 }

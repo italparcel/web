@@ -23,8 +23,7 @@ export function Footer() {
               </span>
             </div>
             <p className="mt-4 max-w-sm text-sm text-fg-muted">
-              Your Italian address for parcels you want forwarded worldwide.
-              Run from Trento, Italy.
+              Parcel forwarding from Italy. Made easy.
             </p>
           </div>
 

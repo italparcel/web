@@ -26,8 +26,7 @@ export const FAQS: Faq[] = [
   },
   {
     q: "How do payments work?",
-    a: "Payments happen in two steps. After your first quote, you pay a €10 activation fee to get started — don't worry, it's not an extra cost: it comes off your final bill, which covers shipping plus our handling fee.\nHere's an example: you ask us to ship a t-shirt to the USA, and we quote €30 for shipping plus a €17 handling fee for one parcel. You pay €10 now to get started; then, before we ship, you settle the balance — €47 in total (€30 + €17), less the €10 you've already paid, so €37. We accept SEPA (including SEPA Instant), card payments (credit, debit, prepaid), Apple Pay, Google Pay and Revolut Pay, all via a secure payment link. Amounts are in euros.",
-    breaks: ["We accept SEPA"],
+    a: "Payments happen in two steps. After your first quote, you pay a €10 activation fee to get started — don't worry, it's not an extra cost: it comes off your final bill, which covers shipping plus our handling fee.\n\nHere's an example: you ask us to ship a t-shirt to the USA, and we quote €30 for shipping plus a €17 handling fee for one parcel. You pay €10 now to get started; then, before we ship, you settle the balance — €47 in total (€30 + €17), less the €10 you've already paid, so €37.\n\nWe accept SEPA (including SEPA Instant), card payments (credit, debit, prepaid), Apple Pay, Google Pay and Revolut Pay, all via a secure payment link. Amounts are in euros.",
   },
   {
     q: "Can you collect parcels from pickup points?",

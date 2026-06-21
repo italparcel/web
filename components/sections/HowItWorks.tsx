@@ -6,7 +6,20 @@ import {
   useScroll,
   useMotionValueEvent,
   useReducedMotion,
+  useInView,
+  useTime,
+  useTransform,
+  useMotionTemplate,
 } from "framer-motion";
+import type { Transition } from "framer-motion";
+import {
+  Store,
+  Warehouse,
+  MapPin,
+  Package,
+  Check,
+  MessageCircle,
+} from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 
@@ -14,6 +27,13 @@ import { cn } from "@/lib/cn";
 // fast scroll. Big enough that every phase is actually seen, small enough that
 // the catch-up still feels responsive.
 const STEP_ADVANCE_MS = 150;
+
+// Easing curves, typed as `Transition["ease"]` so Framer Motion accepts the
+// cubic-bezier tuples (a bare `number[]` is not assignable to `Easing`).
+const EASE: Transition["ease"] = [0.16, 1, 0.3, 1]; // shared entrance
+const EASE_BACK: Transition["ease"] = [0.34, 1.45, 0.5, 1]; // overshoot / pop
+const EASE_STAMP: Transition["ease"] = [0.3, 1.4, 0.5, 1]; // APPROVED stamp
+const EASE_IN: Transition["ease"] = [0.4, 0, 1, 1]; // form collapse
 
 type Step = {
   n: string;
@@ -85,6 +105,12 @@ export function HowItWorks() {
 
 function DesktopScroll() {
   const ref = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  // Only let the step illustrations animate once the pinned stage is actually
+  // on screen. Otherwise step 01 mounts (and finishes animating) at page load,
+  // far above the fold, so scrolling down lands on an already-completed
+  // animation — while scrolling up re-mounts it and looks correct.
+  const entered = useInView(stageRef, { amount: 0.5 });
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end end"],
@@ -139,23 +165,25 @@ function DesktopScroll() {
       className="relative hidden md:block"
       style={{ height: `${STEPS.length * 100 + 100}vh` }}
     >
-      <div className="sticky top-0 flex h-screen flex-col">
+      <div ref={stageRef} className="sticky top-0 flex h-screen flex-col">
         {/* Stage */}
         <div className="relative flex-1 overflow-hidden">
           <AnimatePresence initial={false}>
-            <motion.div
-              key={active}
-              initial={{ opacity: 0, y: 32 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -32 }}
-              transition={{
-                duration: marching ? 0.3 : 0.55,
-                ease: [0.16, 1, 0.3, 1],
-              }}
-              className="absolute inset-0 flex items-center"
-            >
-              <StepContent step={STEPS[active]} />
-            </motion.div>
+            {entered && (
+              <motion.div
+                key={active}
+                initial={{ opacity: 0, y: 32 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -32 }}
+                transition={{
+                  duration: marching ? 0.3 : 0.55,
+                  ease: EASE,
+                }}
+                className="absolute inset-0 flex items-center"
+              >
+                <StepContent step={STEPS[active]} />
+              </motion.div>
+            )}
           </AnimatePresence>
 
           {/* Scroll hint */}
@@ -262,20 +290,24 @@ function Fallback({
    Step illustrations — custom, restrained SVG
    ───────────────────────────────────────────────────────────── */
 
-function ArtFrame({ children }: { children: React.ReactNode }) {
+// Shared frame for all four "how it works" phases — the single source of truth
+// for the container. Aspect ratio (3:2, short enough that the wide phases fill),
+// the one dashed border, the clean white surface, radius and padding are
+// identical for every phase; each phase supplies its own artwork, centred.
+function PhaseVisual({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative aspect-[4/3] w-full max-w-xl overflow-hidden rounded-2xl border border-border bg-bg-elev shadow-[var(--shadow-soft)]">
-      <div className="absolute inset-3 rounded-xl border border-dashed border-border-strong/60" />
+    <div className="relative aspect-[3/2] w-full max-w-xl overflow-hidden rounded-2xl border-[1.5px] border-dashed border-border-strong bg-bg-elev">
+      {/* dot-grid watermark, same as the "Why us" feature cards (CardArtDots) */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.04]"
+        className="pointer-events-none absolute inset-0 opacity-[0.06]"
         style={{
           backgroundImage:
             "radial-gradient(circle, #0b0f14 1px, transparent 1px)",
           backgroundSize: "12px 12px",
         }}
       />
-      <div className="absolute inset-0 grid place-items-center p-10">
+      <div className="absolute inset-0 grid place-items-center p-6 lg:p-12">
         {children}
       </div>
     </div>
@@ -285,12 +317,12 @@ function ArtFrame({ children }: { children: React.ReactNode }) {
 function ActivateArt() {
   const fields = [
     { label: "NAME", value: "John Doe" },
-    { label: "DESTINATION", value: "Tokyo, Japan" },
+    { label: "DESTINATION", value: "New York, USA" },
     { label: "ITEMS TO SHIP", value: "Bialetti moka pot" },
   ];
   return (
-    <ArtFrame>
-      <svg viewBox="0 0 380 280" className="h-full w-auto" aria-hidden>
+    <PhaseVisual>
+      <svg viewBox="0 0 380 280" preserveAspectRatio="xMidYMid meet" className="h-full w-full" aria-hidden>
         {/* request form card */}
         <rect
           x="40"
@@ -300,642 +332,744 @@ function ActivateArt() {
           rx="10"
           fill="#ffffff"
           stroke="#d6d3ca"
+          style={{
+            filter:
+              "drop-shadow(0 1px 2px rgba(11,15,20,0.04)) drop-shadow(0 10px 22px rgba(11,15,20,0.07))",
+          }}
         />
 
-        {/* header — a new inquiry */}
-        <text
-          x="60"
-          y="58"
-          fontFamily="ui-monospace, monospace"
-          fontSize="11"
-          fill="#0b0f14"
-          letterSpacing="2"
-        >
-          NEW INQUIRY
-        </text>
+        {/* form contents — collapse away once the request is sent */}
         <motion.g
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-          style={{ transformOrigin: "310px 52px" }}
+          initial={{ opacity: 1, scale: 1 }}
+          animate={{ opacity: 0, scale: 0.97 }}
+          transition={{ duration: 0.35, delay: 2.5, ease: EASE_IN }}
+          style={{ transformOrigin: "190px 140px" }}
         >
-          <circle cx="310" cy="52" r="12" fill="#d97706" />
-          <path
-            d="M 310 46 L 310 58 M 304 52 L 316 52"
-            stroke="#fff"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-        </motion.g>
-        <line x1="60" y1="70" x2="320" y2="70" stroke="#e7e5de" />
+          {/* header — a new inquiry */}
+          <text
+            x="60"
+            y="58"
+            fontFamily="var(--font-mono), ui-monospace, monospace"
+            fontSize="12"
+            fill="#0b0f14"
+            letterSpacing="2"
+          >
+            NEW INQUIRY
+          </text>
+          <motion.g
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, delay: 0.15, ease: EASE }}
+            style={{ transformOrigin: "310px 52px" }}
+          >
+            <circle cx="310" cy="52" r="12" fill="#d97706" />
+            <path
+              d="M 310 46 L 310 58 M 304 52 L 316 52"
+              stroke="#fff"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </motion.g>
+          <line x1="60" y1="70" x2="320" y2="70" stroke="#e7e5de" />
 
-        {/* labeled fields */}
-        {fields.map((f, i) => {
-          const labelY = 92 + i * 38;
-          const inputY = 98 + i * 38;
-          return (
-            <g key={f.label}>
+          {/* labeled fields */}
+          {fields.map((f, i) => {
+            const labelY = 92 + i * 38;
+            const inputY = 98 + i * 38;
+            return (
+              <g key={f.label}>
+                <text
+                  x="60"
+                  y={labelY}
+                  fontFamily="var(--font-mono), ui-monospace, monospace"
+                  fontSize="11"
+                  fill="#9ca3af"
+                  letterSpacing="1.5"
+                >
+                  {f.label}
+                </text>
+                <rect
+                  x="60"
+                  y={inputY}
+                  width="220"
+                  height="18"
+                  rx="3"
+                  fill="#f3eee2"
+                  stroke="#e7e5de"
+                />
+                <motion.text
+                  x="68"
+                  y={inputY + 13}
+                  fontFamily="var(--font-mono), ui-monospace, monospace"
+                  fontSize="12"
+                  fill="#0b0f14"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.4, delay: 0.3 + i * 0.18 }}
+                >
+                  {f.value}
+                </motion.text>
+              </g>
+            );
+          })}
+
+          {/* submit button — pops in, then gets clicked */}
+          <motion.g
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, delay: 1.1, ease: EASE }}
+            style={{ transformOrigin: "170px 220px" }}
+          >
+            {/* press dip, timed to the cursor's click */}
+            <motion.g
+              initial={{ scale: 1 }}
+              animate={{ scale: [1, 0.96, 1] }}
+              transition={{ duration: 0.4, delay: 2.22, times: [0, 0.5, 1] }}
+              style={{ transformOrigin: "170px 220px" }}
+            >
+              <rect x="60" y="206" width="220" height="28" rx="6" fill="#d97706" />
+
+              {/* click ripple */}
+              <motion.circle
+                cx="170"
+                cy="220"
+                r="4"
+                fill="#ffffff"
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: [0, 0.45, 0], scale: [0, 6, 11] }}
+                transition={{ duration: 0.6, delay: 2.42, ease: "easeOut" }}
+                style={{ transformOrigin: "170px 220px" }}
+              />
+
               <text
-                x="60"
-                y={labelY}
-                fontFamily="ui-monospace, monospace"
-                fontSize="8"
-                fill="#9ca3af"
+                x="170"
+                y="224"
+                textAnchor="middle"
+                fontFamily="var(--font-mono), ui-monospace, monospace"
+                fontSize="12"
+                fill="#ffffff"
                 letterSpacing="1.5"
               >
-                {f.label}
+                SEND REQUEST
               </text>
-              <rect
-                x="60"
-                y={inputY}
-                width="220"
-                height="18"
-                rx="3"
-                fill="#f3eee2"
-                stroke="#e7e5de"
-              />
-              <motion.text
-                x="68"
-                y={inputY + 13}
-                fontFamily="ui-monospace, monospace"
-                fontSize="10"
-                fill="#0b0f14"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.4, delay: 0.3 + i * 0.18 }}
-              >
-                {f.value}
-              </motion.text>
-            </g>
-          );
-        })}
+            </motion.g>
+          </motion.g>
+        </motion.g>
 
-        {/* submit button */}
+        {/* success state — the whole inquiry becomes a confirmation */}
         <motion.g
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4, delay: 1.1, ease: [0.16, 1, 0.3, 1] }}
-          style={{ transformOrigin: "170px 220px" }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3, delay: 2.62 }}
         >
-          <rect x="60" y="206" width="220" height="28" rx="6" fill="#d97706" />
-          <text
-            x="170"
-            y="224"
-            textAnchor="middle"
-            fontFamily="ui-monospace, monospace"
-            fontSize="10"
-            fill="#ffffff"
-            letterSpacing="1.5"
+          <motion.circle
+            cx="190"
+            cy="102"
+            r="40"
+            fill="#0f766e"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.5, delay: 2.62, ease: EASE_BACK }}
+            style={{ transformOrigin: "190px 102px" }}
+          />
+          <motion.path
+            d="M 171 103 l 11 12 l 23 -26"
+            stroke="#ffffff"
+            strokeWidth="4.6"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={{ duration: 0.4, delay: 2.95, ease: EASE }}
+          />
+          <motion.g
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 3.0, ease: EASE }}
           >
-            SEND REQUEST
-          </text>
+            <text
+              x="190"
+              y="194"
+              textAnchor="middle"
+              fontFamily="var(--font-sans), system-ui"
+              fontSize="23"
+              fontWeight="600"
+              fill="#0b0f14"
+            >
+              Request sent
+            </text>
+            <text
+              x="190"
+              y="218"
+              textAnchor="middle"
+              fontFamily="var(--font-mono), ui-monospace, monospace"
+              fontSize="11"
+              fill="#9ca3af"
+              letterSpacing="1.5"
+            >
+              WE&apos;LL BE IN TOUCH SHORTLY
+            </text>
+          </motion.g>
+        </motion.g>
+
+        {/* pointer that moves in, clicks, then vanishes on the spot */}
+        <motion.g
+          initial={{ opacity: 0, x: 250, y: 256 }}
+          animate={{
+            opacity: [0, 1, 1, 1, 0],
+            x: [250, 250, 178, 178, 178],
+            y: [256, 256, 226, 230, 230],
+          }}
+          transition={{
+            duration: 1.7,
+            delay: 1.3,
+            times: [0, 0.08, 0.5, 0.66, 0.74],
+            ease: "easeInOut",
+          }}
+        >
+          <path
+            d="M 0 0 L 0 16 L 4.2 12.2 L 6.8 17.6 L 8.8 16.7 L 6.2 11.3 L 11 11.2 Z"
+            fill="#0b0f14"
+            stroke="#ffffff"
+            strokeWidth="1"
+            strokeLinejoin="round"
+          />
         </motion.g>
       </svg>
-    </ArtFrame>
+    </PhaseVisual>
+  );
+}
+
+/* Shared package marker — the copper square reused in phases 2 and 4. */
+function Parcel() {
+  return (
+    <div className="grid h-[26px] w-[26px] place-items-center rounded-[6px] bg-accent text-bg-elev shadow-[var(--shadow-soft)]">
+      <Package size={15} strokeWidth={2} />
+    </div>
+  );
+}
+
+/* One hub gear — an 8-tooth cog drawn white (currentColor) with a hole punched
+   to the hub's near-black so it reads as a gear. Two of these mesh inside the
+   hub; the second is rendered with `phase={22.5}` (half a tooth) so its gaps
+   sit opposite the first's teeth. Centred on (0,0) so a CSS rotation on the
+   wrapping span spins it cleanly about its own centre. */
+function GearSvg({ phase = 0 }: { phase?: number }) {
+  return (
+    <svg viewBox="-12 -12 24 24" width="24" height="24" aria-hidden>
+      <g fill="currentColor" transform={`rotate(${phase})`}>
+        {Array.from({ length: 8 }).map((_, i) => (
+          <rect
+            key={i}
+            x="-1.5"
+            y="-10.4"
+            width="3"
+            height="4.2"
+            rx="0.7"
+            transform={`rotate(${i * 45})`}
+          />
+        ))}
+        <circle r="7.6" />
+      </g>
+      {/* hole — the hub's --fg, so the dark shows through the gear centre */}
+      <circle r="2.6" fill="#0b0f14" />
+    </svg>
+  );
+}
+
+/* A station on the phase-2 path: a 56px badge with a label under it, both
+   centred inside whatever grid column the station is dropped into — so the
+   COLUMN, never the label width, decides the horizontal position. `dark` = the
+   ItalParcel hub (filled near-black — "us"). */
+function Station({
+  label,
+  dark,
+  children,
+}: {
+  label: string;
+  dark?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col items-center">
+      <div
+        className={cn(
+          "relative grid h-[56px] w-[56px] place-items-center rounded-full",
+          dark
+            ? "bg-fg text-bg-elev"
+            : "border border-border bg-bg-elev text-fg shadow-[var(--shadow-soft)]"
+        )}
+      >
+        {children}
+      </div>
+      <span className="mt-3 whitespace-nowrap text-center font-mono text-[10px] uppercase tracking-[0.14em] text-fg-subtle">
+        {label}
+      </span>
+    </div>
   );
 }
 
 function ReceiveArt() {
-  const smallBoxes = [
-    { x: 68, fill: "#d97706", delay: 0.1 },
-    { x: 163, fill: "#0f766e", delay: 0.25 },
-    { x: 258, fill: "#0b0f14", delay: 0.4 },
-  ];
-  const arrows = [
-    { d: "M 95 88 Q 165 138 165 178", delay: 0.7 },
-    { d: "M 190 88 L 190 178", delay: 0.85 },
-    { d: "M 285 88 Q 215 138 215 178", delay: 1.0 },
-  ];
+  // ONE shared clock: a 0→1 progress that runs ONCE over 6s. No modulo, so after
+  // 6s it simply keeps climbing past 1 and every downstream useTransform clamps
+  // at its end value — the phase plays through a single time and then holds, just
+  // like the other three phases (no loop). Deriving every moving piece (parcel,
+  // hub gears, delivered tick) from this one value keeps them perfectly in sync.
+  const time = useTime();
+  const p = useTransform(time, (ms) => ms / 6000);
+
+  // The 3-equal-column grid pins the circle centres at 1/6, 1/2, 5/6 of the
+  // block. The parcel is positioned by the SAME fraction (not pixels), so it
+  // rides the line through each circle centre at any width. It sweeps SELLER →
+  // DESTINATION but DWELLS briefly behind the hub (50%, p 0.36→0.48) so the
+  // repack gears get a longer beat to turn, then travels on and holds delivered.
+  // It stays fully opaque throughout — the badges sit above it (z-20 > the
+  // parcel's z-10 > the copper line's z-0), so each opaque circle covers it
+  // while it's behind and it reappears on the far side.
+  const parcelPct = useTransform(
+    p,
+    [0, 0.36, 0.48, 0.82, 1],
+    [16.667, 50, 50, 83.333, 83.333]
+  );
+  const parcelLeft = useMotionTemplate`${parcelPct}%`;
+
+  // Hub: warehouse ⇄ gears while the parcel is tucked behind the centre badge.
+  // The window spans the dwell (p ~0.34→0.50), so the gears spin a beat longer;
+  // it stays inside the "covered" span at every width (badge is a fixed 56px,
+  // widest case = 432px block), so no sliver of the parcel pokes out.
+  const whOp = useTransform(p, [0.34, 0.37, 0.47, 0.50], [1, 0, 0, 1]);
+  const gearOp = useTransform(p, [0.34, 0.37, 0.47, 0.50], [0, 1, 1, 0]);
+
+  // Destination "delivered" disc stamps in ONLY once the parcel has reached the
+  // badge: the parcel settles at p=0.82 and the swap fires at 0.79→0.815, while
+  // it is already tucked behind the DESTINATION circle — so the tick can never
+  // appear before the parcel arrives.
+  const pinOp = useTransform(p, [0.79, 0.815], [1, 0]);
+  const tickOp = useTransform(p, [0.79, 0.815], [0, 1]);
+  const tickSc = useTransform(p, [0.79, 0.808, 0.82], [0.5, 1.12, 1]);
+
   return (
-    <ArtFrame>
-      <svg viewBox="0 0 380 280" className="h-full w-auto" aria-hidden>
-        {/* caption */}
-        <text
-          x="190"
-          y="32"
-          textAnchor="middle"
-          fontFamily="ui-monospace, monospace"
-          fontSize="12"
-          fill="#0b0f14"
-          letterSpacing="0.5"
-        >
-          Multiple parcels
-        </text>
+    <PhaseVisual>
+      {/* Responsive block — SAME width rule as the other phases (e.g. TrackArt:
+          w-full max-w-[27rem]). It never overflows the frame, so PhaseVisual
+          centres it cleanly; its height comes from the in-flow station grid
+          (circles + labels), so the WHOLE block is centred on both axes. With
+          the grid + fraction-based line/parcel the two outer circles land at 1/6
+          and 5/6 of the block → equal gap to each frame edge, by construction. */}
+      <motion.div
+        className="relative w-full max-w-[27rem]"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: EASE }}
+      >
+        {/* copper line (z-0) — links the SELLER circle centre (1/6) to the
+            DESTINATION circle centre (5/6 = 100% − 1/6), behind the badges. top
+            27 sits it on the circle centre (circles are 56 tall from the top). */}
+        <div
+          className="pointer-events-none absolute z-0 h-[2px] rounded-full bg-accent"
+          style={{ left: "16.667%", right: "16.667%", top: 27 }}
+        />
 
-        {/* incoming small boxes */}
-        {smallBoxes.map((b, i) => (
-          <motion.g
-            key={i}
-            initial={{ opacity: 0, scale: 0.6, y: -8 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: b.delay, ease: [0.16, 1, 0.3, 1] }}
-          >
-            {/* box body */}
-            <rect x={b.x} y="46" width="54" height="38" rx="5" fill={b.fill} />
-            {/* packing tape */}
-            <rect
-              x={b.x}
-              y="60"
-              width="54"
-              height="8"
-              fill="#ffffff"
-              opacity="0.18"
-            />
-            {/* shipping label */}
-            <rect
-              x={b.x + 15}
-              y="57"
-              width="24"
-              height="15"
-              rx="1.5"
-              fill="#fafaf7"
-            />
-            <rect
-              x={b.x + 18}
-              y="60"
-              width="18"
-              height="1.6"
-              fill="#0b0f14"
-              opacity="0.5"
-            />
-            <rect
-              x={b.x + 18}
-              y="63"
-              width="11"
-              height="1.6"
-              fill="#0b0f14"
-              opacity="0.5"
-            />
-            <g fill="#0b0f14">
-              <rect x={b.x + 18} y="66" width="1.2" height="4" />
-              <rect x={b.x + 20.5} y="66" width="1.8" height="4" />
-              <rect x={b.x + 23.5} y="66" width="1" height="4" />
-              <rect x={b.x + 25.5} y="66" width="2.2" height="4" />
-              <rect x={b.x + 29} y="66" width="1" height="4" />
-              <rect x={b.x + 31} y="66" width="1.6" height="4" />
-            </g>
-          </motion.g>
-        ))}
-
-        {/* converging arrows */}
-        {arrows.map((a, i) => (
-          <motion.path
-            key={i}
-            d={a.d}
-            stroke="#d97706"
-            strokeWidth="1.4"
-            fill="none"
-            strokeLinecap="round"
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: 1, opacity: 1 }}
-            transition={{ duration: 0.6, delay: a.delay }}
-          />
-        ))}
-        <motion.g
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3, delay: 1.5 }}
-          stroke="#d97706"
-          strokeWidth="1.4"
-          fill="none"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+        {/* the parcel — z-10: above the line (z-0), BELOW the badges (z-20) so
+            the opaque circles cover it as it slides behind each station. Same
+            fraction as the circles, centred on it (x:-50%); top 15 centres the
+            26px parcel on the circle centre (28). */}
+        <motion.div
+          className="absolute z-10"
+          style={{ left: parcelLeft, top: 15, x: "-50%" }}
         >
-          <path d="M 159 171 L 165 178 L 171 171" />
-          <path d="M 184 171 L 190 178 L 196 171" />
-          <path d="M 209 171 L 215 178 L 221 171" />
-        </motion.g>
+          <Parcel />
+        </motion.div>
 
-        {/* single consolidated box */}
-        <motion.g
-          initial={{ opacity: 0, scale: 0.6, y: 8 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 1.6, ease: [0.16, 1, 0.3, 1] }}
-          style={{ transformOrigin: "190px 211px" }}
-        >
-          {/* box body */}
-          <rect x="130" y="178" width="120" height="66" rx="8" fill="#0b0f14" />
-          {/* packing tape */}
-          <rect
-            x="130"
-            y="203"
-            width="120"
-            height="14"
-            fill="#ffffff"
-            opacity="0.14"
-          />
-          {/* shipping label */}
-          <rect x="158" y="189" width="64" height="38" rx="2.5" fill="#fafaf7" />
-          <rect
-            x="166"
-            y="196"
-            width="46"
-            height="3"
-            rx="1.5"
-            fill="#0b0f14"
-            opacity="0.5"
-          />
-          <rect
-            x="166"
-            y="202"
-            width="32"
-            height="3"
-            rx="1.5"
-            fill="#0b0f14"
-            opacity="0.5"
-          />
-          <g fill="#0b0f14">
-            <rect x="166" y="209" width="2.5" height="12" />
-            <rect x="170.5" y="209" width="1.2" height="12" />
-            <rect x="173.5" y="209" width="3.5" height="12" />
-            <rect x="179" y="209" width="1.5" height="12" />
-            <rect x="182.5" y="209" width="1.2" height="12" />
-            <rect x="185.5" y="209" width="2.8" height="12" />
-            <rect x="190.5" y="209" width="1.2" height="12" />
-            <rect x="193.5" y="209" width="2" height="12" />
-            <rect x="197.5" y="209" width="1.2" height="12" />
-            <rect x="200.5" y="209" width="3" height="12" />
-            <rect x="205.5" y="209" width="1.5" height="12" />
-            <rect x="209" y="209" width="1.2" height="12" />
-          </g>
-          <text
-            x="190"
-            y="262"
-            textAnchor="middle"
-            fontFamily="ui-monospace, monospace"
-            fontSize="10"
-            fill="#0b0f14"
-            letterSpacing="1.5"
-          >
-            1 PARCEL
-          </text>
-        </motion.g>
-      </svg>
-    </ArtFrame>
+        {/* stations — a FORCED 3-equal-column grid (grid-cols-3 = three
+            minmax(0,1fr) tracks). Each circle is centred in its own column; a
+            long label like DESTINATION overflows its column symmetrically rather
+            than widening it, so the three circles are locked at 1/6, 1/2, 5/6 of
+            the block — centre badge dead-centre, SELLER and DESTINATION
+            mirrored. Symmetric by construction, not by eyeballed margins. */}
+        <div className="relative z-20 grid grid-cols-3">
+          <Station label="SELLER">
+            <Store size={24} strokeWidth={1.8} />
+          </Station>
+
+          {/* ITALPARCEL hub — warehouse ⇄ two counter-rotating gears (repack) */}
+          <Station label="ITALPARCEL" dark>
+            <motion.span
+              className="absolute inset-0 grid place-items-center"
+              style={{ opacity: whOp }}
+            >
+              <Warehouse size={24} strokeWidth={1.8} />
+            </motion.span>
+            <motion.span
+              className="absolute inset-0 grid place-items-center"
+              style={{ opacity: gearOp }}
+            >
+              {/* two meshed gears, centred in the hub: the right one is phased by
+                  half a tooth so its gaps line up with the left one's teeth, and
+                  they spin in opposite directions at the same speed (coupled). */}
+              <span className="flex items-center justify-center text-bg-elev">
+                <motion.span
+                  className="block"
+                  style={{ width: 24, height: 24 }}
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 3, ease: "linear", repeat: Infinity }}
+                >
+                  <GearSvg />
+                </motion.span>
+                <motion.span
+                  className="block"
+                  style={{ width: 24, height: 24, marginLeft: -7 }}
+                  animate={{ rotate: -360 }}
+                  transition={{ duration: 3, ease: "linear", repeat: Infinity }}
+                >
+                  <GearSvg phase={22.5} />
+                </motion.span>
+              </span>
+            </motion.span>
+          </Station>
+
+          {/* DESTINATION — map pin becomes a teal delivered disc on arrival */}
+          <Station label="DESTINATION">
+            <motion.span
+              className="absolute inset-0 grid place-items-center"
+              style={{ opacity: pinOp }}
+            >
+              <MapPin size={24} strokeWidth={1.8} />
+            </motion.span>
+            <motion.span
+              className="absolute inset-0 grid place-items-center rounded-full bg-teal text-bg-elev"
+              style={{ opacity: tickOp, scale: tickSc }}
+            >
+              <Check size={28} strokeWidth={3} />
+            </motion.span>
+          </Station>
+        </div>
+      </motion.div>
+    </PhaseVisual>
   );
 }
 
 function ShipArt() {
+  const rows = [
+    { label: "Handling", value: "€17.00" },
+    { label: "Shipping · DPD", value: "€30.00" },
+    { label: "Activation credit", value: "−€10.00" },
+  ];
   return (
-    <ArtFrame>
-      <svg viewBox="0 0 380 280" className="h-full w-auto" aria-hidden>
-        {/* quote ticket */}
+    <PhaseVisual>
+      <svg viewBox="0 0 380 280" preserveAspectRatio="xMidYMid meet" className="h-full w-full overflow-visible" aria-hidden>
+        {/* paper plane — drawn BEFORE the ticket so it paints BEHIND it. It is
+            parked hidden behind the ticket's right edge, then once the APPROVED
+            stamp has landed it climbs out from that edge toward the riquadro's
+            top-right corner and is clipped clean by the frame (PhaseVisual is
+            overflow-hidden). Tilted up-right for a take-off read. */}
+        <motion.g
+          initial={{ opacity: 0, x: 0, y: 0 }}
+          animate={{ opacity: [0, 1, 1], x: [0, 0, 340], y: [0, 0, -380] }}
+          transition={{ duration: 1.7, delay: 1.55, times: [0, 0.07, 1], ease: "easeIn" }}
+        >
+          <g transform="translate(250, 200) rotate(-32) scale(1.2)">
+            <path
+              d="M 32 0 C 30 -3 24 -3.5 16 -3.5 L 3 -3.5 L -9 -16 L -15 -16 L -5 -3.5 L -18 -3.5 L -23 -8 L -28 -8 L -23 -1.6 L -28 0 L -23 1.6 L -28 8 L -23 8 L -18 3.5 L -5 3.5 L -15 16 L -9 16 L 3 3.5 L 16 3.5 C 24 3.5 30 3 32 0 Z"
+              fill="#0b0f14"
+            />
+          </g>
+        </motion.g>
+
+        {/* quote ticket — wrapped in a translate so the whole ticket (contents,
+            stamp and rows all unchanged) sits centred in the 380-wide viewBox */}
+        <g transform="translate(57, 0)">
         <motion.g
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
           <rect
-            x="40"
+            x="30"
             y="40"
-            width="200"
+            width="206"
             height="200"
-            rx="6"
+            rx="8"
             fill="#ffffff"
             stroke="#d6d3ca"
+            style={{
+              filter:
+                "drop-shadow(0 1px 2px rgba(11,15,20,0.04)) drop-shadow(0 10px 22px rgba(11,15,20,0.07))",
+            }}
           />
           <text
-            x="55"
-            y="62"
-            fontFamily="ui-monospace, monospace"
-            fontSize="8"
+            x="46"
+            y="66"
+            fontFamily="var(--font-mono), ui-monospace, monospace"
+            fontSize="12"
             fill="#9ca3af"
             letterSpacing="1.5"
           >
-            QUOTE · №&#160;Q-8472
+            QUOTE · №&#160;8472-EW
           </text>
-          <line x1="55" y1="74" x2="225" y2="74" stroke="#e7e5de" />
 
-          {/* line items */}
-          {[
-            { label: "Handling", value: "€17.00", y: 102 },
-            { label: "Repack", value: "Included", y: 124 },
-            { label: "Shipping · DHL", value: "€30.00", y: 146 },
-            { label: "Activation credit", value: "−€10.00", y: 168 },
-          ].map((row) => (
-            <g key={row.y}>
-              <text
-                x="55"
-                y={row.y}
-                fontFamily="ui-monospace, monospace"
-                fontSize="9"
-                fill="#0b0f14"
-                opacity="0.7"
-              >
-                {row.label}
-              </text>
-              <text
-                x="225"
-                y={row.y}
-                textAnchor="end"
-                fontFamily="ui-monospace, monospace"
-                fontSize="9"
-                fill="#0b0f14"
-              >
-                {row.value}
-              </text>
-            </g>
-          ))}
+          {/* approved status */}
+          <motion.g
+            initial={{ opacity: 0, scale: 0.6 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, delay: 1.1, ease: EASE_BACK }}
+            style={{ transformOrigin: "212px 60px" }}
+          >
+            <circle cx="212" cy="60" r="11" fill="#0f766e" />
+            <path
+              d="M 207 60 l 3 3 l 6 -7"
+              stroke="#ffffff"
+              strokeWidth="2"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </motion.g>
 
-          <line
-            x1="55"
-            y1="186"
-            x2="225"
-            y2="186"
-            stroke="#0b0f14"
-            strokeWidth="1.4"
+          {/* header check pulses gently, in loop */}
+          <motion.circle
+            cx="212"
+            cy="60"
+            r="11"
+            fill="none"
+            stroke="#0f766e"
+            strokeWidth="2"
+            initial={{ opacity: 0, scale: 1 }}
+            animate={{ opacity: [0, 0.45, 0], scale: [1, 1.9, 1.9] }}
+            transition={{ duration: 2.2, delay: 1.6, repeat: Infinity, ease: "easeOut" }}
+            style={{ transformOrigin: "212px 60px" }}
           />
 
-          <text
-            x="55"
-            y="208"
-            fontFamily="ui-monospace, monospace"
-            fontSize="10"
-            fill="#0b0f14"
-            fontWeight="600"
-          >
+          <line x1="46" y1="78" x2="220" y2="78" stroke="#e7e5de" />
+
+          {/* line items */}
+          {rows.map((row, i) => {
+            const y = 110 + i * 30;
+            return (
+              <motion.g
+                key={row.label}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3, delay: 0.15 + i * 0.12, ease: EASE }}
+              >
+                <text x="46" y={y} fontFamily="var(--font-mono), ui-monospace, monospace" fontSize="11" fill="#0b0f14" opacity="0.7">
+                  {row.label}
+                </text>
+                <text x="220" y={y} textAnchor="end" fontFamily="var(--font-mono), ui-monospace, monospace" fontSize="11" fill="#0b0f14">
+                  {row.value}
+                </text>
+              </motion.g>
+            );
+          })}
+
+          <line x1="46" y1="194" x2="220" y2="194" stroke="#0b0f14" strokeWidth="1.4" />
+
+          <text x="46" y="222" fontFamily="var(--font-mono), ui-monospace, monospace" fontSize="12" fill="#0b0f14" fontWeight="600" letterSpacing="1">
             TOTAL
           </text>
           <motion.text
-            x="225"
-            y="210"
+            x="220"
+            y="226"
             textAnchor="end"
             fontFamily={"var(--font-sans), system-ui"}
-            fontSize="22"
+            fontSize="26"
+            fontWeight="600"
             fill="#0b0f14"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.9 }}
+            initial={{ opacity: 0, scale: 0.6 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, delay: 0.5, ease: EASE_BACK }}
+            style={{ transformOrigin: "220px 222px" }}
           >
             €37.00
           </motion.text>
 
-          {/* approved stamp */}
+          {/* APPROVED stamp — imprints over the total, left of the number */}
           <motion.g
-            initial={{ opacity: 0, scale: 0.6, rotate: -8 }}
-            animate={{ opacity: 1, scale: 1, rotate: -10 }}
-            transition={{
-              duration: 0.5,
-              delay: 1.3,
-              ease: [0.16, 1, 0.3, 1],
-            }}
-            style={{ transformOrigin: "180px 220px" }}
+            initial={{ opacity: 0, scale: 1.8 }}
+            animate={{ opacity: 0.86, scale: 1 }}
+            transition={{ duration: 0.45, delay: 0.95, ease: EASE_STAMP }}
+            style={{ transformOrigin: "112px 210px" }}
           >
-            <rect
-              x="150"
-              y="195"
-              width="80"
-              height="34"
-              rx="3"
-              fill="none"
-              stroke="#d97706"
-              strokeWidth="2"
-              strokeDasharray="4 3"
-            />
-            <text
-              x="190"
-              y="218"
-              textAnchor="middle"
-              fontFamily="ui-monospace, monospace"
-              fontSize="11"
-              fill="#d97706"
-              fontWeight="600"
-              letterSpacing="2"
-            >
-              APPROVED
-            </text>
+            <g transform="rotate(-10 112 210)">
+              <rect
+                x="66"
+                y="196"
+                width="92"
+                height="30"
+                rx="4"
+                fill="none"
+                stroke="#0f766e"
+                strokeWidth="2.5"
+              />
+              <text
+                x="112"
+                y="215"
+                textAnchor="middle"
+                fontFamily="var(--font-mono), ui-monospace, monospace"
+                fontSize="13"
+                fontWeight="700"
+                fill="#0f766e"
+                letterSpacing="2"
+              >
+                APPROVED
+              </text>
+            </g>
           </motion.g>
         </motion.g>
-
-        {/* hand-off arrow */}
-        <motion.path
-          d="M 250 140 L 294 140"
-          stroke="#0b0f14"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: 1 }}
-          transition={{ duration: 0.7, delay: 1.6 }}
-        />
-        <motion.path
-          d="M 287 134 L 297 140 L 287 146"
-          stroke="#0b0f14"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3, delay: 2.2 }}
-        />
-        <text
-          x="267"
-          y="128"
-          textAnchor="middle"
-          fontFamily="ui-monospace, monospace"
-          fontSize="8"
-          fill="#9ca3af"
-          letterSpacing="1.5"
-        >
-          HAND-OFF
-        </text>
-
-        {/* carrier badge */}
-        <motion.g
-          initial={{ opacity: 0, x: 8 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 1.9 }}
-        >
-          <rect
-            x="300"
-            y="111"
-            width="76"
-            height="58"
-            rx="6"
-            fill="#0b0f14"
-          />
-          <text
-            x="338"
-            y="135"
-            textAnchor="middle"
-            fontFamily="ui-monospace, monospace"
-            fontSize="9"
-            fill="#fafaf7"
-            opacity="0.7"
-            letterSpacing="1.5"
-          >
-            CARRIER
-          </text>
-          <text
-            x="338"
-            y="156"
-            textAnchor="middle"
-            fontFamily={"var(--font-sans), system-ui"}
-            fontSize="16"
-            fill="#fafaf7"
-            fontWeight="600"
-          >
-            DHL
-          </text>
-        </motion.g>
+        </g>
       </svg>
-    </ArtFrame>
+    </PhaseVisual>
   );
 }
 
 function TrackArt() {
-  const events = [
-    { x: 50, label: "Picked up", state: "done" },
-    { x: 120, label: "Repacked", state: "done" },
-    { x: 190, label: "Departed", state: "done" },
-    { x: 260, label: "In transit", state: "active" },
-    { x: 330, label: "Delivered", state: "pending" },
-  ] as const;
-
+  const stops = [
+    { label: "Picked up", date: "MAY 12", done: true },
+    { label: "Repacked", date: "MAY 12", done: true },
+    { label: "Departed", date: "MAY 13", done: true },
+    { label: "Delivered", date: "ETA MAY 16", done: false },
+  ];
   return (
-    <ArtFrame>
-      <svg viewBox="0 0 380 280" className="h-full w-auto" aria-hidden>
-        {/* baseline */}
-        <line
-          x1="50"
-          y1="140"
-          x2="330"
-          y2="140"
-          stroke="#e7e5de"
-          strokeWidth="2"
-        />
-        <motion.line
-          x1="50"
-          y1="140"
-          x2="260"
-          y2="140"
-          stroke="#0b0f14"
-          strokeWidth="2"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: 1 }}
-          transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-        />
+    <PhaseVisual>
+      <motion.div
+        className="flex w-full max-w-[27rem] flex-col items-center"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: EASE }}
+      >
+        {/* origin / destination share the same 4-col grid → sit over col 1 & 4 */}
+        <div className="grid w-full grid-cols-4">
+          <span className="text-center font-mono text-[10px] uppercase tracking-[0.16em] text-fg-subtle">
+            TRENTO
+          </span>
+          <span className="col-start-4 text-center font-mono text-[10px] uppercase tracking-[0.16em] text-fg-subtle">
+            NEW YORK
+          </span>
+        </div>
 
-        {events.map((e, i) => (
-          <motion.g
-            key={i}
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.4 + i * 0.18 }}
-          >
-            {e.state === "done" && (
-              <>
-                <circle cx={e.x} cy={140} r={8} fill="#0b0f14" />
-                <path
-                  d={`M ${e.x - 4} 140 L ${e.x - 1} 143 L ${e.x + 4} 137`}
-                  stroke="#fafaf7"
-                  strokeWidth="1.6"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </>
-            )}
-            {e.state === "active" && (
-              <>
-                <motion.circle
-                  cx={e.x}
-                  cy={140}
-                  r={16}
-                  fill="#d97706"
-                  opacity={0.18}
-                  animate={{ r: [12, 18, 12], opacity: [0.3, 0, 0.3] }}
-                  transition={{ duration: 2.4, repeat: Infinity }}
-                />
-                <circle cx={e.x} cy={140} r={6} fill="#d97706" />
-              </>
-            )}
-            {e.state === "pending" && (
-              <circle
-                cx={e.x}
-                cy={140}
-                r={5}
-                fill="#fafaf7"
-                stroke="#d6d3ca"
-                strokeWidth="1.6"
-              />
-            )}
-            <text
-              x={e.x}
-              y={170}
-              textAnchor="middle"
-              fontFamily="ui-monospace, monospace"
-              fontSize="9"
-              fill={e.state === "pending" ? "#9ca3af" : "#0b0f14"}
-              letterSpacing="1"
-            >
-              {e.label.toUpperCase()}
-            </text>
-          </motion.g>
-        ))}
+        {/* timeline — the node grid sets every column centre; the line and the
+            live marker are absolute overlays on those same centres, so spunta +
+            label + data and the line all share one centre per column. */}
+        <div className="relative mt-5 w-full pt-[34px]">
+          {/* line segments at the node centre (pt 34 + node radius 18 = 52) —
+              z-0 so the opaque node circles (z-10) hide it; visible only in gaps */}
+          <div className="pointer-events-none absolute inset-x-0 z-0" style={{ top: 51 }}>
+            <motion.div
+              className="absolute h-[2px] origin-left rounded-full bg-fg"
+              style={{ left: "12.5%", width: "50%" }}
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: 1, ease: "linear" }}
+            />
+            <motion.div
+              className="absolute h-[2px] origin-left rounded-full bg-accent"
+              style={{ left: "62.5%", width: "12.5%" }}
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: 0.25, delay: 1, ease: "linear" }}
+            />
+            <motion.div
+              className="absolute h-[2px] origin-left rounded-full bg-border"
+              style={{ left: "75%", width: "12.5%" }}
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: 0.25, delay: 1.25, ease: "linear" }}
+            />
+          </div>
 
-        {/* labels at ends */}
-        <text
-          x="50"
-          y="110"
-          textAnchor="middle"
-          fontFamily="ui-monospace, monospace"
-          fontSize="9"
-          fill="#9ca3af"
-          letterSpacing="1.5"
-        >
-          TRENTO
-        </text>
-        <text
-          x="330"
-          y="110"
-          textAnchor="middle"
-          fontFamily="ui-monospace, monospace"
-          fontSize="9"
-          fill="#9ca3af"
-          letterSpacing="1.5"
-        >
-          TOKYO
-        </text>
+          {/* nodes — z-10 above the line so the circles cover it */}
+          <div className="relative z-10 grid grid-cols-4">
+            {stops.map((s, i) => (
+              <div key={s.label} className="flex flex-col items-center">
+                <motion.div
+                  className={cn(
+                    "grid h-9 w-9 place-items-center rounded-full",
+                    s.done
+                      ? "bg-fg text-bg-elev"
+                      : "border-2 border-border-strong bg-bg-elev"
+                  )}
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{
+                    duration: 0.4,
+                    delay: s.done ? 0.1 + i * 0.45 : 1.5,
+                    ease: EASE_BACK,
+                  }}
+                >
+                  {s.done && <Check size={16} strokeWidth={3} />}
+                </motion.div>
+                <span
+                  className={cn(
+                    "mt-3 whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.08em]",
+                    s.done ? "text-fg" : "text-fg-subtle"
+                  )}
+                >
+                  {s.label}
+                </span>
+                <span className="mt-0.5 whitespace-nowrap font-mono text-[9px] uppercase tracking-[0.06em] text-fg-subtle">
+                  {s.date}
+                </span>
+              </div>
+            ))}
+          </div>
 
-        {/* helper banner */}
-        <motion.g
-          initial={{ opacity: 0, y: 6 }}
+          {/* live parcel marker at 75% (between Departed and Delivered) — on top */}
+          <div className="absolute z-20" style={{ left: "75%", top: 52 }}>
+            <div className="-translate-x-1/2 -translate-y-1/2">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.4 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, delay: 1.25, ease: EASE_BACK }}
+              >
+                <div className="relative">
+                  {/* pulsing copper halo */}
+                  <motion.span
+                    className="absolute rounded-[9px] bg-accent/30"
+                    style={{ inset: -7 }}
+                    animate={{ opacity: [0.5, 0, 0.5], scale: [0.9, 1.5, 0.9] }}
+                    transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                  {/* the parcel, bobbing live */}
+                  <motion.div
+                    animate={{ x: [-2, 2, -2] }}
+                    transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    <Parcel />
+                  </motion.div>
+                  {/* callout dropping from above, pointing down at the parcel */}
+                  <div className="absolute bottom-full left-1/2 mb-4 -translate-x-1/2">
+                    <motion.div
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: 1.6, ease: EASE }}
+                    >
+                      <div className="whitespace-nowrap rounded-md border border-border bg-bg-elev px-2 py-1 font-mono text-[9px] uppercase tracking-[0.1em] text-fg shadow-[var(--shadow-soft)]">
+                        Milan hub · 14:32
+                      </div>
+                      <div className="absolute left-1/2 top-full h-2 w-2 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-r border-border bg-bg-elev" />
+                    </motion.div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </div>
+
+        {/* WhatsApp — a separate pill, generous gap below the timeline */}
+        <motion.div
+          className="mt-9 flex items-center gap-2.5 rounded-full border border-border bg-bg-elev px-4 py-2 shadow-[var(--shadow-soft)]"
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 1.6 }}
+          transition={{ duration: 0.4, delay: 1.85, ease: EASE }}
         >
-          <rect
-            x="100"
-            y="210"
-            width="180"
-            height="30"
-            rx="4"
-            fill="#ffffff"
-            stroke="#e7e5de"
-          />
-          <circle cx="118" cy="225" r="4" fill="#0f766e" />
-          <text
-            x="132"
-            y="229"
-            fontFamily={"var(--font-sans), system-ui"}
-            fontSize="11"
-            fill="#0b0f14"
-          >
-            Need a hand?
-          </text>
-          <text
-            x="265"
-            y="229"
-            textAnchor="end"
-            fontFamily="ui-monospace, monospace"
-            fontSize="9"
-            fill="#9ca3af"
-            letterSpacing="1.5"
-          >
-            WHATSAPP
-          </text>
-        </motion.g>
-      </svg>
-    </ArtFrame>
+          <MessageCircle size={16} className="text-teal" strokeWidth={2} />
+          <span className="text-sm font-medium text-fg">Need a hand?</span>
+          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-fg-subtle">
+            WhatsApp / Email
+          </span>
+        </motion.div>
+      </motion.div>
+    </PhaseVisual>
   );
 }

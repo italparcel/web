@@ -888,14 +888,14 @@ function TrackArt() {
               style={{ left: "12.5%", width: "50%" }}
               initial={{ scaleX: 0 }}
               animate={{ scaleX: 1 }}
-              transition={{ duration: 0.8, ease: EASE }}
+              transition={{ duration: 1, ease: "linear" }}
             />
             <motion.div
               className="absolute h-[2px] origin-left rounded-full bg-accent"
               style={{ left: "62.5%", width: "12.5%" }}
               initial={{ scaleX: 0 }}
               animate={{ scaleX: 1 }}
-              transition={{ duration: 0.4, delay: 1.2, ease: EASE }}
+              transition={{ duration: 0.25, delay: 1, ease: "linear" }}
             />
             <div
               className="absolute h-[2px] rounded-full bg-border"
@@ -918,7 +918,7 @@ function TrackArt() {
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{
                     duration: 0.4,
-                    delay: s.done ? 0.3 + i * 0.4 : 1.4,
+                    delay: s.done ? 0.1 + i * 0.45 : 1.5,
                     ease: EASE_BACK,
                   }}
                 >
@@ -945,7 +945,7 @@ function TrackArt() {
               <motion.div
                 initial={{ opacity: 0, scale: 0.4 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.4, delay: 1.5, ease: EASE_BACK }}
+                transition={{ duration: 0.4, delay: 1.25, ease: EASE_BACK }}
               >
                 <div className="relative">
                   {/* pulsing copper halo */}
@@ -967,7 +967,7 @@ function TrackArt() {
                     <motion.div
                       initial={{ opacity: 0, y: -6 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: 1.85, ease: EASE }}
+                      transition={{ duration: 0.4, delay: 1.6, ease: EASE }}
                     >
                       <div className="whitespace-nowrap rounded-md border border-border bg-bg-elev px-2 py-1 font-mono text-[9px] uppercase tracking-[0.1em] text-fg shadow-[var(--shadow-soft)]">
                         Milan hub · 14:32
@@ -986,12 +986,12 @@ function TrackArt() {
           className="mt-9 flex items-center gap-2.5 rounded-full border border-border bg-bg-elev px-4 py-2 shadow-[var(--shadow-soft)]"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 2.1, ease: EASE }}
+          transition={{ duration: 0.4, delay: 1.85, ease: EASE }}
         >
           <MessageCircle size={16} className="text-teal" strokeWidth={2} />
           <span className="text-sm font-medium text-fg">Need a hand?</span>
           <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-fg-subtle">
-            WhatsApp
+            WhatsApp / Email
           </span>
         </motion.div>
       </motion.div>

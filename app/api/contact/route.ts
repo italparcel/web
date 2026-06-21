@@ -20,6 +20,14 @@ const ORIGIN_LABELS: Record<ContactInput["origin"], string> = {
   mixed: "Mixed / not sure",
 };
 
+// Best-effort per-IP throttle. NOTE: in-memory, so on serverless it only sees a
+// single warm instance's traffic — it is NOT shared across instances and resets
+// on cold start. It still blunts a naive flood from one IP hammering a warm
+// function; for a hard guarantee use a shared store (e.g. Upstash Redis).
+const RATE_WINDOW_MS = 60_000;
+const RATE_MAX = 5;
+const rateHits = new Map<string, number[]>();
+
 export async function POST(request: Request) {
   let body: unknown;
   try {
@@ -42,10 +50,9 @@ export async function POST(request: Request) {
 
   const parsed = contactSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Invalid form data", issues: parsed.error.issues },
-      { status: 422 }
-    );
+    // Don't echo zod's raw issue tree back to the client — the form runs its own
+    // validation; a generic message avoids leaking the schema's internals.
+    return NextResponse.json({ error: "Invalid form data" }, { status: 422 });
   }
   const data = parsed.data;
 
@@ -55,6 +62,14 @@ export async function POST(request: Request) {
     "unknown";
   const ua = request.headers.get("user-agent") ?? "unknown";
   const acceptedAt = new Date().toISOString();
+
+  // Throttle by IP before doing any real work (Turnstile call, email send).
+  if (ip !== "unknown" && rateLimited(ip)) {
+    return NextResponse.json(
+      { error: "Too many requests. Please wait a moment and try again." },
+      { status: 429 }
+    );
+  }
 
   // Cloudflare Turnstile. The token is sent outside the zod schema, so read it
   // from the raw body. In production verification is always mandatory; in dev
@@ -84,7 +99,10 @@ export async function POST(request: Request) {
     );
   }
 
-  const subject = `New inquiry — ${data.name} (${PARCEL_LABELS[data.parcels]})`;
+  // Strip control chars from the user name before it lands in the Subject
+  // header — defence-in-depth against header injection / display spoofing.
+  const safeName = data.name.replace(/[\r\n\t\f\v]+/g, " ").trim().slice(0, 100);
+  const subject = `New inquiry — ${safeName} (${PARCEL_LABELS[data.parcels]})`;
 
   const text = [
     "New ItalParcel inquiry",
@@ -206,6 +224,7 @@ async function verifyTurnstile(
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ secret, response: token, remoteip }),
+        signal: AbortSignal.timeout(5000),
       }
     );
     const json = (await res.json()) as { success?: boolean };
@@ -230,4 +249,20 @@ function escapeHtml(s: string) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+function rateLimited(ip: string): boolean {
+  const now = Date.now();
+  const recent = (rateHits.get(ip) ?? []).filter(
+    (t) => now - t < RATE_WINDOW_MS
+  );
+  recent.push(now);
+  rateHits.set(ip, recent);
+  // Bound memory: occasionally drop IPs whose window has fully expired.
+  if (rateHits.size > 5000) {
+    for (const [k, times] of rateHits) {
+      if (times.every((t) => now - t >= RATE_WINDOW_MS)) rateHits.delete(k);
+    }
+  }
+  return recent.length > RATE_MAX;
 }

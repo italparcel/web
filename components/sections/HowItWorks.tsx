@@ -621,28 +621,33 @@ function ReceiveArt() {
 
   // The 3-equal-column grid pins the circle centres at 1/6, 1/2, 5/6 of the
   // block. The parcel is positioned by the SAME fraction (not pixels), so it
-  // rides the line exactly through each circle centre at any width. It CROSSES
-  // under the badges instead of stopping: one continuous, constant-speed sweep
-  // (1/6 behind SELLER → 5/6 behind DESTINATION over the first 82%, then it
-  // holds delivered). It stays fully opaque the whole way — the badges sit above
-  // it (z-20 > the parcel's z-10 > the copper line's z-0), so each opaque circle
-  // simply covers it while it slides behind and it reappears on the far side.
-  const parcelPct = useTransform(p, [0, 0.82, 1], [16.667, 83.333, 83.333]);
+  // rides the line through each circle centre at any width. It sweeps SELLER →
+  // DESTINATION but DWELLS briefly behind the hub (50%, p 0.36→0.48) so the
+  // repack gears get a longer beat to turn, then travels on and holds delivered.
+  // It stays fully opaque throughout — the badges sit above it (z-20 > the
+  // parcel's z-10 > the copper line's z-0), so each opaque circle covers it
+  // while it's behind and it reappears on the far side.
+  const parcelPct = useTransform(
+    p,
+    [0, 0.36, 0.48, 0.82, 1],
+    [16.667, 50, 50, 83.333, 83.333]
+  );
   const parcelLeft = useMotionTemplate`${parcelPct}%`;
 
-  // Hub: warehouse ⇄ gears only while the parcel is tucked behind the centre
-  // badge. It crosses the hub at p≈0.41; this window stays inside the "covered"
-  // span at every width (the badge is a fixed 56px, widest case = 432px block).
-  const whOp = useTransform(p, [0.36, 0.39, 0.43, 0.46], [1, 0, 0, 1]);
-  const gearOp = useTransform(p, [0.36, 0.39, 0.43, 0.46], [0, 1, 1, 0]);
+  // Hub: warehouse ⇄ gears while the parcel is tucked behind the centre badge.
+  // The window spans the dwell (p ~0.34→0.50), so the gears spin a beat longer;
+  // it stays inside the "covered" span at every width (badge is a fixed 56px,
+  // widest case = 432px block), so no sliver of the parcel pokes out.
+  const whOp = useTransform(p, [0.34, 0.37, 0.47, 0.50], [1, 0, 0, 1]);
+  const gearOp = useTransform(p, [0.34, 0.37, 0.47, 0.50], [0, 1, 1, 0]);
 
   // Destination "delivered" disc stamps in ONLY once the parcel has reached the
-  // badge: the parcel settles at p=0.82 and the swap fires at 0.78→0.81, while it
-  // is already tucked behind the DESTINATION circle — so the tick can never
+  // badge: the parcel settles at p=0.82 and the swap fires at 0.79→0.815, while
+  // it is already tucked behind the DESTINATION circle — so the tick can never
   // appear before the parcel arrives.
-  const pinOp = useTransform(p, [0.78, 0.81], [1, 0]);
-  const tickOp = useTransform(p, [0.78, 0.81], [0, 1]);
-  const tickSc = useTransform(p, [0.78, 0.805, 0.82], [0.5, 1.12, 1]);
+  const pinOp = useTransform(p, [0.79, 0.815], [1, 0]);
+  const tickOp = useTransform(p, [0.79, 0.815], [0, 1]);
+  const tickSc = useTransform(p, [0.79, 0.808, 0.82], [0.5, 1.12, 1]);
 
   return (
     <PhaseVisual>

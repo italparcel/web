@@ -760,10 +760,10 @@ function ShipArt() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.3, delay: 0.15 + i * 0.12, ease: EASE }}
               >
-                <text x="46" y={y} fontFamily="var(--font-mono), ui-monospace, monospace" fontSize="12" fill="#0b0f14" opacity="0.7">
+                <text x="46" y={y} fontFamily="var(--font-mono), ui-monospace, monospace" fontSize="11" fill="#0b0f14" opacity="0.7">
                   {row.label}
                 </text>
-                <text x="220" y={y} textAnchor="end" fontFamily="var(--font-mono), ui-monospace, monospace" fontSize="12" fill="#0b0f14">
+                <text x="220" y={y} textAnchor="end" fontFamily="var(--font-mono), ui-monospace, monospace" fontSize="11" fill="#0b0f14">
                   {row.value}
                 </text>
               </motion.g>

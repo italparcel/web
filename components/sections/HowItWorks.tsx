@@ -8,6 +8,15 @@ import {
   useReducedMotion,
   useInView,
 } from "framer-motion";
+import {
+  Store,
+  Warehouse,
+  MapPin,
+  Package,
+  Cog,
+  Check,
+  MessageCircle,
+} from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 
@@ -15,6 +24,9 @@ import { cn } from "@/lib/cn";
 // fast scroll. Big enough that every phase is actually seen, small enough that
 // the catch-up still feels responsive.
 const STEP_ADVANCE_MS = 150;
+
+// Shared entrance easing, identical across all four phases.
+const EASE = [0.16, 1, 0.3, 1];
 
 type Step = {
   n: string;
@@ -272,12 +284,12 @@ function Fallback({
    ───────────────────────────────────────────────────────────── */
 
 // Shared frame for all four "how it works" phases — the single source of truth
-// for the container. Aspect ratio, the one dashed border, the page-cream
-// background, radius and padding are identical for every phase; each phase only
-// supplies its own artwork, centred in a safe-zone and fitted so nothing spills.
+// for the container. Aspect ratio, the one dashed border, the white surface,
+// radius and padding are identical for every phase; each phase only supplies
+// its own artwork, centred in a safe-zone and fitted so nothing spills.
 function PhaseVisual({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative aspect-[4/3] w-full max-w-xl overflow-hidden rounded-2xl border-[1.5px] border-dashed border-border-strong bg-bg">
+    <div className="relative aspect-[4/3] w-full max-w-xl overflow-hidden rounded-2xl border-[1.5px] border-dashed border-border-strong bg-bg-elev">
       {/* uniform dotted texture */}
       <div
         aria-hidden
@@ -522,199 +534,145 @@ function ActivateArt() {
   );
 }
 
+/* Shared package marker — the copper square reused in phases 2 and 4. */
+function Parcel() {
+  return (
+    <div className="grid h-[26px] w-[26px] place-items-center rounded-[6px] bg-accent text-bg-elev shadow-[var(--shadow-soft)]">
+      <Package size={15} strokeWidth={2} />
+    </div>
+  );
+}
+
+/* A station on the phase-2 path: a 56px badge centred on `x` with a label
+   under it. `dark` = the ItalParcel hub (filled near-black — "us"). */
+function Station({
+  x,
+  label,
+  dark,
+  children,
+}: {
+  x: number;
+  label: string;
+  dark?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className="absolute flex flex-col items-center"
+      style={{ left: x, top: 12, transform: "translateX(-50%)" }}
+    >
+      <div
+        className={cn(
+          "relative grid h-[56px] w-[56px] place-items-center rounded-full",
+          dark
+            ? "bg-fg text-bg-elev"
+            : "border border-border bg-bg-elev text-fg shadow-[var(--shadow-soft)]"
+        )}
+      >
+        {children}
+      </div>
+      <span className="mt-3 whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.14em] text-fg-subtle">
+        {label}
+      </span>
+    </div>
+  );
+}
+
 function ReceiveArt() {
+  // One 6s cycle drives everything; every timed piece shares duration:6 + repeat
+  // so the parcel, the hub gears and the delivered tick stay locked together.
+  const C = 6;
+  const swap = { duration: C, times: [0, 0.18, 0.22, 0.47, 0.51, 1], repeat: Infinity };
   return (
     <PhaseVisual>
-      <svg viewBox="0 0 380 280" preserveAspectRatio="xMidYMid meet" className="h-full w-full" aria-hidden>
-        {/* route guides */}
-        <line x1="108" y1="150" x2="146" y2="150" stroke="#d6d3ca" strokeWidth="2" strokeDasharray="2 5" />
-        <line x1="234" y1="150" x2="266" y2="150" stroke="#d6d3ca" strokeWidth="2" strokeDasharray="2 5" />
-
-        {/* route trails, traced as each parcel travels */}
-        <motion.line
-          x1="108"
-          y1="150"
-          x2="146"
-          y2="150"
-          stroke="#d97706"
-          strokeWidth="2"
-          strokeLinecap="round"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: 1 }}
-          transition={{ duration: 1, delay: 0.95 }}
-        />
-        <motion.line
-          x1="234"
-          y1="150"
-          x2="266"
-          y2="150"
-          stroke="#d97706"
-          strokeWidth="2"
-          strokeLinecap="round"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: 1 }}
-          transition={{ duration: 1, delay: 2.3 }}
+      <motion.div
+        className="relative"
+        style={{ width: 432, height: 124 }}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: EASE }}
+      >
+        {/* copper line the parcel rides */}
+        <div
+          className="absolute h-[2px] rounded-full bg-accent"
+          style={{ left: 50, right: 50, top: 39 }}
         />
 
-        {/* seller — a recognisable little shop */}
-        <motion.g
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+        {/* SELLER */}
+        <Station x={50} label="SELLER">
+          <Store size={24} strokeWidth={1.8} />
+        </Station>
+
+        {/* ITALPARCEL hub — warehouse swaps to two counter-rotating gears
+            (the repack) while the parcel is inside */}
+        <Station x={216} label="ITALPARCEL" dark>
+          <motion.span
+            className="absolute inset-0 grid place-items-center"
+            animate={{ opacity: [1, 1, 0, 0, 1, 1] }}
+            transition={swap}
+          >
+            <Warehouse size={24} strokeWidth={1.8} />
+          </motion.span>
+          <motion.span
+            className="absolute inset-0 grid place-items-center"
+            animate={{ opacity: [0, 0, 1, 1, 0, 0] }}
+            transition={swap}
+          >
+            <span className="relative block h-6 w-6">
+              <motion.span
+                className="absolute left-0 top-[3px] block"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 3, ease: "linear", repeat: Infinity }}
+              >
+                <Cog size={15} strokeWidth={1.8} />
+              </motion.span>
+              <motion.span
+                className="absolute bottom-0 right-0 block"
+                animate={{ rotate: -360 }}
+                transition={{ duration: 3, ease: "linear", repeat: Infinity }}
+              >
+                <Cog size={12} strokeWidth={1.8} />
+              </motion.span>
+            </span>
+          </motion.span>
+        </Station>
+
+        {/* DESTINATION — map pin + teal delivered tick popping in place */}
+        <Station x={382} label="DESTINATION">
+          <MapPin size={24} strokeWidth={1.8} />
+          <motion.span
+            className="absolute -right-1.5 -top-1.5 grid h-[22px] w-[22px] place-items-center rounded-full bg-teal text-bg-elev shadow-[var(--shadow-soft)]"
+            initial={{ opacity: 0, scale: 0.4 }}
+            animate={{ opacity: [0, 0, 1, 1, 0], scale: [0.4, 0.4, 1, 1, 0.4] }}
+            transition={{
+              duration: C,
+              times: [0, 0.62, 0.69, 0.95, 1],
+              repeat: Infinity,
+              ease: [0.34, 1.45, 0.5, 1],
+            }}
+          >
+            <Check size={13} strokeWidth={3} />
+          </motion.span>
+        </Station>
+
+        {/* the parcel — slides linearly, fades INTO each badge (never over it) */}
+        <motion.div
+          className="absolute"
+          style={{ left: 0, top: 27 }}
+          animate={{
+            x: [69, 69, 172, 172, 245, 245, 338, 338, 338],
+            opacity: [0, 1, 1, 0, 0, 1, 1, 0, 0],
+          }}
+          transition={{
+            duration: C,
+            times: [0, 0.03, 0.18, 0.21, 0.45, 0.48, 0.63, 0.66, 1],
+            repeat: Infinity,
+            ease: "linear",
+          }}
         >
-          {/* shop body */}
-          <rect x="44" y="113" width="60" height="67" rx="3" fill="#ffffff" stroke="#d6d3ca" strokeWidth="1.5" />
-          {/* display window with goods */}
-          <rect x="51" y="124" width="29" height="32" rx="2" fill="#eef5f3" stroke="#e7e5de" />
-          <rect x="56" y="139" width="8" height="17" fill="#bcccc8" />
-          <rect x="67" y="133" width="8" height="23" fill="#bcccc8" />
-          {/* door */}
-          <rect x="85" y="150" width="17" height="30" rx="1" fill="#f3eee2" stroke="#e7e5de" />
-          <circle cx="89" cy="166" r="1.6" fill="#9ca3af" />
-          {/* scalloped awning, overhanging the storefront */}
-          <rect x="38" y="96" width="72" height="13" rx="1" fill="#d97706" />
-          <path d="M 38 109 q 9 10 18 0 q 9 10 18 0 q 9 10 18 0 q 9 10 18 0" fill="#d97706" />
-          <text x="74" y="212" textAnchor="middle" fontFamily="var(--font-mono), ui-monospace, monospace" fontSize="11" fill="#9ca3af" letterSpacing="1.5">
-            SELLER
-          </text>
-        </motion.g>
-
-        {/* ItalParcel — a light-bodied warehouse with a dark roof */}
-        <motion.g
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        >
-          {/* body */}
-          <rect x="150" y="112" width="80" height="68" rx="3" fill="#ffffff" stroke="#d6d3ca" strokeWidth="1.5" />
-          {/* gable roof */}
-          <polygon points="142,114 190,86 238,114" fill="#0b0f14" />
-          {/* side windows */}
-          <rect x="158" y="124" width="13" height="13" rx="1.5" fill="#eef5f3" stroke="#e7e5de" />
-          <rect x="209" y="124" width="13" height="13" rx="1.5" fill="#eef5f3" stroke="#e7e5de" />
-          {/* roll-up loading dock */}
-          <rect x="174" y="128" width="32" height="52" rx="1.5" fill="#ece9e1" stroke="#d6d3ca" />
-          <g stroke="#c7c2b4" strokeWidth="1.2">
-            <line x1="176" y1="139" x2="204" y2="139" />
-            <line x1="176" y1="150" x2="204" y2="150" />
-            <line x1="176" y1="161" x2="204" y2="161" />
-            <line x1="176" y1="172" x2="204" y2="172" />
-          </g>
-          {/* brand badge on the roof — a little parcel */}
-          <circle cx="190" cy="96" r="12" fill="#d97706" />
-          <g stroke="#ffffff" strokeWidth="2" fill="none" strokeLinejoin="round" strokeLinecap="round">
-            <rect x="184.5" y="91" width="11" height="10" rx="1.5" />
-            <line x1="184.5" y1="96" x2="195.5" y2="96" />
-          </g>
-          <text x="190" y="212" textAnchor="middle" fontFamily="var(--font-mono), ui-monospace, monospace" fontSize="11" fill="#9ca3af" letterSpacing="1.5">
-            ITALPARCEL
-          </text>
-        </motion.g>
-
-        {/* warehouse intake — a scan sweep + pulse as the parcel arrives */}
-        <motion.line
-          x1="156"
-          y1="124"
-          x2="224"
-          y2="124"
-          stroke="#d97706"
-          strokeWidth="2"
-          strokeLinecap="round"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0, 0.9, 0], y: [0, 52, 52] }}
-          transition={{ duration: 0.6, delay: 1.9, ease: "easeInOut" }}
-        />
-        <motion.circle
-          cx="190"
-          cy="96"
-          r="12"
-          fill="none"
-          stroke="#d97706"
-          strokeWidth="2"
-          initial={{ opacity: 0.5, scale: 1 }}
-          animate={{ opacity: 0, scale: 2.4 }}
-          transition={{ duration: 0.7, delay: 1.95, ease: "easeOut" }}
-          style={{ transformOrigin: "190px 96px" }}
-        />
-
-        {/* destination — recipient's home */}
-        <motion.g
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <rect x="278" y="118" width="56" height="62" rx="3" fill="#ffffff" stroke="#d6d3ca" strokeWidth="1.5" />
-          <polygon points="270,120 306,90 342,120" fill="#0f766e" />
-          <rect x="286" y="128" width="13" height="13" rx="1.5" fill="#eef5f3" stroke="#e7e5de" />
-          <rect x="300" y="148" width="18" height="32" rx="1" fill="#f3eee2" stroke="#e7e5de" />
-          <circle cx="304" cy="164" r="1.6" fill="#9ca3af" />
-          <text x="306" y="212" textAnchor="middle" fontFamily="var(--font-mono), ui-monospace, monospace" fontSize="11" fill="#9ca3af" letterSpacing="1">
-            DESTINATION
-          </text>
-        </motion.g>
-
-        {/* parcel: seller → warehouse */}
-        <motion.g
-          initial={{ opacity: 0, x: 108, y: 150 }}
-          animate={{ opacity: [0, 1, 1, 0], x: [108, 116, 140, 146] }}
-          transition={{ duration: 1, delay: 0.95, times: [0, 0.12, 0.82, 1], ease: "easeInOut", repeat: Infinity, repeatDelay: 4.5 }}
-        >
-          <rect x="-11" y="-9" width="22" height="18" rx="3" fill="#d97706" />
-          <rect x="-4.5" y="-5" width="12" height="10" rx="1" fill="#fafaf7" opacity="0.9" />
-        </motion.g>
-
-        {/* parcel: warehouse → destination (re-packed, re-shipped) */}
-        <motion.g
-          initial={{ opacity: 0, x: 234, y: 150 }}
-          animate={{ opacity: [0, 1, 1, 0], x: [234, 242, 260, 266] }}
-          transition={{ duration: 1, delay: 2.3, times: [0, 0.12, 0.82, 1], ease: "easeInOut", repeat: Infinity, repeatDelay: 4.5 }}
-        >
-          <rect x="-11" y="-9" width="22" height="18" rx="3" fill="#0b0f14" />
-          <rect x="-4.5" y="-5" width="12" height="10" rx="1" fill="#fafaf7" opacity="0.9" />
-        </motion.g>
-
-        {/* arrowheads at each leg's end */}
-        <motion.path
-          d="M 140 144 L 146 150 L 140 156"
-          stroke="#d97706"
-          strokeWidth="2"
-          fill="none"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3, delay: 1.8 }}
-        />
-        <motion.path
-          d="M 260 144 L 266 150 L 260 156"
-          stroke="#d97706"
-          strokeWidth="2"
-          fill="none"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3, delay: 3.2 }}
-        />
-
-        {/* delivered tick over the destination */}
-        <motion.g
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4, delay: 3.35, ease: [0.34, 1.45, 0.5, 1] }}
-          style={{ transformOrigin: "306px 74px" }}
-        >
-          <circle cx="306" cy="74" r="12" fill="#0f766e" />
-          <path
-            d="M 300 74 l 4 4 l 8 -9"
-            stroke="#ffffff"
-            strokeWidth="2.4"
-            fill="none"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </motion.g>
-      </svg>
+          <Parcel />
+        </motion.div>
+      </motion.div>
     </PhaseVisual>
   );
 }
@@ -776,20 +734,39 @@ function ShipArt() {
             />
           </motion.g>
 
+          {/* header check pulses gently, in loop */}
+          <motion.circle
+            cx="212"
+            cy="60"
+            r="11"
+            fill="none"
+            stroke="#0f766e"
+            strokeWidth="2"
+            initial={{ opacity: 0, scale: 1 }}
+            animate={{ opacity: [0, 0.45, 0], scale: [1, 1.9, 1.9] }}
+            transition={{ duration: 2.2, delay: 1.6, repeat: Infinity, ease: "easeOut" }}
+            style={{ transformOrigin: "212px 60px" }}
+          />
+
           <line x1="46" y1="78" x2="220" y2="78" stroke="#e7e5de" />
 
           {/* line items */}
           {rows.map((row, i) => {
             const y = 110 + i * 30;
             return (
-              <g key={row.label}>
+              <motion.g
+                key={row.label}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3, delay: 0.15 + i * 0.12, ease: EASE }}
+              >
                 <text x="46" y={y} fontFamily="var(--font-mono), ui-monospace, monospace" fontSize="12" fill="#0b0f14" opacity="0.7">
                   {row.label}
                 </text>
                 <text x="220" y={y} textAnchor="end" fontFamily="var(--font-mono), ui-monospace, monospace" fontSize="12" fill="#0b0f14">
                   {row.value}
                 </text>
-              </g>
+              </motion.g>
             );
           })}
 
@@ -806,12 +783,46 @@ function ShipArt() {
             fontSize="26"
             fontWeight="600"
             fill="#0b0f14"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.9 }}
+            initial={{ opacity: 0, scale: 0.6 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, delay: 0.5, ease: [0.34, 1.45, 0.5, 1] }}
+            style={{ transformOrigin: "220px 222px" }}
           >
             €37.00
           </motion.text>
+
+          {/* APPROVED stamp — imprints over the total, left of the number */}
+          <motion.g
+            initial={{ opacity: 0, scale: 1.8 }}
+            animate={{ opacity: 0.86, scale: 1 }}
+            transition={{ duration: 0.45, delay: 0.95, ease: [0.3, 1.4, 0.5, 1] }}
+            style={{ transformOrigin: "112px 210px" }}
+          >
+            <g transform="rotate(-10 112 210)">
+              <rect
+                x="66"
+                y="196"
+                width="92"
+                height="30"
+                rx="4"
+                fill="none"
+                stroke="#0f766e"
+                strokeWidth="2.5"
+              />
+              <text
+                x="112"
+                y="215"
+                textAnchor="middle"
+                fontFamily="var(--font-mono), ui-monospace, monospace"
+                fontSize="13"
+                fontWeight="700"
+                fill="#0f766e"
+                letterSpacing="2"
+              >
+                APPROVED
+              </text>
+            </g>
+          </motion.g>
         </motion.g>
 
         {/* hand-off line to the carrier */}
@@ -821,7 +832,7 @@ function ShipArt() {
           strokeWidth="2"
           initial={{ pathLength: 0 }}
           animate={{ pathLength: 1 }}
-          transition={{ duration: 0.7, delay: 1.6 }}
+          transition={{ duration: 0.5, delay: 1.35 }}
         />
         <motion.path
           d="M 261 134 L 271 140 L 261 146"
@@ -832,14 +843,14 @@ function ShipArt() {
           fill="none"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.3, delay: 2.2 }}
+          transition={{ duration: 0.3, delay: 1.75 }}
         />
 
         {/* carrier badge */}
         <motion.g
           initial={{ opacity: 0, x: 8 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 1.9 }}
+          transition={{ duration: 0.5, delay: 1.45 }}
         >
           <rect x="274" y="108" width="76" height="64" rx="8" fill="#0b0f14" />
           <text
@@ -872,150 +883,148 @@ function ShipArt() {
 }
 
 function TrackArt() {
-  const events = [
-    { x: 36, label: "Picked up", state: "done", ts: "MAY 12" },
-    { x: 113, label: "Repacked", state: "done", ts: "MAY 12" },
-    { x: 190, label: "Departed", state: "done", ts: "MAY 13" },
-    { x: 267, label: "In transit", state: "active", ts: "MAY 14" },
-    { x: 344, label: "Delivered", state: "pending", ts: "ETA MAY 16" },
-  ] as const;
-
+  const stops = [
+    { label: "Picked up", date: "MAY 12", done: true },
+    { label: "Repacked", date: "MAY 12", done: true },
+    { label: "Departed", date: "MAY 13", done: true },
+    { label: "Delivered", date: "ETA MAY 16", done: false },
+  ];
   return (
     <PhaseVisual>
-      <svg viewBox="0 0 380 280" preserveAspectRatio="xMidYMid meet" className="h-full w-full" aria-hidden>
-        {/* origin / destination */}
-        <text x="36" y="50" textAnchor="middle" fontFamily="var(--font-mono), ui-monospace, monospace" fontSize="11" fill="#9ca3af" letterSpacing="1.5">
-          TRENTO
-        </text>
-        <text x="344" y="50" textAnchor="middle" fontFamily="var(--font-mono), ui-monospace, monospace" fontSize="11" fill="#9ca3af" letterSpacing="1.5">
-          NEW YORK
-        </text>
+      <motion.div
+        className="flex w-full max-w-[27rem] flex-col items-center"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: EASE }}
+      >
+        {/* origin / destination share the same 4-col grid → sit over col 1 & 4 */}
+        <div className="grid w-full grid-cols-4">
+          <span className="text-center font-mono text-[10px] uppercase tracking-[0.16em] text-fg-subtle">
+            TRENTO
+          </span>
+          <span className="col-start-4 text-center font-mono text-[10px] uppercase tracking-[0.16em] text-fg-subtle">
+            NEW YORK
+          </span>
+        </div>
 
-        {/* track */}
-        <line x1="36" y1="92" x2="344" y2="92" stroke="#e7e5de" strokeWidth="2" />
-        <motion.line
-          x1="36"
-          y1="92"
-          x2="267"
-          y2="92"
-          stroke="#0b0f14"
-          strokeWidth="2"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: 1 }}
-          transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-        />
+        {/* timeline — the node grid sets every column centre; the line and the
+            live marker are absolute overlays on those same centres, so spunta +
+            label + data and the line all share one centre per column. */}
+        <div className="relative mt-5 w-full pt-[34px]">
+          {/* line segments at the node centre (pt 34 + node radius 18 = 52) */}
+          <div className="pointer-events-none absolute inset-x-0" style={{ top: 51 }}>
+            <motion.div
+              className="absolute h-[2px] origin-left rounded-full bg-fg"
+              style={{ left: "12.5%", width: "50%" }}
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: 0.8, ease: EASE }}
+            />
+            <motion.div
+              className="absolute h-[2px] origin-left rounded-full bg-accent"
+              style={{ left: "62.5%", width: "12.5%" }}
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: 0.4, delay: 1.2, ease: EASE }}
+            />
+            <div
+              className="absolute h-[2px] rounded-full bg-border"
+              style={{ left: "75%", width: "12.5%" }}
+            />
+          </div>
 
-        {events.map((e, i) => (
-          <motion.g
-            key={i}
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.4 + i * 0.18 }}
-          >
-            {e.state === "done" && (
-              <>
-                <circle cx={e.x} cy={92} r={9} fill="#0b0f14" />
-                <path
-                  d={`M ${e.x - 4} 92 L ${e.x - 1} 95 L ${e.x + 4} 89`}
-                  stroke="#fafaf7"
-                  strokeWidth="2"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </>
-            )}
-            {e.state === "active" && (
-              <>
-                <motion.circle
-                  cx={e.x}
-                  cy={92}
-                  r={16}
-                  fill="#d97706"
-                  opacity={0.18}
-                  animate={{ r: [12, 18, 12], opacity: [0.3, 0, 0.3] }}
-                  transition={{ duration: 2.4, repeat: Infinity }}
-                />
-                <circle cx={e.x} cy={92} r={7} fill="#d97706" />
-              </>
-            )}
-            {e.state === "pending" && (
-              <circle cx={e.x} cy={92} r={6} fill="#fafaf7" stroke="#d6d3ca" strokeWidth="2" />
-            )}
-            <text
-              x={e.x}
-              y={116}
-              textAnchor="middle"
-              fontFamily="var(--font-mono), ui-monospace, monospace"
-              fontSize="10"
-              fill={e.state === "pending" ? "#9ca3af" : "#0b0f14"}
-              letterSpacing="0.5"
-            >
-              {e.label.toUpperCase()}
-            </text>
-            <text
-              x={e.x}
-              y={131}
-              textAnchor="middle"
-              fontFamily="var(--font-mono), ui-monospace, monospace"
-              fontSize="10"
-              fill="#9ca3af"
-              letterSpacing="0.5"
-            >
-              {e.ts}
-            </text>
-          </motion.g>
-        ))}
+          {/* nodes */}
+          <div className="grid grid-cols-4">
+            {stops.map((s, i) => (
+              <div key={s.label} className="flex flex-col items-center">
+                <motion.div
+                  className={cn(
+                    "grid h-9 w-9 place-items-center rounded-full",
+                    s.done
+                      ? "bg-fg text-bg-elev"
+                      : "border-2 border-border-strong bg-bg-elev"
+                  )}
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{
+                    duration: 0.4,
+                    delay: s.done ? 0.3 + i * 0.4 : 1.4,
+                    ease: [0.34, 1.45, 0.5, 1],
+                  }}
+                >
+                  {s.done && <Check size={16} strokeWidth={3} />}
+                </motion.div>
+                <span
+                  className={cn(
+                    "mt-3 whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.08em]",
+                    s.done ? "text-fg" : "text-fg-subtle"
+                  )}
+                >
+                  {s.label}
+                </span>
+                <span className="mt-0.5 whitespace-nowrap font-mono text-[9px] uppercase tracking-[0.06em] text-fg-subtle">
+                  {s.date}
+                </span>
+              </div>
+            ))}
+          </div>
 
-        {/* live-status / log card — folds in the WhatsApp helper */}
-        <motion.g
+          {/* live parcel marker at 75% (between Departed and Delivered) */}
+          <div className="absolute" style={{ left: "75%", top: 52 }}>
+            <div className="-translate-x-1/2 -translate-y-1/2">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.4 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, delay: 1.5, ease: [0.34, 1.45, 0.5, 1] }}
+              >
+                <div className="relative">
+                  {/* pulsing copper halo */}
+                  <motion.span
+                    className="absolute rounded-[9px] bg-accent/30"
+                    style={{ inset: -7 }}
+                    animate={{ opacity: [0.5, 0, 0.5], scale: [0.9, 1.5, 0.9] }}
+                    transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                  {/* the parcel, bobbing live */}
+                  <motion.div
+                    animate={{ x: [-2, 2, -2] }}
+                    transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    <Parcel />
+                  </motion.div>
+                  {/* callout dropping from above, pointing down at the parcel */}
+                  <div className="absolute bottom-full left-1/2 mb-2 -translate-x-1/2">
+                    <motion.div
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: 1.85, ease: EASE }}
+                    >
+                      <div className="whitespace-nowrap rounded-md border border-border bg-bg-elev px-2 py-1 font-mono text-[9px] uppercase tracking-[0.1em] text-fg shadow-[var(--shadow-soft)]">
+                        Milan hub · 14:32
+                      </div>
+                      <div className="absolute left-1/2 top-full h-2 w-2 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-r border-border bg-bg-elev" />
+                    </motion.div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </div>
+
+        {/* WhatsApp — a separate pill, generous gap below the timeline */}
+        <motion.div
+          className="mt-9 flex items-center gap-2.5 rounded-full border border-border bg-bg-elev px-4 py-2 shadow-[var(--shadow-soft)]"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 1.5, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.4, delay: 2.1, ease: EASE }}
         >
-          <rect
-            x="44"
-            y="162"
-            width="292"
-            height="66"
-            rx="10"
-            fill="#ffffff"
-            stroke="#d6d3ca"
-            style={{
-              filter:
-                "drop-shadow(0 1px 2px rgba(11,15,20,0.04)) drop-shadow(0 10px 22px rgba(11,15,20,0.07))",
-            }}
-          />
-          {/* row 1 — live status */}
-          <motion.circle
-            cx="64"
-            cy="184"
-            r="9"
-            fill="#d97706"
-            opacity={0.18}
-            animate={{ r: [6, 11, 6], opacity: [0.3, 0, 0.3] }}
-            transition={{ duration: 2.4, repeat: Infinity }}
-          />
-          <circle cx="64" cy="184" r="3.5" fill="#d97706" />
-          <text x="80" y="188" fontFamily={"var(--font-sans), system-ui"} fontSize="12" fill="#0b0f14">
-            In transit · Milan hub
-          </text>
-          <text x="320" y="188" textAnchor="end" fontFamily="var(--font-mono), ui-monospace, monospace" fontSize="11" fill="#9ca3af" letterSpacing="1">
-            14:32
-          </text>
-
-          <line x1="64" y1="201" x2="316" y2="201" stroke="#e7e5de" />
-
-          {/* row 2 — WhatsApp helper */}
-          <circle cx="64" cy="216" r="3.5" fill="#0f766e" />
-          <text x="80" y="220" fontFamily={"var(--font-sans), system-ui"} fontSize="12" fill="#0b0f14">
-            Need a hand?
-          </text>
-          <text x="320" y="220" textAnchor="end" fontFamily="var(--font-mono), ui-monospace, monospace" fontSize="11" fill="#9ca3af" letterSpacing="1.5">
-            WHATSAPP
-          </text>
-        </motion.g>
-      </svg>
+          <MessageCircle size={16} className="text-teal" strokeWidth={2} />
+          <span className="text-sm font-medium text-fg">Need a hand?</span>
+          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-fg-subtle">
+            WhatsApp
+          </span>
+        </motion.div>
+      </motion.div>
     </PhaseVisual>
   );
 }

@@ -8,6 +8,7 @@ import {
   useReducedMotion,
   useInView,
 } from "framer-motion";
+import type { Transition } from "framer-motion";
 import {
   Store,
   Warehouse,
@@ -25,8 +26,12 @@ import { cn } from "@/lib/cn";
 // the catch-up still feels responsive.
 const STEP_ADVANCE_MS = 150;
 
-// Shared entrance easing, identical across all four phases.
-const EASE = [0.16, 1, 0.3, 1];
+// Easing curves, typed as `Transition["ease"]` so Framer Motion accepts the
+// cubic-bezier tuples (a bare `number[]` is not assignable to `Easing`).
+const EASE: Transition["ease"] = [0.16, 1, 0.3, 1]; // shared entrance
+const EASE_BACK: Transition["ease"] = [0.34, 1.45, 0.5, 1]; // overshoot / pop
+const EASE_STAMP: Transition["ease"] = [0.3, 1.4, 0.5, 1]; // APPROVED stamp
+const EASE_IN: Transition["ease"] = [0.4, 0, 1, 1]; // form collapse
 
 type Step = {
   n: string;
@@ -170,7 +175,7 @@ function DesktopScroll() {
                 exit={{ opacity: 0, y: -32 }}
                 transition={{
                   duration: marching ? 0.3 : 0.55,
-                  ease: [0.16, 1, 0.3, 1],
+                  ease: EASE,
                 }}
                 className="absolute inset-0 flex items-center"
               >
@@ -335,7 +340,7 @@ function ActivateArt() {
         <motion.g
           initial={{ opacity: 1, scale: 1 }}
           animate={{ opacity: 0, scale: 0.97 }}
-          transition={{ duration: 0.35, delay: 2.5, ease: [0.4, 0, 1, 1] }}
+          transition={{ duration: 0.35, delay: 2.5, ease: EASE_IN }}
           style={{ transformOrigin: "190px 140px" }}
         >
           {/* header — a new inquiry */}
@@ -352,7 +357,7 @@ function ActivateArt() {
           <motion.g
             initial={{ opacity: 0, scale: 0 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.4, delay: 0.15, ease: EASE }}
             style={{ transformOrigin: "310px 52px" }}
           >
             <circle cx="310" cy="52" r="12" fill="#d97706" />
@@ -410,7 +415,7 @@ function ActivateArt() {
           <motion.g
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, delay: 1.1, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.4, delay: 1.1, ease: EASE }}
             style={{ transformOrigin: "170px 220px" }}
           >
             {/* press dip, timed to the cursor's click */}
@@ -462,7 +467,7 @@ function ActivateArt() {
             fill="#0f766e"
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={{ duration: 0.5, delay: 2.62, ease: [0.34, 1.45, 0.5, 1] }}
+            transition={{ duration: 0.5, delay: 2.62, ease: EASE_BACK }}
             style={{ transformOrigin: "190px 102px" }}
           />
           <motion.path
@@ -474,12 +479,12 @@ function ActivateArt() {
             strokeLinejoin="round"
             initial={{ pathLength: 0 }}
             animate={{ pathLength: 1 }}
-            transition={{ duration: 0.4, delay: 2.95, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.4, delay: 2.95, ease: EASE }}
           />
           <motion.g
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: 3.0, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.35, delay: 3.0, ease: EASE }}
           >
             <text
               x="190"
@@ -648,7 +653,7 @@ function ReceiveArt() {
               duration: C,
               times: [0, 0.62, 0.69, 0.95, 1],
               repeat: Infinity,
-              ease: [0.34, 1.45, 0.5, 1],
+              ease: EASE_BACK,
             }}
           >
             <Check size={13} strokeWidth={3} />
@@ -720,7 +725,7 @@ function ShipArt() {
           <motion.g
             initial={{ opacity: 0, scale: 0.6 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, delay: 1.1, ease: [0.34, 1.45, 0.5, 1] }}
+            transition={{ duration: 0.4, delay: 1.1, ease: EASE_BACK }}
             style={{ transformOrigin: "212px 60px" }}
           >
             <circle cx="212" cy="60" r="11" fill="#0f766e" />
@@ -785,7 +790,7 @@ function ShipArt() {
             fill="#0b0f14"
             initial={{ opacity: 0, scale: 0.6 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, delay: 0.5, ease: [0.34, 1.45, 0.5, 1] }}
+            transition={{ duration: 0.4, delay: 0.5, ease: EASE_BACK }}
             style={{ transformOrigin: "220px 222px" }}
           >
             €37.00
@@ -795,7 +800,7 @@ function ShipArt() {
           <motion.g
             initial={{ opacity: 0, scale: 1.8 }}
             animate={{ opacity: 0.86, scale: 1 }}
-            transition={{ duration: 0.45, delay: 0.95, ease: [0.3, 1.4, 0.5, 1] }}
+            transition={{ duration: 0.45, delay: 0.95, ease: EASE_STAMP }}
             style={{ transformOrigin: "112px 210px" }}
           >
             <g transform="rotate(-10 112 210)">
@@ -949,7 +954,7 @@ function TrackArt() {
                   transition={{
                     duration: 0.4,
                     delay: s.done ? 0.3 + i * 0.4 : 1.4,
-                    ease: [0.34, 1.45, 0.5, 1],
+                    ease: EASE_BACK,
                   }}
                 >
                   {s.done && <Check size={16} strokeWidth={3} />}
@@ -975,7 +980,7 @@ function TrackArt() {
               <motion.div
                 initial={{ opacity: 0, scale: 0.4 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.4, delay: 1.5, ease: [0.34, 1.45, 0.5, 1] }}
+                transition={{ duration: 0.4, delay: 1.5, ease: EASE_BACK }}
               >
                 <div className="relative">
                   {/* pulsing copper halo */}

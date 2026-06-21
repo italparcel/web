@@ -6,6 +6,7 @@ import {
   useScroll,
   useMotionValueEvent,
   useReducedMotion,
+  useInView,
 } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
@@ -85,6 +86,12 @@ export function HowItWorks() {
 
 function DesktopScroll() {
   const ref = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  // Only let the step illustrations animate once the pinned stage is actually
+  // on screen. Otherwise step 01 mounts (and finishes animating) at page load,
+  // far above the fold, so scrolling down lands on an already-completed
+  // animation — while scrolling up re-mounts it and looks correct.
+  const entered = useInView(stageRef, { amount: 0.5 });
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end end"],
@@ -139,23 +146,25 @@ function DesktopScroll() {
       className="relative hidden md:block"
       style={{ height: `${STEPS.length * 100 + 100}vh` }}
     >
-      <div className="sticky top-0 flex h-screen flex-col">
+      <div ref={stageRef} className="sticky top-0 flex h-screen flex-col">
         {/* Stage */}
         <div className="relative flex-1 overflow-hidden">
           <AnimatePresence initial={false}>
-            <motion.div
-              key={active}
-              initial={{ opacity: 0, y: 32 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -32 }}
-              transition={{
-                duration: marching ? 0.3 : 0.55,
-                ease: [0.16, 1, 0.3, 1],
-              }}
-              className="absolute inset-0 flex items-center"
-            >
-              <StepContent step={STEPS[active]} />
-            </motion.div>
+            {entered && (
+              <motion.div
+                key={active}
+                initial={{ opacity: 0, y: 32 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -32 }}
+                transition={{
+                  duration: marching ? 0.3 : 0.55,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+                className="absolute inset-0 flex items-center"
+              >
+                <StepContent step={STEPS[active]} />
+              </motion.div>
+            )}
           </AnimatePresence>
 
           {/* Scroll hint */}
@@ -370,25 +379,104 @@ function ActivateArt() {
           );
         })}
 
-        {/* submit button */}
+        {/* submit button — pops in, then gets clicked */}
         <motion.g
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4, delay: 1.1, ease: [0.16, 1, 0.3, 1] }}
           style={{ transformOrigin: "170px 220px" }}
         >
-          <rect x="60" y="206" width="220" height="28" rx="6" fill="#d97706" />
-          <text
-            x="170"
-            y="224"
-            textAnchor="middle"
-            fontFamily="ui-monospace, monospace"
-            fontSize="10"
-            fill="#ffffff"
-            letterSpacing="1.5"
+          {/* press dip, timed to the cursor's click */}
+          <motion.g
+            initial={{ scale: 1 }}
+            animate={{ scale: [1, 0.96, 1] }}
+            transition={{ duration: 0.4, delay: 2.22, times: [0, 0.5, 1] }}
+            style={{ transformOrigin: "170px 220px" }}
           >
-            SEND REQUEST
-          </text>
+            <rect x="60" y="206" width="220" height="28" rx="6" fill="#d97706" />
+
+            {/* click ripple */}
+            <motion.circle
+              cx="170"
+              cy="220"
+              r="4"
+              fill="#ffffff"
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: [0, 0.45, 0], scale: [0, 6, 11] }}
+              transition={{ duration: 0.6, delay: 2.42, ease: "easeOut" }}
+              style={{ transformOrigin: "170px 220px" }}
+            />
+
+            {/* default label — fades out on click */}
+            <motion.text
+              x="170"
+              y="224"
+              textAnchor="middle"
+              fontFamily="ui-monospace, monospace"
+              fontSize="10"
+              fill="#ffffff"
+              letterSpacing="1.5"
+              initial={{ opacity: 1 }}
+              animate={{ opacity: 0 }}
+              transition={{ duration: 0.2, delay: 2.5 }}
+            >
+              SEND REQUEST
+            </motion.text>
+
+            {/* sent confirmation — fades in after the click */}
+            <motion.g
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.25, delay: 2.62 }}
+            >
+              <motion.path
+                d="M 110 220 l 4 4 l 8 -9"
+                stroke="#ffffff"
+                strokeWidth="2.4"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 0.35, delay: 2.68, ease: [0.16, 1, 0.3, 1] }}
+              />
+              <text
+                x="184"
+                y="224"
+                textAnchor="middle"
+                fontFamily="ui-monospace, monospace"
+                fontSize="10"
+                fill="#ffffff"
+                letterSpacing="1.5"
+              >
+                REQUEST SENT
+              </text>
+            </motion.g>
+          </motion.g>
+        </motion.g>
+
+        {/* pointer that moves in and clicks the button */}
+        <motion.g
+          initial={{ opacity: 0, x: 250, y: 256 }}
+          animate={{
+            opacity: [0, 1, 1, 1, 1, 0],
+            x: [250, 250, 178, 178, 178, 204],
+            y: [256, 256, 226, 230, 226, 244],
+          }}
+          transition={{
+            duration: 1.7,
+            delay: 1.3,
+            times: [0, 0.08, 0.55, 0.66, 0.78, 1],
+            ease: "easeInOut",
+          }}
+        >
+          <path
+            d="M 0 0 L 0 16 L 4.2 12.2 L 6.8 17.6 L 8.8 16.7 L 6.2 11.3 L 11 11.2 Z"
+            fill="#0b0f14"
+            stroke="#ffffff"
+            strokeWidth="1"
+            strokeLinejoin="round"
+          />
         </motion.g>
       </svg>
     </ArtFrame>

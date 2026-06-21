@@ -827,57 +827,24 @@ function ShipArt() {
           </motion.g>
         </motion.g>
 
-        {/* hand-off line to the carrier */}
-        <motion.path
-          d="M 244 140 L 268 140"
-          stroke="#0b0f14"
-          strokeWidth="2"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: 1 }}
-          transition={{ duration: 0.5, delay: 1.35 }}
-        />
-        <motion.path
-          d="M 261 134 L 271 140 L 261 146"
-          stroke="#0b0f14"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3, delay: 1.75 }}
-        />
-
-        {/* carrier badge */}
+        {/* approved → a stylised black plane departs along the ticket base and
+            accelerates off the right edge of the frame, then is gone */}
         <motion.g
-          initial={{ opacity: 0, x: 8 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 1.45 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 1, 1, 0], x: [0, 0, 170, 210] }}
+          transition={{
+            duration: 1.5,
+            delay: 1.45,
+            times: [0, 0.12, 0.82, 1],
+            ease: "easeIn",
+          }}
         >
-          <rect x="274" y="108" width="76" height="64" rx="8" fill="#0b0f14" />
-          <text
-            x="312"
-            y="136"
-            textAnchor="middle"
-            fontFamily="var(--font-mono), ui-monospace, monospace"
-            fontSize="11"
-            fill="#fafaf7"
-            opacity="0.7"
-            letterSpacing="1.5"
-          >
-            CARRIER
-          </text>
-          <text
-            x="312"
-            y="160"
-            textAnchor="middle"
-            fontFamily={"var(--font-sans), system-ui"}
-            fontSize="20"
-            fill="#fafaf7"
-            fontWeight="600"
-          >
-            DPD
-          </text>
+          <g transform="translate(262, 236) scale(1.15)">
+            <path
+              d="M 26 0 L 10 -2.5 L 2 -2.5 L -12 -14 L -7 -2.5 L -15 -2.5 L -20 -8 L -16 -1.2 L -22 0 L -16 1.2 L -20 8 L -15 2.5 L -7 2.5 L -12 14 L 2 2.5 L 10 2.5 Z"
+              fill="#0b0f14"
+            />
+          </g>
         </motion.g>
       </svg>
     </PhaseVisual>

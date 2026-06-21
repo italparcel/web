@@ -289,22 +289,12 @@ function Fallback({
    ───────────────────────────────────────────────────────────── */
 
 // Shared frame for all four "how it works" phases — the single source of truth
-// for the container. Aspect ratio, the one dashed border, the white surface,
-// radius and padding are identical for every phase; each phase only supplies
-// its own artwork, centred in a safe-zone and fitted so nothing spills.
+// for the container. Aspect ratio (3:2, short enough that the wide phases fill),
+// the one dashed border, the clean white surface, radius and padding are
+// identical for every phase; each phase supplies its own artwork, centred.
 function PhaseVisual({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative aspect-[4/3] w-full max-w-xl overflow-hidden rounded-2xl border-[1.5px] border-dashed border-border-strong bg-bg-elev">
-      {/* uniform dotted texture */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.04]"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle, #0b0f14 1px, transparent 1px)",
-          backgroundSize: "14px 14px",
-        }}
-      />
+    <div className="relative aspect-[3/2] w-full max-w-xl overflow-hidden rounded-2xl border-[1.5px] border-dashed border-border-strong bg-bg-elev">
       <div className="absolute inset-0 grid place-items-center p-6 lg:p-12">
         {children}
       </div>
@@ -665,7 +655,10 @@ function ReceiveArt() {
           className="absolute"
           style={{ left: 0, top: 27 }}
           animate={{
-            x: [69, 69, 172, 172, 245, 245, 338, 338, 338],
+            // x sits exactly on each badge's edge at the keyframes where opacity
+            // flips, so the parcel never overlaps a circle (badge radius = 28,
+            // parcel = 26 wide). Same `times` for x and opacity ⇒ locked sync.
+            x: [78, 78, 162, 162, 244, 244, 328, 328, 328],
             opacity: [0, 1, 1, 0, 0, 1, 1, 0, 0],
           }}
           transition={{

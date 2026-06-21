@@ -445,18 +445,18 @@ function ActivateArt() {
         >
           <motion.circle
             cx="190"
-            cy="116"
-            r="26"
+            cy="102"
+            r="40"
             fill="#0f766e"
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ duration: 0.5, delay: 2.62, ease: [0.34, 1.45, 0.5, 1] }}
-            style={{ transformOrigin: "190px 116px" }}
+            style={{ transformOrigin: "190px 102px" }}
           />
           <motion.path
-            d="M 179 116 l 7 8 l 15 -17"
+            d="M 171 103 l 11 12 l 23 -26"
             stroke="#ffffff"
-            strokeWidth="3.4"
+            strokeWidth="4.6"
             fill="none"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -471,10 +471,10 @@ function ActivateArt() {
           >
             <text
               x="190"
-              y="168"
+              y="194"
               textAnchor="middle"
               fontFamily="var(--font-sans), system-ui"
-              fontSize="19"
+              fontSize="23"
               fontWeight="600"
               fill="#0b0f14"
             >
@@ -482,7 +482,7 @@ function ActivateArt() {
             </text>
             <text
               x="190"
-              y="189"
+              y="218"
               textAnchor="middle"
               fontFamily="var(--font-mono), ui-monospace, monospace"
               fontSize="11"
@@ -657,7 +657,7 @@ function ReceiveArt() {
         <motion.g
           initial={{ opacity: 0, x: 108, y: 150 }}
           animate={{ opacity: [0, 1, 1, 0], x: [108, 116, 140, 146] }}
-          transition={{ duration: 1, delay: 0.95, times: [0, 0.12, 0.82, 1], ease: "easeInOut" }}
+          transition={{ duration: 1, delay: 0.95, times: [0, 0.12, 0.82, 1], ease: "easeInOut", repeat: Infinity, repeatDelay: 4.5 }}
         >
           <rect x="-11" y="-9" width="22" height="18" rx="3" fill="#d97706" />
           <rect x="-4.5" y="-5" width="12" height="10" rx="1" fill="#fafaf7" opacity="0.9" />
@@ -667,7 +667,7 @@ function ReceiveArt() {
         <motion.g
           initial={{ opacity: 0, x: 234, y: 150 }}
           animate={{ opacity: [0, 1, 1, 0], x: [234, 242, 260, 266] }}
-          transition={{ duration: 1, delay: 2.3, times: [0, 0.12, 0.82, 1], ease: "easeInOut" }}
+          transition={{ duration: 1, delay: 2.3, times: [0, 0.12, 0.82, 1], ease: "easeInOut", repeat: Infinity, repeatDelay: 4.5 }}
         >
           <rect x="-11" y="-9" width="22" height="18" rx="3" fill="#0b0f14" />
           <rect x="-4.5" y="-5" width="12" height="10" rx="1" fill="#fafaf7" opacity="0.9" />
@@ -722,7 +722,7 @@ function ReceiveArt() {
 function ShipArt() {
   const rows = [
     { label: "Handling", value: "€17.00" },
-    { label: "Shipping · UPS", value: "€30.00" },
+    { label: "Shipping · DPD", value: "€30.00" },
     { label: "Activation credit", value: "−€10.00" },
   ];
   return (
@@ -755,7 +755,7 @@ function ShipArt() {
             fill="#9ca3af"
             letterSpacing="1.5"
           >
-            QUOTE · №&#160;Q-8472
+            QUOTE · №&#160;8472-EW
           </text>
 
           {/* approved status */}
@@ -816,7 +816,7 @@ function ShipArt() {
 
         {/* hand-off line to the carrier */}
         <motion.path
-          d="M 250 140 L 286 140"
+          d="M 244 140 L 268 140"
           stroke="#0b0f14"
           strokeWidth="2"
           initial={{ pathLength: 0 }}
@@ -824,7 +824,7 @@ function ShipArt() {
           transition={{ duration: 0.7, delay: 1.6 }}
         />
         <motion.path
-          d="M 279 134 L 289 140 L 279 146"
+          d="M 261 134 L 271 140 L 261 146"
           stroke="#0b0f14"
           strokeWidth="2"
           strokeLinecap="round"
@@ -841,9 +841,9 @@ function ShipArt() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 1.9 }}
         >
-          <rect x="292" y="108" width="76" height="64" rx="8" fill="#0b0f14" />
+          <rect x="274" y="108" width="76" height="64" rx="8" fill="#0b0f14" />
           <text
-            x="330"
+            x="312"
             y="136"
             textAnchor="middle"
             fontFamily="var(--font-mono), ui-monospace, monospace"
@@ -855,7 +855,7 @@ function ShipArt() {
             CARRIER
           </text>
           <text
-            x="330"
+            x="312"
             y="160"
             textAnchor="middle"
             fontFamily={"var(--font-sans), system-ui"}
@@ -863,7 +863,7 @@ function ShipArt() {
             fill="#fafaf7"
             fontWeight="600"
           >
-            UPS
+            DPD
           </text>
         </motion.g>
       </svg>
@@ -873,30 +873,30 @@ function ShipArt() {
 
 function TrackArt() {
   const events = [
-    { x: 50, label: "Picked up", state: "done", ts: "MAY 12" },
-    { x: 120, label: "Repacked", state: "done", ts: "MAY 12" },
+    { x: 36, label: "Picked up", state: "done", ts: "MAY 12" },
+    { x: 113, label: "Repacked", state: "done", ts: "MAY 12" },
     { x: 190, label: "Departed", state: "done", ts: "MAY 13" },
-    { x: 260, label: "In transit", state: "active", ts: "MAY 14" },
-    { x: 330, label: "Delivered", state: "pending", ts: "ETA MAY 16" },
+    { x: 267, label: "In transit", state: "active", ts: "MAY 14" },
+    { x: 344, label: "Delivered", state: "pending", ts: "ETA MAY 16" },
   ] as const;
 
   return (
     <PhaseVisual>
       <svg viewBox="0 0 380 280" preserveAspectRatio="xMidYMid meet" className="h-full w-full" aria-hidden>
         {/* origin / destination */}
-        <text x="50" y="50" textAnchor="middle" fontFamily="var(--font-mono), ui-monospace, monospace" fontSize="11" fill="#9ca3af" letterSpacing="1.5">
+        <text x="36" y="50" textAnchor="middle" fontFamily="var(--font-mono), ui-monospace, monospace" fontSize="11" fill="#9ca3af" letterSpacing="1.5">
           TRENTO
         </text>
-        <text x="330" y="50" textAnchor="middle" fontFamily="var(--font-mono), ui-monospace, monospace" fontSize="11" fill="#9ca3af" letterSpacing="1.5">
+        <text x="344" y="50" textAnchor="middle" fontFamily="var(--font-mono), ui-monospace, monospace" fontSize="11" fill="#9ca3af" letterSpacing="1.5">
           NEW YORK
         </text>
 
         {/* track */}
-        <line x1="50" y1="92" x2="330" y2="92" stroke="#e7e5de" strokeWidth="2" />
+        <line x1="36" y1="92" x2="344" y2="92" stroke="#e7e5de" strokeWidth="2" />
         <motion.line
-          x1="50"
+          x1="36"
           y1="92"
-          x2="260"
+          x2="267"
           y2="92"
           stroke="#0b0f14"
           strokeWidth="2"
@@ -947,9 +947,9 @@ function TrackArt() {
               y={116}
               textAnchor="middle"
               fontFamily="var(--font-mono), ui-monospace, monospace"
-              fontSize="11"
+              fontSize="10"
               fill={e.state === "pending" ? "#9ca3af" : "#0b0f14"}
-              letterSpacing="1"
+              letterSpacing="0.5"
             >
               {e.label.toUpperCase()}
             </text>
@@ -958,7 +958,7 @@ function TrackArt() {
               y={131}
               textAnchor="middle"
               fontFamily="var(--font-mono), ui-monospace, monospace"
-              fontSize="11"
+              fontSize="10"
               fill="#9ca3af"
               letterSpacing="0.5"
             >

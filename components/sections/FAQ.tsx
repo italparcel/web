@@ -28,14 +28,14 @@ export function FAQ() {
           description={
             <>
               Direct answers, drawn straight from our Terms &amp; Conditions.
-              The full text is on the{" "}
+              The full text is in the{" "}
               <Link
                 href="/terms"
-                className="font-medium text-fg underline decoration-accent/50 underline-offset-4 transition-colors hover:text-accent hover:decoration-accent"
+                className="font-medium text-fg underline underline-offset-2 hover:text-accent"
               >
-                /terms
-              </Link>{" "}
-              page.
+                T&amp;C
+              </Link>
+              .
             </>
           }
         />

@@ -555,7 +555,7 @@ function Station({
 }) {
   return (
     <div
-      className="absolute flex flex-col items-center"
+      className="absolute z-20 flex flex-col items-center"
       style={{ left: x, top: 12, transform: "translateX(-50%)" }}
     >
       <div
@@ -582,23 +582,26 @@ function ReceiveArt() {
   const time = useTime();
   const p = useTransform(time, (ms) => (ms % 6000) / 6000);
 
-  // Parcel — x sits exactly on each badge edge where opacity flips (badge r=28,
-  // parcel 26px wide) so it never overlaps a circle.
-  const PT = [0, 0.04, 0.22, 0.26, 0.5, 0.54, 0.72, 0.76, 1];
-  const parcelX = useTransform(p, PT, [78, 78, 162, 162, 244, 244, 328, 328, 328]);
-  const parcelOp = useTransform(p, PT, [0, 1, 1, 0, 0, 1, 1, 0, 0]);
+  // Parcel CROSSES under the badges instead of stopping: x is ONE continuous,
+  // constant-speed sweep (64 under SELLER → 370 under DESTINATION over 82% of the
+  // cycle, then a delivered pause). Opacity is derived from x — 0 only while the
+  // parcel overlaps a circle (26px wide vs r28 badge), 1 on the open line between
+  // them. So it slides under each badge and out again, never halting.
+  const parcelX = useTransform(p, [0, 0.82, 1], [64, 370, 370]);
+  const parcelOp = useTransform(
+    parcelX,
+    [74, 82, 158, 166, 240, 248, 324, 332],
+    [0, 1, 1, 0, 0, 1, 1, 0]
+  );
 
-  // Hub — warehouse ⇄ gears only while the parcel is inside (0.26–0.5).
-  const HT = [0, 0.26, 0.3, 0.46, 0.5, 1];
-  const whOp = useTransform(p, HT, [1, 1, 0, 0, 1, 1]);
-  const gearOp = useTransform(p, HT, [0, 0, 1, 1, 0, 0]);
+  // Hub gears spin only while the parcel is underneath it (driven by the same x).
+  const whOp = useTransform(parcelX, [160, 172, 234, 246], [1, 0, 0, 1]);
+  const gearOp = useTransform(parcelX, [160, 172, 234, 246], [0, 1, 1, 0]);
 
-  // Destination — map-pin becomes a big teal "delivered" disc, only after the
-  // parcel has arrived (0.76).
-  const DT = [0, 0.76, 0.82, 0.97, 1];
-  const pinOp = useTransform(p, DT, [1, 1, 0, 0, 1]);
-  const tickOp = useTransform(p, DT, [0, 0, 1, 1, 0]);
-  const tickSc = useTransform(p, DT, [0.3, 0.3, 1, 1, 0.6]);
+  // Destination "delivered" disc stamps in as the parcel slides under it.
+  const pinOp = useTransform(parcelX, [320, 332], [1, 0]);
+  const tickOp = useTransform(parcelX, [320, 332], [0, 1]);
+  const tickSc = useTransform(parcelX, [318, 330, 340, 370], [0.4, 1.12, 1, 1]);
 
   return (
     <PhaseVisual>
@@ -609,9 +612,9 @@ function ReceiveArt() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: EASE }}
       >
-        {/* copper line the parcel rides */}
+        {/* copper line the parcel rides (z-0, under everything) */}
         <div
-          className="absolute h-[2px] rounded-full bg-accent"
+          className="absolute z-0 h-[2px] rounded-full bg-accent"
           style={{ left: 50, right: 50, top: 39 }}
         />
 
@@ -632,20 +635,20 @@ function ReceiveArt() {
             className="absolute inset-0 grid place-items-center"
             style={{ opacity: gearOp }}
           >
-            <span className="relative h-7 w-7">
+            <span className="relative h-8 w-8">
               <motion.span
                 className="absolute left-0 top-0 block"
                 animate={{ rotate: 360 }}
                 transition={{ duration: 2.6, ease: "linear", repeat: Infinity }}
               >
-                <Cog size={18} strokeWidth={2} />
+                <Cog size={21} strokeWidth={2} />
               </motion.span>
               <motion.span
-                className="absolute -bottom-0.5 -right-0.5 block"
+                className="absolute -bottom-1 -right-1 block"
                 animate={{ rotate: -360 }}
                 transition={{ duration: 2.6, ease: "linear", repeat: Infinity }}
               >
-                <Cog size={14} strokeWidth={2} />
+                <Cog size={16} strokeWidth={2} />
               </motion.span>
             </span>
           </motion.span>
@@ -667,9 +670,10 @@ function ReceiveArt() {
           </motion.span>
         </Station>
 
-        {/* the parcel — position AND opacity both read the shared clock */}
+        {/* the parcel — z-10: above the line, BELOW the badges (z-20) so the
+            opaque circles cover it as it slides under each station */}
         <motion.div
-          className="absolute"
+          className="absolute z-10"
           style={{ left: 0, top: 27, x: parcelX, opacity: parcelOp }}
         >
           <Parcel />

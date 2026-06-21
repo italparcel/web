@@ -193,7 +193,7 @@ function Rolling({ value, className }: { value: string; className?: string }) {
   const reduce = useReducedMotion();
   if (reduce) return <span className={className}>{value}</span>;
   return (
-    <span className={cn("relative inline-block whitespace-nowrap", className)}>
+    <span className={cn("relative whitespace-nowrap", className)}>
       <AnimatePresence mode="popLayout" initial={false}>
         <motion.span
           key={value}
@@ -247,7 +247,7 @@ function ShipmentCard() {
                   baseline because Rolling keeps the live value in normal flow */}
               <Rolling
                 value={`№ ${s.code}`}
-                className="font-mono text-sm tabular-nums text-fg"
+                className="inline-block font-mono text-sm tabular-nums text-fg"
               />
             </div>
             <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-fg-subtle">
@@ -278,18 +278,14 @@ function ShipmentCard() {
               <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-fg-subtle">
                 To
               </p>
-              <div className="mt-1.5">
-                <Rolling
-                  value={s.city}
-                  className="display text-lg leading-none md:text-2xl"
-                />
-              </div>
-              <div className="mt-1.5">
-                <Rolling
-                  value={`${s.country} · ${s.postcode}`}
-                  className="font-mono text-[11px] text-fg-subtle"
-                />
-              </div>
+              <Rolling
+                value={s.city}
+                className="mt-1.5 block display text-lg leading-none md:text-2xl"
+              />
+              <Rolling
+                value={`${s.country} · ${s.postcode}`}
+                className="mt-1.5 block font-mono text-[11px] text-fg-subtle"
+              />
             </div>
           </div>
 
@@ -335,12 +331,10 @@ function Detail({ k, v }: { k: string; v: string }) {
       <p className="truncate font-mono text-[10px] uppercase tracking-[0.16em] text-fg-subtle">
         {k}
       </p>
-      <div className="mt-1">
-        <Rolling
-          value={v}
-          className="font-mono text-[11px] text-fg md:text-xs"
-        />
-      </div>
+      <Rolling
+        value={v}
+        className="mt-1 block font-mono text-[11px] text-fg md:text-xs"
+      />
     </div>
   );
 }

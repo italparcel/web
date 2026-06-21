@@ -9,6 +9,7 @@ import {
   useInView,
   useTime,
   useTransform,
+  useMotionTemplate,
 } from "framer-motion";
 import type { Transition } from "framer-motion";
 import {
@@ -618,54 +619,60 @@ function ReceiveArt() {
   const time = useTime();
   const p = useTransform(time, (ms) => ms / 6000);
 
-  // The 3-equal-column grid pins the circles at 1/6, 1/2, 5/6 of the 432-wide
-  // block → SELLER 72, ITALPARCEL 216, DESTINATION 360 (block pixels). Parcel
-  // CROSSES under the badges instead of stopping: x is ONE continuous,
-  // constant-speed sweep (86 emerging at SELLER → 347 resting at DESTINATION over
-  // the first 82%, then it holds delivered). It stays fully opaque the whole
-  // way — the badges are stacked above it (z-20 > the parcel's z-10 > the copper
-  // line's z-0), so each opaque circle simply covers the parcel as it slides
-  // behind and it reappears on the far side. No opacity fade needed.
-  const parcelX = useTransform(p, [0, 0.82, 1], [86, 347, 347]);
+  // The 3-equal-column grid pins the circle centres at 1/6, 1/2, 5/6 of the
+  // block. The parcel is positioned by the SAME fraction (not pixels), so it
+  // rides the line exactly through each circle centre at any width. It CROSSES
+  // under the badges instead of stopping: one continuous, constant-speed sweep
+  // (1/6 behind SELLER → 5/6 behind DESTINATION over the first 82%, then it
+  // holds delivered). It stays fully opaque the whole way — the badges sit above
+  // it (z-20 > the parcel's z-10 > the copper line's z-0), so each opaque circle
+  // simply covers it while it slides behind and it reappears on the far side.
+  const parcelPct = useTransform(p, [0, 0.82, 1], [16.667, 83.333, 83.333]);
+  const parcelLeft = useMotionTemplate`${parcelPct}%`;
 
-  // Hub gears spin only while the parcel is underneath the centre badge (216).
-  const whOp = useTransform(parcelX, [160, 172, 234, 246], [1, 0, 0, 1]);
-  const gearOp = useTransform(parcelX, [160, 172, 234, 246], [0, 1, 1, 0]);
+  // Hub: warehouse ⇄ gears only while the parcel is tucked behind the centre
+  // badge. It crosses the hub at p≈0.41; this window stays inside the "covered"
+  // span at every width (the badge is a fixed 56px, widest case = 432px block).
+  const whOp = useTransform(p, [0.36, 0.39, 0.43, 0.46], [1, 0, 0, 1]);
+  const gearOp = useTransform(p, [0.36, 0.39, 0.43, 0.46], [0, 1, 1, 0]);
 
-  // Destination "delivered" disc stamps in ONLY once the parcel has actually
-  // reached the badge: the parcel rests at 347, and the swap fires at 336→346,
-  // i.e. while it is already tucked behind the DESTINATION circle — so the tick
-  // can never appear before the parcel arrives.
-  const pinOp = useTransform(parcelX, [336, 346], [1, 0]);
-  const tickOp = useTransform(parcelX, [336, 346], [0, 1]);
-  const tickSc = useTransform(parcelX, [336, 344, 347], [0.5, 1.12, 1]);
+  // Destination "delivered" disc stamps in ONLY once the parcel has reached the
+  // badge: the parcel settles at p=0.82 and the swap fires at 0.78→0.81, while it
+  // is already tucked behind the DESTINATION circle — so the tick can never
+  // appear before the parcel arrives.
+  const pinOp = useTransform(p, [0.78, 0.81], [1, 0]);
+  const tickOp = useTransform(p, [0.78, 0.81], [0, 1]);
+  const tickSc = useTransform(p, [0.78, 0.805, 0.82], [0.5, 1.12, 1]);
 
   return (
     <PhaseVisual>
-      {/* Fixed 432-wide block. It has NO fixed height — the height comes from
-          the in-flow station grid (circles + labels), so PhaseVisual centres the
-          WHOLE block, circles and labels together, both axes. No horizontal
-          padding/margin and no one-sided spacer, so nothing can offset it. */}
+      {/* Responsive block — SAME width rule as the other phases (e.g. TrackArt:
+          w-full max-w-[27rem]). It never overflows the frame, so PhaseVisual
+          centres it cleanly; its height comes from the in-flow station grid
+          (circles + labels), so the WHOLE block is centred on both axes. With
+          the grid + fraction-based line/parcel the two outer circles land at 1/6
+          and 5/6 of the block → equal gap to each frame edge, by construction. */}
       <motion.div
-        className="relative w-[432px]"
+        className="relative w-full max-w-[27rem]"
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: EASE }}
       >
-        {/* copper line (z-0) — links the SELLER circle centre (72) to the
-            DESTINATION circle centre (360 = 432 − 72), behind the badges. top 27
-            sits it on the circle centre (circles are 56 tall from the top). */}
+        {/* copper line (z-0) — links the SELLER circle centre (1/6) to the
+            DESTINATION circle centre (5/6 = 100% − 1/6), behind the badges. top
+            27 sits it on the circle centre (circles are 56 tall from the top). */}
         <div
           className="pointer-events-none absolute z-0 h-[2px] rounded-full bg-accent"
-          style={{ left: 72, right: 72, top: 27 }}
+          style={{ left: "16.667%", right: "16.667%", top: 27 }}
         />
 
         {/* the parcel — z-10: above the line (z-0), BELOW the badges (z-20) so
-            the opaque circles cover it as it slides behind each station. top 15
-            centres the 26px parcel on the circle centre (28). */}
+            the opaque circles cover it as it slides behind each station. Same
+            fraction as the circles, centred on it (x:-50%); top 15 centres the
+            26px parcel on the circle centre (28). */}
         <motion.div
           className="absolute z-10"
-          style={{ left: 0, top: 15, x: parcelX }}
+          style={{ left: parcelLeft, top: 15, x: "-50%" }}
         >
           <Parcel />
         </motion.div>

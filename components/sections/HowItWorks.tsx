@@ -577,7 +577,9 @@ function ReceiveArt() {
   // One 6s cycle drives everything; every timed piece shares duration:6 + repeat
   // so the parcel, the hub gears and the delivered tick stay locked together.
   const C = 6;
-  const swap = { duration: C, times: [0, 0.18, 0.22, 0.47, 0.51, 1], repeat: Infinity };
+  // Warehouse → gears only AFTER the parcel has vanished into the hub (0.23)
+  // and back BEFORE it re-emerges (0.46).
+  const swap = { duration: C, times: [0, 0.23, 0.27, 0.42, 0.46, 1], repeat: Infinity };
   return (
     <PhaseVisual>
       <motion.div
@@ -636,17 +638,17 @@ function ReceiveArt() {
         <Station x={382} label="DESTINATION">
           <MapPin size={24} strokeWidth={1.8} />
           <motion.span
-            className="absolute -right-1.5 -top-1.5 grid h-[22px] w-[22px] place-items-center rounded-full bg-teal text-bg-elev shadow-[var(--shadow-soft)]"
+            className="absolute -right-2 -top-2 grid h-[30px] w-[30px] place-items-center rounded-full bg-teal text-bg-elev shadow-[var(--shadow-soft)]"
             initial={{ opacity: 0, scale: 0.4 }}
             animate={{ opacity: [0, 0, 1, 1, 0], scale: [0.4, 0.4, 1, 1, 0.4] }}
             transition={{
               duration: C,
-              times: [0, 0.62, 0.69, 0.95, 1],
+              times: [0, 0.69, 0.76, 0.96, 1],
               repeat: Infinity,
               ease: EASE_BACK,
             }}
           >
-            <Check size={13} strokeWidth={3} />
+            <Check size={18} strokeWidth={3} />
           </motion.span>
         </Station>
 
@@ -663,7 +665,7 @@ function ReceiveArt() {
           }}
           transition={{
             duration: C,
-            times: [0, 0.03, 0.18, 0.21, 0.45, 0.48, 0.63, 0.66, 1],
+            times: [0, 0.03, 0.2, 0.23, 0.46, 0.49, 0.66, 0.69, 1],
             repeat: Infinity,
             ease: "linear",
           }}

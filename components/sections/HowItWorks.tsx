@@ -691,7 +691,7 @@ function ShipArt() {
   ];
   return (
     <PhaseVisual>
-      <svg viewBox="0 0 380 280" preserveAspectRatio="xMidYMid meet" className="h-full w-full" aria-hidden>
+      <svg viewBox="0 0 380 280" preserveAspectRatio="xMidYMid meet" className="h-full w-full overflow-visible" aria-hidden>
         {/* quote ticket */}
         <motion.g
           initial={{ opacity: 0, y: 8 }}
@@ -831,21 +831,17 @@ function ShipArt() {
           </motion.g>
         </motion.g>
 
-        {/* approved → a stylised black plane departs along the ticket base and
-            accelerates off the right edge of the frame, then is gone */}
+        {/* approved → a generic plane leaves the ticket's right edge and flies
+            clean off the white frame edge (svg overflow is visible; the frame's
+            overflow-hidden clips it exactly at its border) */}
         <motion.g
           initial={{ opacity: 0 }}
-          animate={{ opacity: [0, 1, 1, 0], x: [0, 0, 170, 210] }}
-          transition={{
-            duration: 1.5,
-            delay: 1.45,
-            times: [0, 0.12, 0.82, 1],
-            ease: "easeIn",
-          }}
+          animate={{ opacity: [0, 1, 1], x: [0, 0, 250] }}
+          transition={{ duration: 1.6, delay: 1.45, times: [0, 0.12, 1], ease: "easeIn" }}
         >
-          <g transform="translate(262, 236) scale(1.15)">
+          <g transform="translate(270, 235) scale(1.2)">
             <path
-              d="M 26 0 L 10 -2.5 L 2 -2.5 L -12 -14 L -7 -2.5 L -15 -2.5 L -20 -8 L -16 -1.2 L -22 0 L -16 1.2 L -20 8 L -15 2.5 L -7 2.5 L -12 14 L 2 2.5 L 10 2.5 Z"
+              d="M 32 0 C 30 -3 24 -3.5 16 -3.5 L 3 -3.5 L -9 -16 L -15 -16 L -5 -3.5 L -18 -3.5 L -23 -8 L -28 -8 L -23 -1.6 L -28 0 L -23 1.6 L -28 8 L -23 8 L -18 3.5 L -5 3.5 L -15 16 L -9 16 L 3 3.5 L 16 3.5 C 24 3.5 30 3 32 0 Z"
               fill="#0b0f14"
             />
           </g>

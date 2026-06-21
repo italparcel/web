@@ -294,7 +294,7 @@ function ArtFrame({ children }: { children: React.ReactNode }) {
 function ActivateArt() {
   const fields = [
     { label: "NAME", value: "John Doe" },
-    { label: "DESTINATION", value: "Tokyo, Japan" },
+    { label: "DESTINATION", value: "New York, USA" },
     { label: "ITEMS TO SHIP", value: "Bialetti moka pot" },
   ];
   return (
@@ -311,137 +311,111 @@ function ActivateArt() {
           stroke="#d6d3ca"
         />
 
-        {/* header — a new inquiry */}
-        <text
-          x="60"
-          y="58"
-          fontFamily="ui-monospace, monospace"
-          fontSize="11"
-          fill="#0b0f14"
-          letterSpacing="2"
-        >
-          NEW INQUIRY
-        </text>
+        {/* form contents — collapse away once the request is sent */}
         <motion.g
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-          style={{ transformOrigin: "310px 52px" }}
+          initial={{ opacity: 1, scale: 1 }}
+          animate={{ opacity: 0, scale: 0.97 }}
+          transition={{ duration: 0.35, delay: 2.5, ease: [0.4, 0, 1, 1] }}
+          style={{ transformOrigin: "190px 140px" }}
         >
-          <circle cx="310" cy="52" r="12" fill="#d97706" />
-          <path
-            d="M 310 46 L 310 58 M 304 52 L 316 52"
-            stroke="#fff"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-        </motion.g>
-        <line x1="60" y1="70" x2="320" y2="70" stroke="#e7e5de" />
-
-        {/* labeled fields */}
-        {fields.map((f, i) => {
-          const labelY = 92 + i * 38;
-          const inputY = 98 + i * 38;
-          return (
-            <g key={f.label}>
-              <text
-                x="60"
-                y={labelY}
-                fontFamily="ui-monospace, monospace"
-                fontSize="8"
-                fill="#9ca3af"
-                letterSpacing="1.5"
-              >
-                {f.label}
-              </text>
-              <rect
-                x="60"
-                y={inputY}
-                width="220"
-                height="18"
-                rx="3"
-                fill="#f3eee2"
-                stroke="#e7e5de"
-              />
-              <motion.text
-                x="68"
-                y={inputY + 13}
-                fontFamily="ui-monospace, monospace"
-                fontSize="10"
-                fill="#0b0f14"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.4, delay: 0.3 + i * 0.18 }}
-              >
-                {f.value}
-              </motion.text>
-            </g>
-          );
-        })}
-
-        {/* submit button — pops in, then gets clicked */}
-        <motion.g
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4, delay: 1.1, ease: [0.16, 1, 0.3, 1] }}
-          style={{ transformOrigin: "170px 220px" }}
-        >
-          {/* press dip, timed to the cursor's click */}
+          {/* header — a new inquiry */}
+          <text
+            x="60"
+            y="58"
+            fontFamily="ui-monospace, monospace"
+            fontSize="11"
+            fill="#0b0f14"
+            letterSpacing="2"
+          >
+            NEW INQUIRY
+          </text>
           <motion.g
-            initial={{ scale: 1 }}
-            animate={{ scale: [1, 0.96, 1] }}
-            transition={{ duration: 0.4, delay: 2.22, times: [0, 0.5, 1] }}
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+            style={{ transformOrigin: "310px 52px" }}
+          >
+            <circle cx="310" cy="52" r="12" fill="#d97706" />
+            <path
+              d="M 310 46 L 310 58 M 304 52 L 316 52"
+              stroke="#fff"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </motion.g>
+          <line x1="60" y1="70" x2="320" y2="70" stroke="#e7e5de" />
+
+          {/* labeled fields */}
+          {fields.map((f, i) => {
+            const labelY = 92 + i * 38;
+            const inputY = 98 + i * 38;
+            return (
+              <g key={f.label}>
+                <text
+                  x="60"
+                  y={labelY}
+                  fontFamily="ui-monospace, monospace"
+                  fontSize="8"
+                  fill="#9ca3af"
+                  letterSpacing="1.5"
+                >
+                  {f.label}
+                </text>
+                <rect
+                  x="60"
+                  y={inputY}
+                  width="220"
+                  height="18"
+                  rx="3"
+                  fill="#f3eee2"
+                  stroke="#e7e5de"
+                />
+                <motion.text
+                  x="68"
+                  y={inputY + 13}
+                  fontFamily="ui-monospace, monospace"
+                  fontSize="10"
+                  fill="#0b0f14"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.4, delay: 0.3 + i * 0.18 }}
+                >
+                  {f.value}
+                </motion.text>
+              </g>
+            );
+          })}
+
+          {/* submit button — pops in, then gets clicked */}
+          <motion.g
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, delay: 1.1, ease: [0.16, 1, 0.3, 1] }}
             style={{ transformOrigin: "170px 220px" }}
           >
-            <rect x="60" y="206" width="220" height="28" rx="6" fill="#d97706" />
-
-            {/* click ripple */}
-            <motion.circle
-              cx="170"
-              cy="220"
-              r="4"
-              fill="#ffffff"
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: [0, 0.45, 0], scale: [0, 6, 11] }}
-              transition={{ duration: 0.6, delay: 2.42, ease: "easeOut" }}
-              style={{ transformOrigin: "170px 220px" }}
-            />
-
-            {/* default label — fades out on click */}
-            <motion.text
-              x="170"
-              y="224"
-              textAnchor="middle"
-              fontFamily="ui-monospace, monospace"
-              fontSize="10"
-              fill="#ffffff"
-              letterSpacing="1.5"
-              initial={{ opacity: 1 }}
-              animate={{ opacity: 0 }}
-              transition={{ duration: 0.2, delay: 2.5 }}
-            >
-              SEND REQUEST
-            </motion.text>
-
-            {/* sent confirmation — fades in after the click */}
+            {/* press dip, timed to the cursor's click */}
             <motion.g
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.25, delay: 2.62 }}
+              initial={{ scale: 1 }}
+              animate={{ scale: [1, 0.96, 1] }}
+              transition={{ duration: 0.4, delay: 2.22, times: [0, 0.5, 1] }}
+              style={{ transformOrigin: "170px 220px" }}
             >
-              <motion.path
-                d="M 110 220 l 4 4 l 8 -9"
-                stroke="#ffffff"
-                strokeWidth="2.4"
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{ duration: 0.35, delay: 2.68, ease: [0.16, 1, 0.3, 1] }}
+              <rect x="60" y="206" width="220" height="28" rx="6" fill="#d97706" />
+
+              {/* click ripple */}
+              <motion.circle
+                cx="170"
+                cy="220"
+                r="4"
+                fill="#ffffff"
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: [0, 0.45, 0], scale: [0, 6, 11] }}
+                transition={{ duration: 0.6, delay: 2.42, ease: "easeOut" }}
+                style={{ transformOrigin: "170px 220px" }}
               />
+
               <text
-                x="184"
+                x="170"
                 y="224"
                 textAnchor="middle"
                 fontFamily="ui-monospace, monospace"
@@ -449,9 +423,66 @@ function ActivateArt() {
                 fill="#ffffff"
                 letterSpacing="1.5"
               >
-                REQUEST SENT
+                SEND REQUEST
               </text>
             </motion.g>
+          </motion.g>
+        </motion.g>
+
+        {/* success state — the whole inquiry becomes a confirmation */}
+        <motion.g
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3, delay: 2.62 }}
+        >
+          <motion.circle
+            cx="190"
+            cy="116"
+            r="24"
+            fill="#d97706"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.5, delay: 2.62, ease: [0.34, 1.45, 0.5, 1] }}
+            style={{ transformOrigin: "190px 116px" }}
+          />
+          <motion.path
+            d="M 179 116 l 7 8 l 15 -17"
+            stroke="#ffffff"
+            strokeWidth="3.4"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={{ duration: 0.4, delay: 2.95, ease: [0.16, 1, 0.3, 1] }}
+          />
+          <motion.g
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 3.0, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <text
+              x="190"
+              y="168"
+              textAnchor="middle"
+              fontFamily="var(--font-sans), system-ui"
+              fontSize="16"
+              fontWeight="600"
+              fill="#0b0f14"
+            >
+              Request sent
+            </text>
+            <text
+              x="190"
+              y="189"
+              textAnchor="middle"
+              fontFamily="ui-monospace, monospace"
+              fontSize="8.5"
+              fill="#9ca3af"
+              letterSpacing="1.5"
+            >
+              WE&apos;LL BE IN TOUCH SHORTLY
+            </text>
           </motion.g>
         </motion.g>
 
@@ -484,179 +515,225 @@ function ActivateArt() {
 }
 
 function ReceiveArt() {
-  const smallBoxes = [
-    { x: 68, fill: "#d97706", delay: 0.1 },
-    { x: 163, fill: "#0f766e", delay: 0.25 },
-    { x: 258, fill: "#0b0f14", delay: 0.4 },
-  ];
-  const arrows = [
-    { d: "M 95 88 Q 165 138 165 178", delay: 0.7 },
-    { d: "M 190 88 L 190 178", delay: 0.85 },
-    { d: "M 285 88 Q 215 138 215 178", delay: 1.0 },
-  ];
   return (
     <ArtFrame>
       <svg viewBox="0 0 380 280" className="h-full w-auto" aria-hidden>
         {/* caption */}
         <text
           x="190"
-          y="32"
+          y="40"
           textAnchor="middle"
           fontFamily="ui-monospace, monospace"
-          fontSize="12"
+          fontSize="11"
           fill="#0b0f14"
           letterSpacing="0.5"
         >
-          Multiple parcels
+          From seller to your door
         </text>
 
-        {/* incoming small boxes */}
-        {smallBoxes.map((b, i) => (
-          <motion.g
-            key={i}
-            initial={{ opacity: 0, scale: 0.6, y: -8 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: b.delay, ease: [0.16, 1, 0.3, 1] }}
-          >
-            {/* box body */}
-            <rect x={b.x} y="46" width="54" height="38" rx="5" fill={b.fill} />
-            {/* packing tape */}
-            <rect
-              x={b.x}
-              y="60"
-              width="54"
-              height="8"
-              fill="#ffffff"
-              opacity="0.18"
-            />
-            {/* shipping label */}
-            <rect
-              x={b.x + 15}
-              y="57"
-              width="24"
-              height="15"
-              rx="1.5"
-              fill="#fafaf7"
-            />
-            <rect
-              x={b.x + 18}
-              y="60"
-              width="18"
-              height="1.6"
-              fill="#0b0f14"
-              opacity="0.5"
-            />
-            <rect
-              x={b.x + 18}
-              y="63"
-              width="11"
-              height="1.6"
-              fill="#0b0f14"
-              opacity="0.5"
-            />
-            <g fill="#0b0f14">
-              <rect x={b.x + 18} y="66" width="1.2" height="4" />
-              <rect x={b.x + 20.5} y="66" width="1.8" height="4" />
-              <rect x={b.x + 23.5} y="66" width="1" height="4" />
-              <rect x={b.x + 25.5} y="66" width="2.2" height="4" />
-              <rect x={b.x + 29} y="66" width="1" height="4" />
-              <rect x={b.x + 31} y="66" width="1.6" height="4" />
-            </g>
-          </motion.g>
-        ))}
-
-        {/* converging arrows */}
-        {arrows.map((a, i) => (
-          <motion.path
-            key={i}
-            d={a.d}
-            stroke="#d97706"
-            strokeWidth="1.4"
-            fill="none"
-            strokeLinecap="round"
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: 1, opacity: 1 }}
-            transition={{ duration: 0.6, delay: a.delay }}
-          />
-        ))}
-        <motion.g
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3, delay: 1.5 }}
-          stroke="#d97706"
+        {/* route guides */}
+        <line
+          x1="90"
+          y1="138"
+          x2="156"
+          y2="138"
+          stroke="#d6d3ca"
           strokeWidth="1.4"
+          strokeDasharray="2 5"
+        />
+        <line
+          x1="226"
+          y1="138"
+          x2="290"
+          y2="138"
+          stroke="#d6d3ca"
+          strokeWidth="1.4"
+          strokeDasharray="2 5"
+        />
+
+        {/* route trails, traced as each parcel travels */}
+        <motion.line
+          x1="90"
+          y1="138"
+          x2="156"
+          y2="138"
+          stroke="#d97706"
+          strokeWidth="2"
+          strokeLinecap="round"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: 0.95, delay: 0.85 }}
+        />
+        <motion.line
+          x1="226"
+          y1="138"
+          x2="290"
+          y2="138"
+          stroke="#d97706"
+          strokeWidth="2"
+          strokeLinecap="round"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: 0.95, delay: 2.15 }}
+        />
+
+        {/* seller storefront */}
+        <motion.g
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <rect x="34" y="118" width="56" height="12" rx="3" fill="#d97706" />
+          <rect x="38" y="130" width="50" height="46" rx="3" fill="#ffffff" stroke="#d6d3ca" />
+          <rect x="44" y="138" width="16" height="13" rx="1.5" fill="#f3eee2" stroke="#e7e5de" />
+          <rect x="66" y="148" width="16" height="28" fill="#f3eee2" stroke="#e7e5de" />
+          <text
+            x="63"
+            y="194"
+            textAnchor="middle"
+            fontFamily="ui-monospace, monospace"
+            fontSize="8"
+            fill="#9ca3af"
+            letterSpacing="1.5"
+          >
+            SELLER
+          </text>
+        </motion.g>
+
+        {/* ItalParcel hub */}
+        <motion.g
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <rect x="158" y="116" width="64" height="62" rx="5" fill="#0b0f14" />
+          <rect x="176" y="150" width="28" height="28" rx="1" fill="#fafaf7" opacity="0.1" />
+          <circle cx="190" cy="134" r="11" fill="#d97706" />
+          <path
+            d="M 190 128 L 190 140 M 184 134 L 196 134"
+            stroke="#ffffff"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+          <text
+            x="190"
+            y="194"
+            textAnchor="middle"
+            fontFamily="ui-monospace, monospace"
+            fontSize="8"
+            fill="#9ca3af"
+            letterSpacing="1.5"
+          >
+            ITALPARCEL
+          </text>
+        </motion.g>
+
+        {/* hub arrival pulse */}
+        <motion.circle
+          cx="190"
+          cy="134"
+          r="11"
+          fill="none"
+          stroke="#d97706"
+          strokeWidth="2"
+          initial={{ opacity: 0.55, scale: 1 }}
+          animate={{ opacity: 0, scale: 2.6 }}
+          transition={{ duration: 0.7, delay: 1.85, ease: "easeOut" }}
+          style={{ transformOrigin: "190px 134px" }}
+        />
+
+        {/* destination */}
+        <motion.g
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <polygon points="291,138 314,117 337,138" fill="#0f766e" />
+          <rect x="297" y="138" width="34" height="38" fill="#ffffff" stroke="#d6d3ca" />
+          <rect x="308" y="154" width="13" height="22" fill="#f3eee2" stroke="#e7e5de" />
+          <text
+            x="314"
+            y="194"
+            textAnchor="middle"
+            fontFamily="ui-monospace, monospace"
+            fontSize="8"
+            fill="#9ca3af"
+            letterSpacing="1"
+          >
+            DESTINATION
+          </text>
+        </motion.g>
+
+        {/* parcel: seller → hub */}
+        <motion.g
+          initial={{ opacity: 0, x: 90, y: 138 }}
+          animate={{ opacity: [0, 1, 1, 0], x: [90, 100, 150, 156] }}
+          transition={{
+            duration: 0.95,
+            delay: 0.85,
+            times: [0, 0.12, 0.82, 1],
+            ease: "easeInOut",
+          }}
+        >
+          <rect x="-9" y="-7" width="18" height="14" rx="2.5" fill="#d97706" />
+          <rect x="-3.5" y="-4" width="9" height="8" rx="1" fill="#fafaf7" opacity="0.9" />
+        </motion.g>
+
+        {/* parcel: hub → destination (re-packed, re-shipped) */}
+        <motion.g
+          initial={{ opacity: 0, x: 226, y: 138 }}
+          animate={{ opacity: [0, 1, 1, 0], x: [226, 236, 284, 290] }}
+          transition={{
+            duration: 0.95,
+            delay: 2.15,
+            times: [0, 0.12, 0.82, 1],
+            ease: "easeInOut",
+          }}
+        >
+          <rect x="-9" y="-7" width="18" height="14" rx="2.5" fill="#0b0f14" />
+          <rect x="-3.5" y="-4" width="9" height="8" rx="1" fill="#fafaf7" opacity="0.9" />
+        </motion.g>
+
+        {/* arrowheads at each leg's end */}
+        <motion.path
+          d="M 150 133 L 156 138 L 150 143"
+          stroke="#d97706"
+          strokeWidth="1.8"
           fill="none"
           strokeLinecap="round"
           strokeLinejoin="round"
-        >
-          <path d="M 159 171 L 165 178 L 171 171" />
-          <path d="M 184 171 L 190 178 L 196 171" />
-          <path d="M 209 171 L 215 178 L 221 171" />
-        </motion.g>
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3, delay: 1.7 }}
+        />
+        <motion.path
+          d="M 284 133 L 290 138 L 284 143"
+          stroke="#d97706"
+          strokeWidth="1.8"
+          fill="none"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3, delay: 3.0 }}
+        />
 
-        {/* single consolidated box */}
+        {/* delivered tick over the destination */}
         <motion.g
-          initial={{ opacity: 0, scale: 0.6, y: 8 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 1.6, ease: [0.16, 1, 0.3, 1] }}
-          style={{ transformOrigin: "190px 211px" }}
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, delay: 3.1, ease: [0.34, 1.45, 0.5, 1] }}
+          style={{ transformOrigin: "314px 104px" }}
         >
-          {/* box body */}
-          <rect x="130" y="178" width="120" height="66" rx="8" fill="#0b0f14" />
-          {/* packing tape */}
-          <rect
-            x="130"
-            y="203"
-            width="120"
-            height="14"
-            fill="#ffffff"
-            opacity="0.14"
+          <circle cx="314" cy="104" r="9" fill="#0f766e" />
+          <path
+            d="M 309.5 104 l 3 3 l 6 -7"
+            stroke="#ffffff"
+            strokeWidth="2"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
-          {/* shipping label */}
-          <rect x="158" y="189" width="64" height="38" rx="2.5" fill="#fafaf7" />
-          <rect
-            x="166"
-            y="196"
-            width="46"
-            height="3"
-            rx="1.5"
-            fill="#0b0f14"
-            opacity="0.5"
-          />
-          <rect
-            x="166"
-            y="202"
-            width="32"
-            height="3"
-            rx="1.5"
-            fill="#0b0f14"
-            opacity="0.5"
-          />
-          <g fill="#0b0f14">
-            <rect x="166" y="209" width="2.5" height="12" />
-            <rect x="170.5" y="209" width="1.2" height="12" />
-            <rect x="173.5" y="209" width="3.5" height="12" />
-            <rect x="179" y="209" width="1.5" height="12" />
-            <rect x="182.5" y="209" width="1.2" height="12" />
-            <rect x="185.5" y="209" width="2.8" height="12" />
-            <rect x="190.5" y="209" width="1.2" height="12" />
-            <rect x="193.5" y="209" width="2" height="12" />
-            <rect x="197.5" y="209" width="1.2" height="12" />
-            <rect x="200.5" y="209" width="3" height="12" />
-            <rect x="205.5" y="209" width="1.5" height="12" />
-            <rect x="209" y="209" width="1.2" height="12" />
-          </g>
-          <text
-            x="190"
-            y="262"
-            textAnchor="middle"
-            fontFamily="ui-monospace, monospace"
-            fontSize="10"
-            fill="#0b0f14"
-            letterSpacing="1.5"
-          >
-            1 PARCEL
-          </text>
         </motion.g>
       </svg>
     </ArtFrame>

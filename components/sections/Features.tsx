@@ -8,7 +8,6 @@ import {
   MessagesSquare,
   Sparkles,
 } from "lucide-react";
-import { motion, useReducedMotion } from "framer-motion";
 import { SectionHeader } from "../ui/SectionHeader";
 import { Reveal } from "../ui/Reveal";
 import { cn } from "@/lib/cn";
@@ -219,8 +218,81 @@ function CardCopy({
   );
 }
 
+function Parcel({
+  x,
+  y,
+  w,
+  h,
+  fill,
+  labelFill = "#fafaf7",
+}: {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  fill: string;
+  labelFill?: string;
+}) {
+  // shipping label, centred on the box
+  const lw = w * 0.6;
+  const lh = h * 0.62;
+  const lx = x + (w - lw) / 2;
+  const ly = y + h * 0.19;
+
+  // barcode laid out as alternating bar/gap widths, scaled to the label
+  const unit = lw / 26;
+  const pattern = [2, 1, 1, 2, 1, 3, 1, 1, 2, 1, 2, 1, 1, 2, 1, 1];
+  const barY = ly + lh * 0.52;
+  const barH = lh * 0.36;
+  let bx = lx + lw * 0.14;
+  const bars: React.ReactNode[] = [];
+  pattern.forEach((p, i) => {
+    if (i % 2 === 0) {
+      bars.push(<rect key={i} x={bx} y={barY} width={p * unit} height={barH} />);
+    }
+    bx += p * unit;
+  });
+
+  return (
+    <g>
+      <rect x={x} y={y} width={w} height={h} rx={h * 0.16} fill={fill} />
+      {/* packing tape */}
+      <rect
+        x={x}
+        y={y + h * 0.45}
+        width={w}
+        height={h * 0.13}
+        fill="#0b0f14"
+        opacity={0.12}
+      />
+      {/* shipping label */}
+      <rect x={lx} y={ly} width={lw} height={lh} rx={3} fill={labelFill} />
+      <rect
+        x={lx + lw * 0.14}
+        y={ly + lh * 0.16}
+        width={lw * 0.62}
+        height={lh * 0.1}
+        rx={1}
+        fill="#0b0f14"
+        opacity={0.5}
+      />
+      <rect
+        x={lx + lw * 0.14}
+        y={ly + lh * 0.31}
+        width={lw * 0.42}
+        height={lh * 0.1}
+        rx={1}
+        fill="#0b0f14"
+        opacity={0.5}
+      />
+      <g fill="#0b0f14" opacity={0.8}>
+        {bars}
+      </g>
+    </g>
+  );
+}
+
 function CardArtRepack() {
-  const reduce = useReducedMotion();
   return (
     <div
       aria-hidden
@@ -245,138 +317,64 @@ function CardArtRepack() {
         </defs>
         <rect width="400" height="400" fill="url(#grid-bg)" />
 
-        {/* incoming parcels */}
-        {[
-          { x: 90, y: 120, seamY: 141, fill: "#d97706", opacity: 1 },
-          { x: 170, y: 110, seamY: 131, fill: "#fafaf7", opacity: 0.9 },
-          { x: 250, y: 120, seamY: 141, fill: "#0f766e", opacity: 1 },
-        ].map((b, i) => (
-          <motion.g
-            key={i}
-            initial={reduce ? false : { opacity: 0, y: -10 }}
-            whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-50px" }}
-            transition={{ duration: 0.5, delay: i * 0.12, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <rect
-              x={b.x}
-              y={b.y}
-              width="60"
-              height="42"
-              rx="8"
-              fill={b.fill}
-              opacity={b.opacity}
-            />
-            <line
-              x1={b.x}
-              y1={b.seamY}
-              x2={b.x + 60}
-              y2={b.seamY}
-              stroke="#0b0f14"
-              strokeOpacity="0.2"
-              strokeWidth="2.5"
-            />
-          </motion.g>
-        ))}
+        {/* incoming, individually labeled parcels */}
+        <Parcel x={44} y={104} w={82} h={58} fill="#d97706" />
+        <Parcel x={150} y={86} w={82} h={58} fill="#fafaf7" labelFill="#f3eee2" />
+        <Parcel x={256} y={104} w={82} h={58} fill="#0f766e" />
 
         {/* converging arrows */}
         {[
           {
-            d: "M 120 168 Q 180 205 180 236",
-            head: "M 174 230 L 180 238 L 186 230",
-            delay: 0.5,
+            d: "M 85 168 Q 182 212 183 250",
+            head: "M 177 244 L 183 252 L 189 244",
           },
           {
-            d: "M 200 158 L 200 236",
-            head: "M 194 230 L 200 238 L 206 230",
-            delay: 0.62,
+            d: "M 191 150 L 200 250",
+            head: "M 194 244 L 200 252 L 206 244",
           },
           {
-            d: "M 280 168 Q 220 205 220 236",
-            head: "M 214 230 L 220 238 L 226 230",
-            delay: 0.74,
+            d: "M 297 168 Q 218 212 217 250",
+            head: "M 211 244 L 217 252 L 223 244",
           },
         ].map((a, i) => (
           <g key={i}>
-            <motion.path
+            <path
               d={a.d}
               stroke="#fafaf7"
-              strokeOpacity="0.85"
+              strokeOpacity="0.8"
               strokeWidth="2.5"
               fill="none"
               strokeLinecap="round"
-              initial={reduce ? false : { pathLength: 0, opacity: 0 }}
-              whileInView={reduce ? undefined : { pathLength: 1, opacity: 1 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.6, delay: a.delay }}
             />
-            <motion.path
+            <path
               d={a.head}
               stroke="#fafaf7"
-              strokeOpacity="0.85"
+              strokeOpacity="0.8"
               strokeWidth="2.5"
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
-              initial={reduce ? false : { opacity: 0 }}
-              whileInView={reduce ? undefined : { opacity: 1 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.3, delay: a.delay + 0.45 }}
             />
           </g>
         ))}
 
-        {/* consolidated parcel */}
-        <motion.g
-          initial={reduce ? false : { opacity: 0, y: 12 }}
-          whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-50px" }}
-          transition={{ duration: 0.55, delay: 1.05, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <rect x="128" y="240" width="144" height="96" rx="12" fill="#d97706" />
-          <line
-            x1="128"
-            y1="288"
-            x2="272"
-            y2="288"
-            stroke="#0b0f14"
-            strokeOpacity="0.22"
-            strokeWidth="3.5"
-          />
-          <line
-            x1="200"
-            y1="240"
-            x2="200"
-            y2="336"
-            stroke="#0b0f14"
-            strokeOpacity="0.22"
-            strokeWidth="3.5"
-          />
-        </motion.g>
+        {/* one consolidated, labeled parcel */}
+        <Parcel x={116} y={258} w={168} h={116} fill="#d97706" />
 
-        <Sparkle x={210} y={80} delay={0.3} />
-        <Sparkle x={340} y={200} delay={0.8} />
-        <Sparkle x={78} y={300} delay={1.2} />
+        <Sparkle x={356} y={150} />
+        <Sparkle x={66} y={252} />
       </svg>
     </div>
   );
 }
 
-function Sparkle({ x, y, delay }: { x: number; y: number; delay: number }) {
-  const reduce = useReducedMotion();
+function Sparkle({ x, y }: { x: number; y: number }) {
   return (
-    <motion.g
-      initial={reduce ? false : { opacity: 0, scale: 0 }}
-      whileInView={reduce ? undefined : { opacity: 1, scale: 1 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.4, delay }}
-    >
-      <path
-        d={`M ${x} ${y - 8} L ${x + 2} ${y - 2} L ${x + 8} ${y} L ${x + 2} ${y + 2} L ${x} ${y + 8} L ${x - 2} ${y + 2} L ${x - 8} ${y} L ${x - 2} ${y - 2} Z`}
-        fill="#fafaf7"
-        opacity="0.7"
-      />
-    </motion.g>
+    <path
+      d={`M ${x} ${y - 8} L ${x + 2} ${y - 2} L ${x + 8} ${y} L ${x + 2} ${y + 2} L ${x} ${y + 8} L ${x - 2} ${y + 2} L ${x - 8} ${y} L ${x - 2} ${y - 2} Z`}
+      fill="#fafaf7"
+      opacity="0.7"
+    />
   );
 }
 

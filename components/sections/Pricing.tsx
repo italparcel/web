@@ -22,8 +22,8 @@ const tiers: Tier[] = [
     price: 17,
     features: [
       "1 parcel handling fee",
-      "Email + WhatsApp updates",
-      "€10 activation deducted",
+      "Full repacking",
+      "Free pictures on request",
     ],
     cta: "Get started",
   },
@@ -55,9 +55,9 @@ const tiers: Tier[] = [
     parcels: "Custom",
     price: "custom",
     features: [
-      "10+ parcels — volume pricing",
-      "Dedicated account contact",
-      "Negotiated carrier rates",
+      "Negotiated fees based on your volume",
+      "Dedicated email for all pickup codes",
+      "Most cost-effective option",
     ],
     cta: "Talk to us",
   },

@@ -271,20 +271,24 @@ function Fallback({
    Step illustrations — custom, restrained SVG
    ───────────────────────────────────────────────────────────── */
 
-function ArtFrame({ children }: { children: React.ReactNode }) {
+// Shared frame for all four "how it works" phases — the single source of truth
+// for the container. Aspect ratio, the one dashed border, the page-cream
+// background, radius and padding are identical for every phase; each phase only
+// supplies its own artwork, centred in a safe-zone and fitted so nothing spills.
+function PhaseVisual({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative aspect-[4/3] w-full max-w-xl overflow-hidden rounded-2xl border border-border bg-bg-elev shadow-[var(--shadow-soft)]">
-      <div className="absolute inset-3 rounded-xl border border-dashed border-border-strong/60" />
+    <div className="relative aspect-[4/3] w-full max-w-xl overflow-hidden rounded-2xl border-[1.5px] border-dashed border-border-strong bg-bg">
+      {/* uniform dotted texture */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 opacity-[0.04]"
         style={{
           backgroundImage:
             "radial-gradient(circle, #0b0f14 1px, transparent 1px)",
-          backgroundSize: "12px 12px",
+          backgroundSize: "14px 14px",
         }}
       />
-      <div className="absolute inset-0 grid place-items-center p-6">
+      <div className="absolute inset-0 grid place-items-center p-6 lg:p-12">
         {children}
       </div>
     </div>
@@ -298,8 +302,8 @@ function ActivateArt() {
     { label: "ITEMS TO SHIP", value: "Bialetti moka pot" },
   ];
   return (
-    <ArtFrame>
-      <svg viewBox="0 0 380 280" className="h-full w-auto" aria-hidden>
+    <PhaseVisual>
+      <svg viewBox="0 0 380 280" preserveAspectRatio="xMidYMid meet" className="h-full w-full" aria-hidden>
         {/* request form card */}
         <rect
           x="40"
@@ -309,6 +313,10 @@ function ActivateArt() {
           rx="10"
           fill="#ffffff"
           stroke="#d6d3ca"
+          style={{
+            filter:
+              "drop-shadow(0 1px 2px rgba(11,15,20,0.04)) drop-shadow(0 10px 22px rgba(11,15,20,0.07))",
+          }}
         />
 
         {/* form contents — collapse away once the request is sent */}
@@ -322,8 +330,8 @@ function ActivateArt() {
           <text
             x="60"
             y="58"
-            fontFamily="ui-monospace, monospace"
-            fontSize="13"
+            fontFamily="var(--font-mono), ui-monospace, monospace"
+            fontSize="12"
             fill="#0b0f14"
             letterSpacing="2"
           >
@@ -354,8 +362,8 @@ function ActivateArt() {
                 <text
                   x="60"
                   y={labelY}
-                  fontFamily="ui-monospace, monospace"
-                  fontSize="9.5"
+                  fontFamily="var(--font-mono), ui-monospace, monospace"
+                  fontSize="11"
                   fill="#9ca3af"
                   letterSpacing="1.5"
                 >
@@ -373,8 +381,8 @@ function ActivateArt() {
                 <motion.text
                   x="68"
                   y={inputY + 13}
-                  fontFamily="ui-monospace, monospace"
-                  fontSize="11.5"
+                  fontFamily="var(--font-mono), ui-monospace, monospace"
+                  fontSize="12"
                   fill="#0b0f14"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -418,8 +426,8 @@ function ActivateArt() {
                 x="170"
                 y="224"
                 textAnchor="middle"
-                fontFamily="ui-monospace, monospace"
-                fontSize="11.5"
+                fontFamily="var(--font-mono), ui-monospace, monospace"
+                fontSize="12"
                 fill="#ffffff"
                 letterSpacing="1.5"
               >
@@ -476,8 +484,8 @@ function ActivateArt() {
               x="190"
               y="189"
               textAnchor="middle"
-              fontFamily="ui-monospace, monospace"
-              fontSize="10"
+              fontFamily="var(--font-mono), ui-monospace, monospace"
+              fontSize="11"
               fill="#9ca3af"
               letterSpacing="1.5"
             >
@@ -510,17 +518,17 @@ function ActivateArt() {
           />
         </motion.g>
       </svg>
-    </ArtFrame>
+    </PhaseVisual>
   );
 }
 
 function ReceiveArt() {
   return (
-    <ArtFrame>
-      <svg viewBox="0 0 380 280" className="h-full w-auto" aria-hidden>
+    <PhaseVisual>
+      <svg viewBox="0 0 380 280" preserveAspectRatio="xMidYMid meet" className="h-full w-full" aria-hidden>
         {/* route guides */}
-        <line x1="108" y1="150" x2="146" y2="150" stroke="#d6d3ca" strokeWidth="1.4" strokeDasharray="2 5" />
-        <line x1="234" y1="150" x2="266" y2="150" stroke="#d6d3ca" strokeWidth="1.4" strokeDasharray="2 5" />
+        <line x1="108" y1="150" x2="146" y2="150" stroke="#d6d3ca" strokeWidth="2" strokeDasharray="2 5" />
+        <line x1="234" y1="150" x2="266" y2="150" stroke="#d6d3ca" strokeWidth="2" strokeDasharray="2 5" />
 
         {/* route trails, traced as each parcel travels */}
         <motion.line
@@ -566,7 +574,7 @@ function ReceiveArt() {
           {/* scalloped awning, overhanging the storefront */}
           <rect x="38" y="96" width="72" height="13" rx="1" fill="#d97706" />
           <path d="M 38 109 q 9 10 18 0 q 9 10 18 0 q 9 10 18 0 q 9 10 18 0" fill="#d97706" />
-          <text x="74" y="212" textAnchor="middle" fontFamily="ui-monospace, monospace" fontSize="10.5" fill="#9ca3af" letterSpacing="1.5">
+          <text x="74" y="212" textAnchor="middle" fontFamily="var(--font-mono), ui-monospace, monospace" fontSize="11" fill="#9ca3af" letterSpacing="1.5">
             SELLER
           </text>
         </motion.g>
@@ -594,11 +602,11 @@ function ReceiveArt() {
           </g>
           {/* brand badge on the roof — a little parcel */}
           <circle cx="190" cy="96" r="12" fill="#d97706" />
-          <g stroke="#ffffff" strokeWidth="1.6" fill="none" strokeLinejoin="round" strokeLinecap="round">
+          <g stroke="#ffffff" strokeWidth="2" fill="none" strokeLinejoin="round" strokeLinecap="round">
             <rect x="184.5" y="91" width="11" height="10" rx="1.5" />
             <line x1="184.5" y1="96" x2="195.5" y2="96" />
           </g>
-          <text x="190" y="212" textAnchor="middle" fontFamily="ui-monospace, monospace" fontSize="10.5" fill="#9ca3af" letterSpacing="1.5">
+          <text x="190" y="212" textAnchor="middle" fontFamily="var(--font-mono), ui-monospace, monospace" fontSize="11" fill="#9ca3af" letterSpacing="1.5">
             ITALPARCEL
           </text>
         </motion.g>
@@ -610,7 +618,7 @@ function ReceiveArt() {
           x2="224"
           y2="124"
           stroke="#d97706"
-          strokeWidth="1.6"
+          strokeWidth="2"
           strokeLinecap="round"
           initial={{ opacity: 0 }}
           animate={{ opacity: [0, 0.9, 0], y: [0, 52, 52] }}
@@ -640,7 +648,7 @@ function ReceiveArt() {
           <rect x="286" y="128" width="13" height="13" rx="1.5" fill="#eef5f3" stroke="#e7e5de" />
           <rect x="300" y="148" width="18" height="32" rx="1" fill="#f3eee2" stroke="#e7e5de" />
           <circle cx="304" cy="164" r="1.6" fill="#9ca3af" />
-          <text x="306" y="212" textAnchor="middle" fontFamily="ui-monospace, monospace" fontSize="10" fill="#9ca3af" letterSpacing="1">
+          <text x="306" y="212" textAnchor="middle" fontFamily="var(--font-mono), ui-monospace, monospace" fontSize="11" fill="#9ca3af" letterSpacing="1">
             DESTINATION
           </text>
         </motion.g>
@@ -669,7 +677,7 @@ function ReceiveArt() {
         <motion.path
           d="M 140 144 L 146 150 L 140 156"
           stroke="#d97706"
-          strokeWidth="1.8"
+          strokeWidth="2"
           fill="none"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -680,7 +688,7 @@ function ReceiveArt() {
         <motion.path
           d="M 260 144 L 266 150 L 260 156"
           stroke="#d97706"
-          strokeWidth="1.8"
+          strokeWidth="2"
           fill="none"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -707,7 +715,7 @@ function ReceiveArt() {
           />
         </motion.g>
       </svg>
-    </ArtFrame>
+    </PhaseVisual>
   );
 }
 
@@ -718,20 +726,32 @@ function ShipArt() {
     { label: "Activation credit", value: "−€10.00" },
   ];
   return (
-    <ArtFrame>
-      <svg viewBox="0 0 380 280" className="h-full w-auto" aria-hidden>
+    <PhaseVisual>
+      <svg viewBox="0 0 380 280" preserveAspectRatio="xMidYMid meet" className="h-full w-full" aria-hidden>
         {/* quote ticket */}
         <motion.g
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <rect x="30" y="40" width="206" height="200" rx="8" fill="#ffffff" stroke="#d6d3ca" />
+          <rect
+            x="30"
+            y="40"
+            width="206"
+            height="200"
+            rx="8"
+            fill="#ffffff"
+            stroke="#d6d3ca"
+            style={{
+              filter:
+                "drop-shadow(0 1px 2px rgba(11,15,20,0.04)) drop-shadow(0 10px 22px rgba(11,15,20,0.07))",
+            }}
+          />
           <text
             x="46"
             y="66"
-            fontFamily="ui-monospace, monospace"
-            fontSize="10"
+            fontFamily="var(--font-mono), ui-monospace, monospace"
+            fontSize="12"
             fill="#9ca3af"
             letterSpacing="1.5"
           >
@@ -763,10 +783,10 @@ function ShipArt() {
             const y = 110 + i * 30;
             return (
               <g key={row.label}>
-                <text x="46" y={y} fontFamily="ui-monospace, monospace" fontSize="11.5" fill="#0b0f14" opacity="0.7">
+                <text x="46" y={y} fontFamily="var(--font-mono), ui-monospace, monospace" fontSize="12" fill="#0b0f14" opacity="0.7">
                   {row.label}
                 </text>
-                <text x="220" y={y} textAnchor="end" fontFamily="ui-monospace, monospace" fontSize="11.5" fill="#0b0f14">
+                <text x="220" y={y} textAnchor="end" fontFamily="var(--font-mono), ui-monospace, monospace" fontSize="12" fill="#0b0f14">
                   {row.value}
                 </text>
               </g>
@@ -775,7 +795,7 @@ function ShipArt() {
 
           <line x1="46" y1="194" x2="220" y2="194" stroke="#0b0f14" strokeWidth="1.4" />
 
-          <text x="46" y="222" fontFamily="ui-monospace, monospace" fontSize="12" fill="#0b0f14" fontWeight="600" letterSpacing="1">
+          <text x="46" y="222" fontFamily="var(--font-mono), ui-monospace, monospace" fontSize="12" fill="#0b0f14" fontWeight="600" letterSpacing="1">
             TOTAL
           </text>
           <motion.text
@@ -798,7 +818,7 @@ function ShipArt() {
         <motion.path
           d="M 250 140 L 286 140"
           stroke="#0b0f14"
-          strokeWidth="1.6"
+          strokeWidth="2"
           initial={{ pathLength: 0 }}
           animate={{ pathLength: 1 }}
           transition={{ duration: 0.7, delay: 1.6 }}
@@ -806,7 +826,7 @@ function ShipArt() {
         <motion.path
           d="M 279 134 L 289 140 L 279 146"
           stroke="#0b0f14"
-          strokeWidth="1.6"
+          strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
           fill="none"
@@ -826,8 +846,8 @@ function ShipArt() {
             x="330"
             y="136"
             textAnchor="middle"
-            fontFamily="ui-monospace, monospace"
-            fontSize="10"
+            fontFamily="var(--font-mono), ui-monospace, monospace"
+            fontSize="11"
             fill="#fafaf7"
             opacity="0.7"
             letterSpacing="1.5"
@@ -847,36 +867,37 @@ function ShipArt() {
           </text>
         </motion.g>
       </svg>
-    </ArtFrame>
+    </PhaseVisual>
   );
 }
 
 function TrackArt() {
   const events = [
-    { x: 50, label: "Picked up", state: "done" },
-    { x: 120, label: "Repacked", state: "done" },
-    { x: 190, label: "Departed", state: "done" },
-    { x: 260, label: "In transit", state: "active" },
-    { x: 330, label: "Delivered", state: "pending" },
+    { x: 50, label: "Picked up", state: "done", ts: "MAY 12" },
+    { x: 120, label: "Repacked", state: "done", ts: "MAY 12" },
+    { x: 190, label: "Departed", state: "done", ts: "MAY 13" },
+    { x: 260, label: "In transit", state: "active", ts: "MAY 14" },
+    { x: 330, label: "Delivered", state: "pending", ts: "ETA MAY 16" },
   ] as const;
 
   return (
-    <ArtFrame>
-      <svg viewBox="0 0 380 280" className="h-full w-auto" aria-hidden>
-        {/* baseline */}
-        <line
-          x1="50"
-          y1="140"
-          x2="330"
-          y2="140"
-          stroke="#e7e5de"
-          strokeWidth="2"
-        />
+    <PhaseVisual>
+      <svg viewBox="0 0 380 280" preserveAspectRatio="xMidYMid meet" className="h-full w-full" aria-hidden>
+        {/* origin / destination */}
+        <text x="50" y="50" textAnchor="middle" fontFamily="var(--font-mono), ui-monospace, monospace" fontSize="11" fill="#9ca3af" letterSpacing="1.5">
+          TRENTO
+        </text>
+        <text x="330" y="50" textAnchor="middle" fontFamily="var(--font-mono), ui-monospace, monospace" fontSize="11" fill="#9ca3af" letterSpacing="1.5">
+          NEW YORK
+        </text>
+
+        {/* track */}
+        <line x1="50" y1="92" x2="330" y2="92" stroke="#e7e5de" strokeWidth="2" />
         <motion.line
           x1="50"
-          y1="140"
+          y1="92"
           x2="260"
-          y2="140"
+          y2="92"
           stroke="#0b0f14"
           strokeWidth="2"
           initial={{ pathLength: 0 }}
@@ -893,11 +914,11 @@ function TrackArt() {
           >
             {e.state === "done" && (
               <>
-                <circle cx={e.x} cy={140} r={9} fill="#0b0f14" />
+                <circle cx={e.x} cy={92} r={9} fill="#0b0f14" />
                 <path
-                  d={`M ${e.x - 4} 140 L ${e.x - 1} 143 L ${e.x + 4} 137`}
+                  d={`M ${e.x - 4} 92 L ${e.x - 1} 95 L ${e.x + 4} 89`}
                   stroke="#fafaf7"
-                  strokeWidth="1.6"
+                  strokeWidth="2"
                   fill="none"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -908,102 +929,93 @@ function TrackArt() {
               <>
                 <motion.circle
                   cx={e.x}
-                  cy={140}
+                  cy={92}
                   r={16}
                   fill="#d97706"
                   opacity={0.18}
                   animate={{ r: [12, 18, 12], opacity: [0.3, 0, 0.3] }}
                   transition={{ duration: 2.4, repeat: Infinity }}
                 />
-                <circle cx={e.x} cy={140} r={7} fill="#d97706" />
+                <circle cx={e.x} cy={92} r={7} fill="#d97706" />
               </>
             )}
             {e.state === "pending" && (
-              <circle
-                cx={e.x}
-                cy={140}
-                r={6}
-                fill="#fafaf7"
-                stroke="#d6d3ca"
-                strokeWidth="1.6"
-              />
+              <circle cx={e.x} cy={92} r={6} fill="#fafaf7" stroke="#d6d3ca" strokeWidth="2" />
             )}
             <text
               x={e.x}
-              y={170}
+              y={116}
               textAnchor="middle"
-              fontFamily="ui-monospace, monospace"
-              fontSize="10.5"
+              fontFamily="var(--font-mono), ui-monospace, monospace"
+              fontSize="11"
               fill={e.state === "pending" ? "#9ca3af" : "#0b0f14"}
               letterSpacing="1"
             >
               {e.label.toUpperCase()}
             </text>
+            <text
+              x={e.x}
+              y={131}
+              textAnchor="middle"
+              fontFamily="var(--font-mono), ui-monospace, monospace"
+              fontSize="11"
+              fill="#9ca3af"
+              letterSpacing="0.5"
+            >
+              {e.ts}
+            </text>
           </motion.g>
         ))}
 
-        {/* labels at ends */}
-        <text
-          x="50"
-          y="110"
-          textAnchor="middle"
-          fontFamily="ui-monospace, monospace"
-          fontSize="10.5"
-          fill="#9ca3af"
-          letterSpacing="1.5"
-        >
-          TRENTO
-        </text>
-        <text
-          x="330"
-          y="110"
-          textAnchor="middle"
-          fontFamily="ui-monospace, monospace"
-          fontSize="10.5"
-          fill="#9ca3af"
-          letterSpacing="1.5"
-        >
-          NEW YORK
-        </text>
-
-        {/* helper banner */}
+        {/* live-status / log card — folds in the WhatsApp helper */}
         <motion.g
-          initial={{ opacity: 0, y: 6 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 1.6 }}
+          transition={{ duration: 0.5, delay: 1.5, ease: [0.16, 1, 0.3, 1] }}
         >
           <rect
-            x="92"
-            y="206"
-            width="196"
-            height="34"
-            rx="5"
+            x="44"
+            y="162"
+            width="292"
+            height="66"
+            rx="10"
             fill="#ffffff"
-            stroke="#e7e5de"
+            stroke="#d6d3ca"
+            style={{
+              filter:
+                "drop-shadow(0 1px 2px rgba(11,15,20,0.04)) drop-shadow(0 10px 22px rgba(11,15,20,0.07))",
+            }}
           />
-          <circle cx="114" cy="223" r="4.5" fill="#0f766e" />
-          <text
-            x="128"
-            y="228"
-            fontFamily={"var(--font-sans), system-ui"}
-            fontSize="13"
-            fill="#0b0f14"
-          >
+          {/* row 1 — live status */}
+          <motion.circle
+            cx="64"
+            cy="184"
+            r="9"
+            fill="#d97706"
+            opacity={0.18}
+            animate={{ r: [6, 11, 6], opacity: [0.3, 0, 0.3] }}
+            transition={{ duration: 2.4, repeat: Infinity }}
+          />
+          <circle cx="64" cy="184" r="3.5" fill="#d97706" />
+          <text x="80" y="188" fontFamily={"var(--font-sans), system-ui"} fontSize="12" fill="#0b0f14">
+            In transit · Milan hub
+          </text>
+          <text x="320" y="188" textAnchor="end" fontFamily="var(--font-mono), ui-monospace, monospace" fontSize="11" fill="#9ca3af" letterSpacing="1">
+            14:32
+          </text>
+
+          <line x1="64" y1="201" x2="316" y2="201" stroke="#e7e5de" />
+
+          {/* row 2 — WhatsApp helper */}
+          <circle cx="64" cy="216" r="3.5" fill="#0f766e" />
+          <text x="80" y="220" fontFamily={"var(--font-sans), system-ui"} fontSize="12" fill="#0b0f14">
             Need a hand?
           </text>
-          <text
-            x="272"
-            y="228"
-            textAnchor="end"
-            fontFamily="ui-monospace, monospace"
-            fontSize="10"
-            fill="#9ca3af"
-            letterSpacing="1.5"
-          >
+          <text x="320" y="220" textAnchor="end" fontFamily="var(--font-mono), ui-monospace, monospace" fontSize="11" fill="#9ca3af" letterSpacing="1.5">
             WHATSAPP
           </text>
         </motion.g>
       </svg>
-    </ArtFrame>
+    </PhaseVisual>
   );
 }

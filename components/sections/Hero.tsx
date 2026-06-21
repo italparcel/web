@@ -172,12 +172,12 @@ type Shipment = {
 const SHIPMENTS: Shipment[] = [
   { city: "Tokyo", country: "JP", postcode: "100-0001", carrier: "DPD", weight: "2.1 kg", eta: "Sat · May 14" },
   { city: "Sydney", country: "AU", postcode: "2000", carrier: "UPS Express", weight: "3.4 kg", eta: "Mon · May 16" },
-  { city: "New York", country: "US", postcode: "10001", carrier: "UPS", weight: "1.8 kg", eta: "Thu · May 12" },
-  { city: "London", country: "UK", postcode: "EC1A", carrier: "UPS", weight: "0.9 kg", eta: "Fri · May 13" },
-  { city: "Berlin", country: "DE", postcode: "10117", carrier: "BRT", weight: "5.2 kg", eta: "Sat · May 14" },
+  { city: "New York", country: "US", postcode: "10001", carrier: "FedEx", weight: "1.8 kg", eta: "Thu · May 12" },
+  { city: "London", country: "UK", postcode: "EC1A", carrier: "FedEx", weight: "0.9 kg", eta: "Fri · May 13" },
+  { city: "Berlin", country: "DE", postcode: "10117", carrier: "DPD", weight: "5.2 kg", eta: "Sat · May 14" },
   { city: "São Paulo", country: "BR", postcode: "01310", carrier: "DPD", weight: "4.0 kg", eta: "Tue · May 17" },
   { city: "Seoul", country: "KR", postcode: "04524", carrier: "UPS Express", weight: "2.6 kg", eta: "Sun · May 15" },
-  { city: "Dubai", country: "AE", postcode: "00000", carrier: "UPS", weight: "1.4 kg", eta: "Fri · May 13" },
+  { city: "Dubai", country: "AE", postcode: "00000", carrier: "UPS Express", weight: "1.4 kg", eta: "Fri · May 13" },
 ];
 
 function ShipmentCard() {
@@ -232,7 +232,7 @@ function ShipmentCard() {
                 Trento
               </p>
               <p className="mt-1.5 truncate whitespace-nowrap font-mono text-[11px] text-fg-subtle">
-                IT · 38121
+                IT · 38023
               </p>
             </div>
 

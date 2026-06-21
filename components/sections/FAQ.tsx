@@ -25,7 +25,19 @@ export function FAQ() {
               <span className="display-light text-fg-muted">actually ask.</span>
             </>
           }
-          description="Direct answers, drawn straight from our Terms & Conditions. The full text is on the /terms page."
+          description={
+            <>
+              Direct answers, drawn straight from our Terms &amp; Conditions.
+              The full text is on the{" "}
+              <Link
+                href="/terms"
+                className="font-medium text-fg underline decoration-accent/50 underline-offset-4 transition-colors hover:text-accent hover:decoration-accent"
+              >
+                /terms
+              </Link>{" "}
+              page.
+            </>
+          }
         />
 
         <div className="mx-auto mt-14 max-w-3xl">

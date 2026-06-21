@@ -909,8 +909,9 @@ function TrackArt() {
             live marker are absolute overlays on those same centres, so spunta +
             label + data and the line all share one centre per column. */}
         <div className="relative mt-5 w-full pt-[34px]">
-          {/* line segments at the node centre (pt 34 + node radius 18 = 52) */}
-          <div className="pointer-events-none absolute inset-x-0" style={{ top: 51 }}>
+          {/* line segments at the node centre (pt 34 + node radius 18 = 52) —
+              z-0 so the opaque node circles (z-10) hide it; visible only in gaps */}
+          <div className="pointer-events-none absolute inset-x-0 z-0" style={{ top: 51 }}>
             <motion.div
               className="absolute h-[2px] origin-left rounded-full bg-fg"
               style={{ left: "12.5%", width: "50%" }}
@@ -931,8 +932,8 @@ function TrackArt() {
             />
           </div>
 
-          {/* nodes */}
-          <div className="grid grid-cols-4">
+          {/* nodes — z-10 above the line so the circles cover it */}
+          <div className="relative z-10 grid grid-cols-4">
             {stops.map((s, i) => (
               <div key={s.label} className="flex flex-col items-center">
                 <motion.div
@@ -967,8 +968,8 @@ function TrackArt() {
             ))}
           </div>
 
-          {/* live parcel marker at 75% (between Departed and Delivered) */}
-          <div className="absolute" style={{ left: "75%", top: 52 }}>
+          {/* live parcel marker at 75% (between Departed and Delivered) — on top */}
+          <div className="absolute z-20" style={{ left: "75%", top: 52 }}>
             <div className="-translate-x-1/2 -translate-y-1/2">
               <motion.div
                 initial={{ opacity: 0, scale: 0.4 }}

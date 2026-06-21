@@ -170,7 +170,7 @@ function CardIcon({
       className={cn(
         "grid h-11 w-11 place-items-center rounded-xl border transition",
         dark
-          ? "border-bg/15 bg-bg/10 text-bg group-hover:border-accent group-hover:text-accent"
+          ? "border-bg/20 bg-fg text-bg group-hover:border-accent group-hover:text-accent"
           : "border-border-strong bg-bg text-fg group-hover:border-accent group-hover:text-accent",
         className
       )}

@@ -161,6 +161,7 @@ function BackgroundLayer() {
    ───────────────────────────────────────────────────────────── */
 
 type Shipment = {
+  code: string;
   city: string;
   country: string;
   postcode: string;
@@ -170,14 +171,14 @@ type Shipment = {
 };
 
 const SHIPMENTS: Shipment[] = [
-  { city: "Tokyo", country: "JP", postcode: "100-0001", carrier: "DPD", weight: "2.1 kg", eta: "Sat · May 14" },
-  { city: "Sydney", country: "AU", postcode: "2000", carrier: "UPS Express", weight: "3.4 kg", eta: "Mon · May 16" },
-  { city: "New York", country: "US", postcode: "10001", carrier: "FedEx", weight: "1.8 kg", eta: "Thu · May 12" },
-  { city: "London", country: "UK", postcode: "EC1A", carrier: "FedEx", weight: "0.9 kg", eta: "Fri · May 13" },
-  { city: "Berlin", country: "DE", postcode: "10117", carrier: "DPD", weight: "5.2 kg", eta: "Sat · May 14" },
-  { city: "São Paulo", country: "BR", postcode: "01310", carrier: "DPD", weight: "4.0 kg", eta: "Tue · May 17" },
-  { city: "Seoul", country: "KR", postcode: "04524", carrier: "UPS Express", weight: "2.6 kg", eta: "Sun · May 15" },
-  { city: "Dubai", country: "AE", postcode: "00000", carrier: "UPS Express", weight: "1.4 kg", eta: "Fri · May 13" },
+  { code: "8472-EW", city: "Tokyo", country: "JP", postcode: "100-0001", carrier: "DPD", weight: "2.1 kg", eta: "Sat · May 14" },
+  { code: "5391-KT", city: "Sydney", country: "AU", postcode: "2000", carrier: "UPS Express", weight: "3.4 kg", eta: "Mon · May 16" },
+  { code: "6207-QL", city: "New York", country: "US", postcode: "10001", carrier: "FedEx", weight: "1.8 kg", eta: "Thu · May 12" },
+  { code: "7048-RJ", city: "London", country: "UK", postcode: "EC1A", carrier: "FedEx", weight: "0.9 kg", eta: "Fri · May 13" },
+  { code: "3315-MC", city: "Berlin", country: "DE", postcode: "10117", carrier: "DPD", weight: "5.2 kg", eta: "Sat · May 14" },
+  { code: "4926-PD", city: "São Paulo", country: "BR", postcode: "01310", carrier: "DPD", weight: "4.0 kg", eta: "Tue · May 17" },
+  { code: "5573-HB", city: "Seoul", country: "KR", postcode: "04524", carrier: "UPS Express", weight: "2.6 kg", eta: "Sun · May 15" },
+  { code: "6841-NV", city: "Dubai", country: "AE", postcode: "00000", carrier: "UPS Express", weight: "1.4 kg", eta: "Fri · May 13" },
 ];
 
 function ShipmentCard() {
@@ -213,8 +214,28 @@ function ShipmentCard() {
               <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-fg-subtle">
                 Shipment
               </span>
-              <span className="font-mono text-sm tabular-nums text-fg">
-                №&nbsp;8472-EW
+              {/* code rotates in step with the shipment so it stays coherent
+                  with the changing route/details. Invisible spacer fixes the
+                  width + baseline; the live code is overlaid and crossfaded. */}
+              <span className="relative inline-block align-baseline">
+                <span
+                  aria-hidden
+                  className="invisible whitespace-nowrap font-mono text-sm tabular-nums"
+                >
+                  №&nbsp;0000-AA
+                </span>
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.span
+                    key={s.code}
+                    initial={reduce ? false : { opacity: 0, y: 4 }}
+                    animate={reduce ? undefined : { opacity: 1, y: 0 }}
+                    exit={reduce ? undefined : { opacity: 0, y: -4 }}
+                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                    className="absolute inset-0 whitespace-nowrap font-mono text-sm tabular-nums text-fg"
+                  >
+                    №&nbsp;{s.code}
+                  </motion.span>
+                </AnimatePresence>
               </span>
             </div>
             <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-fg-subtle">

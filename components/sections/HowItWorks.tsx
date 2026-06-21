@@ -16,7 +16,6 @@ import {
   Warehouse,
   MapPin,
   Package,
-  Cog,
   Check,
   MessageCircle,
 } from "lucide-react";
@@ -297,6 +296,16 @@ function Fallback({
 function PhaseVisual({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative aspect-[3/2] w-full max-w-xl overflow-hidden rounded-2xl border-[1.5px] border-dashed border-border-strong bg-bg-elev">
+      {/* dot-grid watermark, same as the "Why us" feature cards (CardArtDots) */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-[0.06]"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle, #0b0f14 1px, transparent 1px)",
+          backgroundSize: "12px 12px",
+        }}
+      />
       <div className="absolute inset-0 grid place-items-center p-6 lg:p-12">
         {children}
       </div>
@@ -540,6 +549,34 @@ function Parcel() {
   );
 }
 
+/* One hub gear — an 8-tooth cog drawn white (currentColor) with a hole punched
+   to the hub's near-black so it reads as a gear. Two of these mesh inside the
+   hub; the second is rendered with `phase={22.5}` (half a tooth) so its gaps
+   sit opposite the first's teeth. Centred on (0,0) so a CSS rotation on the
+   wrapping span spins it cleanly about its own centre. */
+function GearSvg({ phase = 0 }: { phase?: number }) {
+  return (
+    <svg viewBox="-12 -12 24 24" width="24" height="24" aria-hidden>
+      <g fill="currentColor" transform={`rotate(${phase})`}>
+        {Array.from({ length: 8 }).map((_, i) => (
+          <rect
+            key={i}
+            x="-1.5"
+            y="-10.4"
+            width="3"
+            height="4.2"
+            rx="0.7"
+            transform={`rotate(${i * 45})`}
+          />
+        ))}
+        <circle r="7.6" />
+      </g>
+      {/* hole — the hub's --fg, so the dark shows through the gear centre */}
+      <circle r="2.6" fill="#0b0f14" />
+    </svg>
+  );
+}
+
 /* A station on the phase-2 path: a 56px badge centred on `x` with a label
    under it. `dark` = the ItalParcel hub (filled near-black — "us"). */
 function Station({
@@ -556,7 +593,7 @@ function Station({
   return (
     <div
       className="absolute z-20 flex flex-col items-center"
-      style={{ left: x, top: 12, transform: "translateX(-50%)" }}
+      style={{ left: x, top: 18, transform: "translateX(-50%)" }}
     >
       <div
         className={cn(
@@ -584,15 +621,11 @@ function ReceiveArt() {
 
   // Parcel CROSSES under the badges instead of stopping: x is ONE continuous,
   // constant-speed sweep (64 under SELLER → 370 under DESTINATION over 82% of the
-  // cycle, then a delivered pause). Opacity is derived from x — 0 only while the
-  // parcel overlaps a circle (26px wide vs r28 badge), 1 on the open line between
-  // them. So it slides under each badge and out again, never halting.
+  // cycle, then a delivered pause). It stays fully opaque the whole way — the
+  // badges are stacked above it (z-20 > the parcel's z-10 > the copper line's
+  // z-0), so each opaque circle simply covers the parcel as it slides behind and
+  // it reappears on the far side. No opacity fade needed.
   const parcelX = useTransform(p, [0, 0.82, 1], [64, 370, 370]);
-  const parcelOp = useTransform(
-    parcelX,
-    [74, 82, 158, 166, 240, 248, 324, 332],
-    [0, 1, 1, 0, 0, 1, 1, 0]
-  );
 
   // Hub gears spin only while the parcel is underneath it (driven by the same x).
   const whOp = useTransform(parcelX, [160, 172, 234, 246], [1, 0, 0, 1]);
@@ -607,7 +640,7 @@ function ReceiveArt() {
     <PhaseVisual>
       <motion.div
         className="relative"
-        style={{ width: 432, height: 106 }}
+        style={{ width: 432, height: 102 }}
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: EASE }}
@@ -615,7 +648,7 @@ function ReceiveArt() {
         {/* copper line the parcel rides (z-0, under everything) */}
         <div
           className="absolute z-0 h-[2px] rounded-full bg-accent"
-          style={{ left: 50, right: 50, top: 39 }}
+          style={{ left: 50, right: 50, top: 45 }}
         />
 
         {/* SELLER */}
@@ -635,20 +668,25 @@ function ReceiveArt() {
             className="absolute inset-0 grid place-items-center"
             style={{ opacity: gearOp }}
           >
-            <span className="relative h-8 w-8">
+            {/* two meshed gears, centred in the hub: the right one is phased by
+                half a tooth so its gaps line up with the left one's teeth, and
+                they spin in opposite directions at the same speed (coupled). */}
+            <span className="flex items-center justify-center text-bg-elev">
               <motion.span
-                className="absolute left-0 top-0 block"
+                className="block"
+                style={{ width: 24, height: 24 }}
                 animate={{ rotate: 360 }}
-                transition={{ duration: 2.6, ease: "linear", repeat: Infinity }}
+                transition={{ duration: 3, ease: "linear", repeat: Infinity }}
               >
-                <Cog size={21} strokeWidth={2} />
+                <GearSvg />
               </motion.span>
               <motion.span
-                className="absolute -bottom-1 -right-1 block"
+                className="block"
+                style={{ width: 24, height: 24, marginLeft: -7 }}
                 animate={{ rotate: -360 }}
-                transition={{ duration: 2.6, ease: "linear", repeat: Infinity }}
+                transition={{ duration: 3, ease: "linear", repeat: Infinity }}
               >
-                <Cog size={16} strokeWidth={2} />
+                <GearSvg phase={22.5} />
               </motion.span>
             </span>
           </motion.span>
@@ -670,11 +708,11 @@ function ReceiveArt() {
           </motion.span>
         </Station>
 
-        {/* the parcel — z-10: above the line, BELOW the badges (z-20) so the
-            opaque circles cover it as it slides under each station */}
+        {/* the parcel — z-10: above the line (z-0), BELOW the badges (z-20) so
+            the opaque circles cover it as it slides behind each station */}
         <motion.div
           className="absolute z-10"
-          style={{ left: 0, top: 27, x: parcelX, opacity: parcelOp }}
+          style={{ left: 0, top: 33, x: parcelX }}
         >
           <Parcel />
         </motion.div>
@@ -692,7 +730,27 @@ function ShipArt() {
   return (
     <PhaseVisual>
       <svg viewBox="0 0 380 280" preserveAspectRatio="xMidYMid meet" className="h-full w-full overflow-visible" aria-hidden>
-        {/* quote ticket */}
+        {/* paper plane — drawn BEFORE the ticket so it paints BEHIND it. It is
+            parked hidden behind the ticket's right edge, then once the APPROVED
+            stamp has landed it climbs out from that edge toward the riquadro's
+            top-right corner and is clipped clean by the frame (PhaseVisual is
+            overflow-hidden). Tilted up-right for a take-off read. */}
+        <motion.g
+          initial={{ opacity: 0, x: 0, y: 0 }}
+          animate={{ opacity: [0, 1, 1], x: [0, 0, 190], y: [0, 0, -240] }}
+          transition={{ duration: 1.5, delay: 1.55, times: [0, 0.08, 1], ease: "easeIn" }}
+        >
+          <g transform="translate(250, 200) rotate(-32) scale(1.2)">
+            <path
+              d="M 32 0 C 30 -3 24 -3.5 16 -3.5 L 3 -3.5 L -9 -16 L -15 -16 L -5 -3.5 L -18 -3.5 L -23 -8 L -28 -8 L -23 -1.6 L -28 0 L -23 1.6 L -28 8 L -23 8 L -18 3.5 L -5 3.5 L -15 16 L -9 16 L 3 3.5 L 16 3.5 C 24 3.5 30 3 32 0 Z"
+              fill="#0b0f14"
+            />
+          </g>
+        </motion.g>
+
+        {/* quote ticket — wrapped in a translate so the whole ticket (contents,
+            stamp and rows all unchanged) sits centred in the 380-wide viewBox */}
+        <g transform="translate(57, 0)">
         <motion.g
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -830,22 +888,7 @@ function ShipArt() {
             </g>
           </motion.g>
         </motion.g>
-
-        {/* approved → a generic plane leaves the ticket's right edge and flies
-            clean off the white frame edge (svg overflow is visible; the frame's
-            overflow-hidden clips it exactly at its border) */}
-        <motion.g
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0, 1, 1], x: [0, 0, 250] }}
-          transition={{ duration: 1.6, delay: 1.45, times: [0, 0.12, 1], ease: "easeIn" }}
-        >
-          <g transform="translate(270, 235) scale(1.2)">
-            <path
-              d="M 32 0 C 30 -3 24 -3.5 16 -3.5 L 3 -3.5 L -9 -16 L -15 -16 L -5 -3.5 L -18 -3.5 L -23 -8 L -28 -8 L -23 -1.6 L -28 0 L -23 1.6 L -28 8 L -23 8 L -18 3.5 L -5 3.5 L -15 16 L -9 16 L 3 3.5 L 16 3.5 C 24 3.5 30 3 32 0 Z"
-              fill="#0b0f14"
-            />
-          </g>
-        </motion.g>
+        </g>
       </svg>
     </PhaseVisual>
   );
@@ -963,7 +1006,7 @@ function TrackArt() {
                     <Parcel />
                   </motion.div>
                   {/* callout dropping from above, pointing down at the parcel */}
-                  <div className="absolute bottom-full left-1/2 mb-2 -translate-x-1/2">
+                  <div className="absolute bottom-full left-1/2 mb-4 -translate-x-1/2">
                     <motion.div
                       initial={{ opacity: 0, y: -6 }}
                       animate={{ opacity: 1, y: 0 }}

@@ -7,6 +7,8 @@ import {
   useMotionValueEvent,
   useReducedMotion,
   useInView,
+  useTime,
+  useTransform,
 } from "framer-motion";
 import type { Transition } from "framer-motion";
 import {
@@ -574,17 +576,35 @@ function Station({
 }
 
 function ReceiveArt() {
-  // One 6s cycle drives everything; every timed piece shares duration:6 + repeat
-  // so the parcel, the hub gears and the delivered tick stay locked together.
-  const C = 6;
-  // Warehouse → gears only AFTER the parcel has vanished into the hub (0.23)
-  // and back BEFORE it re-emerges (0.46).
-  const swap = { duration: C, times: [0, 0.23, 0.27, 0.42, 0.46, 1], repeat: Infinity };
+  // ONE shared clock: a 0→1 progress that cycles every 6s. Every moving piece
+  // (parcel, hub gears, delivered tick) is derived from it with useTransform, so
+  // they are physically incapable of drifting out of sync.
+  const time = useTime();
+  const p = useTransform(time, (ms) => (ms % 6000) / 6000);
+
+  // Parcel — x sits exactly on each badge edge where opacity flips (badge r=28,
+  // parcel 26px wide) so it never overlaps a circle.
+  const PT = [0, 0.04, 0.22, 0.26, 0.5, 0.54, 0.72, 0.76, 1];
+  const parcelX = useTransform(p, PT, [78, 78, 162, 162, 244, 244, 328, 328, 328]);
+  const parcelOp = useTransform(p, PT, [0, 1, 1, 0, 0, 1, 1, 0, 0]);
+
+  // Hub — warehouse ⇄ gears only while the parcel is inside (0.26–0.5).
+  const HT = [0, 0.26, 0.3, 0.46, 0.5, 1];
+  const whOp = useTransform(p, HT, [1, 1, 0, 0, 1, 1]);
+  const gearOp = useTransform(p, HT, [0, 0, 1, 1, 0, 0]);
+
+  // Destination — map-pin becomes a big teal "delivered" disc, only after the
+  // parcel has arrived (0.76).
+  const DT = [0, 0.76, 0.82, 0.97, 1];
+  const pinOp = useTransform(p, DT, [1, 1, 0, 0, 1]);
+  const tickOp = useTransform(p, DT, [0, 0, 1, 1, 0]);
+  const tickSc = useTransform(p, DT, [0.3, 0.3, 1, 1, 0.6]);
+
   return (
     <PhaseVisual>
       <motion.div
         className="relative"
-        style={{ width: 432, height: 124 }}
+        style={{ width: 432, height: 106 }}
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: EASE }}
@@ -600,75 +620,57 @@ function ReceiveArt() {
           <Store size={24} strokeWidth={1.8} />
         </Station>
 
-        {/* ITALPARCEL hub — warehouse swaps to two counter-rotating gears
-            (the repack) while the parcel is inside */}
+        {/* ITALPARCEL hub — warehouse ⇄ two counter-rotating gears (repack) */}
         <Station x={216} label="ITALPARCEL" dark>
           <motion.span
             className="absolute inset-0 grid place-items-center"
-            animate={{ opacity: [1, 1, 0, 0, 1, 1] }}
-            transition={swap}
+            style={{ opacity: whOp }}
           >
             <Warehouse size={24} strokeWidth={1.8} />
           </motion.span>
           <motion.span
             className="absolute inset-0 grid place-items-center"
-            animate={{ opacity: [0, 0, 1, 1, 0, 0] }}
-            transition={swap}
+            style={{ opacity: gearOp }}
           >
-            <span className="relative block h-6 w-6">
+            <span className="relative h-7 w-7">
               <motion.span
-                className="absolute left-0 top-[3px] block"
+                className="absolute left-0 top-0 block"
                 animate={{ rotate: 360 }}
-                transition={{ duration: 3, ease: "linear", repeat: Infinity }}
+                transition={{ duration: 2.6, ease: "linear", repeat: Infinity }}
               >
-                <Cog size={15} strokeWidth={1.8} />
+                <Cog size={18} strokeWidth={2} />
               </motion.span>
               <motion.span
-                className="absolute bottom-0 right-0 block"
+                className="absolute -bottom-0.5 -right-0.5 block"
                 animate={{ rotate: -360 }}
-                transition={{ duration: 3, ease: "linear", repeat: Infinity }}
+                transition={{ duration: 2.6, ease: "linear", repeat: Infinity }}
               >
-                <Cog size={12} strokeWidth={1.8} />
+                <Cog size={14} strokeWidth={2} />
               </motion.span>
             </span>
           </motion.span>
         </Station>
 
-        {/* DESTINATION — map pin + teal delivered tick popping in place */}
+        {/* DESTINATION — map pin becomes a teal delivered disc on arrival */}
         <Station x={382} label="DESTINATION">
-          <MapPin size={24} strokeWidth={1.8} />
           <motion.span
-            className="absolute -right-2 -top-2 grid h-[30px] w-[30px] place-items-center rounded-full bg-teal text-bg-elev shadow-[var(--shadow-soft)]"
-            initial={{ opacity: 0, scale: 0.4 }}
-            animate={{ opacity: [0, 0, 1, 1, 0], scale: [0.4, 0.4, 1, 1, 0.4] }}
-            transition={{
-              duration: C,
-              times: [0, 0.69, 0.76, 0.96, 1],
-              repeat: Infinity,
-              ease: EASE_BACK,
-            }}
+            className="absolute inset-0 grid place-items-center"
+            style={{ opacity: pinOp }}
           >
-            <Check size={18} strokeWidth={3} />
+            <MapPin size={24} strokeWidth={1.8} />
+          </motion.span>
+          <motion.span
+            className="absolute inset-0 grid place-items-center rounded-full bg-teal text-bg-elev"
+            style={{ opacity: tickOp, scale: tickSc }}
+          >
+            <Check size={28} strokeWidth={3} />
           </motion.span>
         </Station>
 
-        {/* the parcel — slides linearly, fades INTO each badge (never over it) */}
+        {/* the parcel — position AND opacity both read the shared clock */}
         <motion.div
           className="absolute"
-          style={{ left: 0, top: 27 }}
-          animate={{
-            // x sits exactly on each badge's edge at the keyframes where opacity
-            // flips, so the parcel never overlaps a circle (badge radius = 28,
-            // parcel = 26 wide). Same `times` for x and opacity ⇒ locked sync.
-            x: [78, 78, 162, 162, 244, 244, 328, 328, 328],
-            opacity: [0, 1, 1, 0, 0, 1, 1, 0, 0],
-          }}
-          transition={{
-            duration: C,
-            times: [0, 0.03, 0.2, 0.23, 0.46, 0.49, 0.66, 0.69, 1],
-            repeat: Infinity,
-            ease: "linear",
-          }}
+          style={{ left: 0, top: 27, x: parcelX, opacity: parcelOp }}
         >
           <Parcel />
         </motion.div>

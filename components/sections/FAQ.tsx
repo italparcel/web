@@ -27,13 +27,12 @@ export function FAQ() {
           }
           description={
             <>
-              Direct answers, drawn straight from our Terms &amp; Conditions.
-              The full text is in the{" "}
+              Direct answers, drawn straight from our{" "}
               <Link
                 href="/terms"
                 className="font-medium text-fg underline underline-offset-2 hover:text-accent"
               >
-                T&amp;C
+                Terms &amp; Conditions
               </Link>
               .
             </>

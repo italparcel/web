@@ -620,21 +620,25 @@ function ReceiveArt() {
   const p = useTransform(time, (ms) => (ms % 6000) / 6000);
 
   // Parcel CROSSES under the badges instead of stopping: x is ONE continuous,
-  // constant-speed sweep (64 under SELLER → 370 under DESTINATION over 82% of the
-  // cycle, then a delivered pause). It stays fully opaque the whole way — the
-  // badges are stacked above it (z-20 > the parcel's z-10 > the copper line's
-  // z-0), so each opaque circle simply covers the parcel as it slides behind and
-  // it reappears on the far side. No opacity fade needed.
-  const parcelX = useTransform(p, [0, 0.82, 1], [64, 370, 370]);
+  // constant-speed sweep (80 emerging at SELLER → 353 resting at DESTINATION over
+  // 82% of the cycle, then a delivered pause). It stays fully opaque the whole
+  // way — the badges are stacked above it (z-20 > the parcel's z-10 > the copper
+  // line's z-0), so each opaque circle simply covers the parcel as it slides
+  // behind and it reappears on the far side. No opacity fade needed.
+  const parcelX = useTransform(p, [0, 0.82, 1], [80, 353, 353]);
 
-  // Hub gears spin only while the parcel is underneath it (driven by the same x).
+  // Hub gears spin only while the parcel is underneath it (hub stays at x=216,
+  // dead-centre, so these are unchanged by the SELLER/DESTINATION re-spacing).
   const whOp = useTransform(parcelX, [160, 172, 234, 246], [1, 0, 0, 1]);
   const gearOp = useTransform(parcelX, [160, 172, 234, 246], [0, 1, 1, 0]);
 
-  // Destination "delivered" disc stamps in as the parcel slides under it.
-  const pinOp = useTransform(parcelX, [320, 332], [1, 0]);
-  const tickOp = useTransform(parcelX, [320, 332], [0, 1]);
-  const tickSc = useTransform(parcelX, [318, 330, 340, 370], [0.4, 1.12, 1, 1]);
+  // Destination "delivered" disc stamps in ONLY once the parcel has actually
+  // reached the badge: the parcel rests at 353, and the swap fires at 342→352,
+  // i.e. while it is already tucked behind the DESTINATION circle — so the tick
+  // can never appear before the parcel arrives.
+  const pinOp = useTransform(parcelX, [342, 352], [1, 0]);
+  const tickOp = useTransform(parcelX, [342, 352], [0, 1]);
+  const tickSc = useTransform(parcelX, [342, 350, 353], [0.5, 1.12, 1]);
 
   return (
     <PhaseVisual>
@@ -648,11 +652,11 @@ function ReceiveArt() {
         {/* copper line the parcel rides (z-0, under everything) */}
         <div
           className="absolute z-0 h-[2px] rounded-full bg-accent"
-          style={{ left: 50, right: 50, top: 45 }}
+          style={{ left: 66, right: 66, top: 45 }}
         />
 
         {/* SELLER */}
-        <Station x={50} label="SELLER">
+        <Station x={66} label="SELLER">
           <Store size={24} strokeWidth={1.8} />
         </Station>
 
@@ -693,7 +697,7 @@ function ReceiveArt() {
         </Station>
 
         {/* DESTINATION — map pin becomes a teal delivered disc on arrival */}
-        <Station x={382} label="DESTINATION">
+        <Station x={366} label="DESTINATION">
           <motion.span
             className="absolute inset-0 grid place-items-center"
             style={{ opacity: pinOp }}
@@ -737,8 +741,8 @@ function ShipArt() {
             overflow-hidden). Tilted up-right for a take-off read. */}
         <motion.g
           initial={{ opacity: 0, x: 0, y: 0 }}
-          animate={{ opacity: [0, 1, 1], x: [0, 0, 190], y: [0, 0, -240] }}
-          transition={{ duration: 1.5, delay: 1.55, times: [0, 0.08, 1], ease: "easeIn" }}
+          animate={{ opacity: [0, 1, 1], x: [0, 0, 340], y: [0, 0, -380] }}
+          transition={{ duration: 1.7, delay: 1.55, times: [0, 0.07, 1], ease: "easeIn" }}
         >
           <g transform="translate(250, 200) rotate(-32) scale(1.2)">
             <path
@@ -940,9 +944,12 @@ function TrackArt() {
               animate={{ scaleX: 1 }}
               transition={{ duration: 0.25, delay: 1, ease: "linear" }}
             />
-            <div
-              className="absolute h-[2px] rounded-full bg-border"
+            <motion.div
+              className="absolute h-[2px] origin-left rounded-full bg-border"
               style={{ left: "75%", width: "12.5%" }}
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: 0.25, delay: 1.25, ease: "linear" }}
             />
           </div>
 

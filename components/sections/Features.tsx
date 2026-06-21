@@ -293,88 +293,63 @@ function Parcel({
 }
 
 function CardArtRepack() {
+  const arrows = [
+    { d: "M 55 92 Q 132 150 132 188", head: "M 126 182 L 132 190 L 138 182" },
+    { d: "M 150 76 L 150 188", head: "M 144 182 L 150 190 L 156 182" },
+    { d: "M 245 92 Q 168 150 168 188", head: "M 162 182 L 168 190 L 174 182" },
+  ];
   return (
-    <div
-      aria-hidden
-      className="pointer-events-none absolute -right-10 -bottom-10 hidden h-[22rem] w-[22rem] md:block"
-    >
-      <svg viewBox="0 0 400 400" className="h-full w-full">
-        <defs>
-          <pattern
-            id="grid-bg"
-            width="22"
-            height="22"
-            patternUnits="userSpaceOnUse"
-          >
-            <path
-              d="M22 0 L0 0 0 22"
-              fill="none"
-              stroke="#fafaf7"
-              strokeOpacity="0.06"
-              strokeWidth="1"
-            />
-          </pattern>
-        </defs>
-        <rect width="400" height="400" fill="url(#grid-bg)" />
+    <>
+      {/* grid across the whole card */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-[0.06]"
+        style={{
+          backgroundImage:
+            "linear-gradient(#fafaf7 1px, transparent 1px), linear-gradient(90deg, #fafaf7 1px, transparent 1px)",
+          backgroundSize: "22px 22px",
+        }}
+      />
 
-        {/* incoming, individually labeled parcels */}
-        <Parcel x={44} y={104} w={82} h={58} fill="#d97706" />
-        <Parcel x={150} y={86} w={82} h={58} fill="#fafaf7" labelFill="#f3eee2" />
-        <Parcel x={256} y={104} w={82} h={58} fill="#0f766e" />
+      {/* consolidation illustration, contained in the lower-right */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute bottom-6 right-6 hidden h-[16rem] w-[16rem] md:block"
+      >
+        <svg viewBox="0 0 300 300" className="h-full w-full">
+          {/* incoming, individually labeled parcels */}
+          <Parcel x={18} y={34} w={74} h={54} fill="#d97706" />
+          <Parcel x={113} y={20} w={74} h={54} fill="#fafaf7" labelFill="#f3eee2" />
+          <Parcel x={208} y={34} w={74} h={54} fill="#0f766e" />
 
-        {/* converging arrows */}
-        {[
-          {
-            d: "M 85 168 Q 182 212 183 250",
-            head: "M 177 244 L 183 252 L 189 244",
-          },
-          {
-            d: "M 191 150 L 200 250",
-            head: "M 194 244 L 200 252 L 206 244",
-          },
-          {
-            d: "M 297 168 Q 218 212 217 250",
-            head: "M 211 244 L 217 252 L 223 244",
-          },
-        ].map((a, i) => (
-          <g key={i}>
-            <path
-              d={a.d}
-              stroke="#fafaf7"
-              strokeOpacity="0.8"
-              strokeWidth="2.5"
-              fill="none"
-              strokeLinecap="round"
-            />
-            <path
-              d={a.head}
-              stroke="#fafaf7"
-              strokeOpacity="0.8"
-              strokeWidth="2.5"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </g>
-        ))}
+          {/* converging arrows */}
+          {arrows.map((a, i) => (
+            <g key={i}>
+              <path
+                d={a.d}
+                stroke="#fafaf7"
+                strokeOpacity="0.8"
+                strokeWidth="2.5"
+                fill="none"
+                strokeLinecap="round"
+              />
+              <path
+                d={a.head}
+                stroke="#fafaf7"
+                strokeOpacity="0.8"
+                strokeWidth="2.5"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </g>
+          ))}
 
-        {/* one consolidated, labeled parcel */}
-        <Parcel x={116} y={258} w={168} h={116} fill="#d97706" />
-
-        <Sparkle x={356} y={150} />
-        <Sparkle x={66} y={252} />
-      </svg>
-    </div>
-  );
-}
-
-function Sparkle({ x, y }: { x: number; y: number }) {
-  return (
-    <path
-      d={`M ${x} ${y - 8} L ${x + 2} ${y - 2} L ${x + 8} ${y} L ${x + 2} ${y + 2} L ${x} ${y + 8} L ${x - 2} ${y + 2} L ${x - 8} ${y} L ${x - 2} ${y - 2} Z`}
-      fill="#fafaf7"
-      opacity="0.7"
-    />
+          {/* one consolidated, labeled parcel */}
+          <Parcel x={88} y={196} w={124} h={88} fill="#d97706" />
+        </svg>
+      </div>
+    </>
   );
 }
 

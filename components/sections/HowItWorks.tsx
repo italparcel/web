@@ -577,24 +577,21 @@ function GearSvg({ phase = 0 }: { phase?: number }) {
   );
 }
 
-/* A station on the phase-2 path: a 56px badge centred on `x` with a label
-   under it. `dark` = the ItalParcel hub (filled near-black — "us"). */
+/* A station on the phase-2 path: a 56px badge with a label under it, both
+   centred inside whatever grid column the station is dropped into — so the
+   COLUMN, never the label width, decides the horizontal position. `dark` = the
+   ItalParcel hub (filled near-black — "us"). */
 function Station({
-  x,
   label,
   dark,
   children,
 }: {
-  x: number;
   label: string;
   dark?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <div
-      className="absolute z-20 flex flex-col items-center"
-      style={{ left: x, top: 18, transform: "translateX(-50%)" }}
-    >
+    <div className="flex flex-col items-center">
       <div
         className={cn(
           "relative grid h-[56px] w-[56px] place-items-center rounded-full",
@@ -605,7 +602,7 @@ function Station({
       >
         {children}
       </div>
-      <span className="mt-3 whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.14em] text-fg-subtle">
+      <span className="mt-3 whitespace-nowrap text-center font-mono text-[10px] uppercase tracking-[0.14em] text-fg-subtle">
         {label}
       </span>
     </div>
@@ -613,113 +610,129 @@ function Station({
 }
 
 function ReceiveArt() {
-  // ONE shared clock: a 0→1 progress that cycles every 6s. Every moving piece
-  // (parcel, hub gears, delivered tick) is derived from it with useTransform, so
-  // they are physically incapable of drifting out of sync.
+  // ONE shared clock: a 0→1 progress that runs ONCE over 6s. No modulo, so after
+  // 6s it simply keeps climbing past 1 and every downstream useTransform clamps
+  // at its end value — the phase plays through a single time and then holds, just
+  // like the other three phases (no loop). Deriving every moving piece (parcel,
+  // hub gears, delivered tick) from this one value keeps them perfectly in sync.
   const time = useTime();
-  const p = useTransform(time, (ms) => (ms % 6000) / 6000);
+  const p = useTransform(time, (ms) => ms / 6000);
 
-  // Parcel CROSSES under the badges instead of stopping: x is ONE continuous,
-  // constant-speed sweep (80 emerging at SELLER → 353 resting at DESTINATION over
-  // 82% of the cycle, then a delivered pause). It stays fully opaque the whole
+  // The 3-equal-column grid pins the circles at 1/6, 1/2, 5/6 of the 432-wide
+  // block → SELLER 72, ITALPARCEL 216, DESTINATION 360 (block pixels). Parcel
+  // CROSSES under the badges instead of stopping: x is ONE continuous,
+  // constant-speed sweep (86 emerging at SELLER → 347 resting at DESTINATION over
+  // the first 82%, then it holds delivered). It stays fully opaque the whole
   // way — the badges are stacked above it (z-20 > the parcel's z-10 > the copper
   // line's z-0), so each opaque circle simply covers the parcel as it slides
   // behind and it reappears on the far side. No opacity fade needed.
-  const parcelX = useTransform(p, [0, 0.82, 1], [80, 353, 353]);
+  const parcelX = useTransform(p, [0, 0.82, 1], [86, 347, 347]);
 
-  // Hub gears spin only while the parcel is underneath it (hub stays at x=216,
-  // dead-centre, so these are unchanged by the SELLER/DESTINATION re-spacing).
+  // Hub gears spin only while the parcel is underneath the centre badge (216).
   const whOp = useTransform(parcelX, [160, 172, 234, 246], [1, 0, 0, 1]);
   const gearOp = useTransform(parcelX, [160, 172, 234, 246], [0, 1, 1, 0]);
 
   // Destination "delivered" disc stamps in ONLY once the parcel has actually
-  // reached the badge: the parcel rests at 353, and the swap fires at 342→352,
+  // reached the badge: the parcel rests at 347, and the swap fires at 336→346,
   // i.e. while it is already tucked behind the DESTINATION circle — so the tick
   // can never appear before the parcel arrives.
-  const pinOp = useTransform(parcelX, [342, 352], [1, 0]);
-  const tickOp = useTransform(parcelX, [342, 352], [0, 1]);
-  const tickSc = useTransform(parcelX, [342, 350, 353], [0.5, 1.12, 1]);
+  const pinOp = useTransform(parcelX, [336, 346], [1, 0]);
+  const tickOp = useTransform(parcelX, [336, 346], [0, 1]);
+  const tickSc = useTransform(parcelX, [336, 344, 347], [0.5, 1.12, 1]);
 
   return (
     <PhaseVisual>
+      {/* Fixed 432-wide block. It has NO fixed height — the height comes from
+          the in-flow station grid (circles + labels), so PhaseVisual centres the
+          WHOLE block, circles and labels together, both axes. No horizontal
+          padding/margin and no one-sided spacer, so nothing can offset it. */}
       <motion.div
-        className="relative"
-        style={{ width: 432, height: 102 }}
+        className="relative w-[432px]"
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: EASE }}
       >
-        {/* copper line the parcel rides (z-0, under everything) */}
+        {/* copper line (z-0) — links the SELLER circle centre (72) to the
+            DESTINATION circle centre (360 = 432 − 72), behind the badges. top 27
+            sits it on the circle centre (circles are 56 tall from the top). */}
         <div
-          className="absolute z-0 h-[2px] rounded-full bg-accent"
-          style={{ left: 66, right: 66, top: 45 }}
+          className="pointer-events-none absolute z-0 h-[2px] rounded-full bg-accent"
+          style={{ left: 72, right: 72, top: 27 }}
         />
 
-        {/* SELLER */}
-        <Station x={66} label="SELLER">
-          <Store size={24} strokeWidth={1.8} />
-        </Station>
-
-        {/* ITALPARCEL hub — warehouse ⇄ two counter-rotating gears (repack) */}
-        <Station x={216} label="ITALPARCEL" dark>
-          <motion.span
-            className="absolute inset-0 grid place-items-center"
-            style={{ opacity: whOp }}
-          >
-            <Warehouse size={24} strokeWidth={1.8} />
-          </motion.span>
-          <motion.span
-            className="absolute inset-0 grid place-items-center"
-            style={{ opacity: gearOp }}
-          >
-            {/* two meshed gears, centred in the hub: the right one is phased by
-                half a tooth so its gaps line up with the left one's teeth, and
-                they spin in opposite directions at the same speed (coupled). */}
-            <span className="flex items-center justify-center text-bg-elev">
-              <motion.span
-                className="block"
-                style={{ width: 24, height: 24 }}
-                animate={{ rotate: 360 }}
-                transition={{ duration: 3, ease: "linear", repeat: Infinity }}
-              >
-                <GearSvg />
-              </motion.span>
-              <motion.span
-                className="block"
-                style={{ width: 24, height: 24, marginLeft: -7 }}
-                animate={{ rotate: -360 }}
-                transition={{ duration: 3, ease: "linear", repeat: Infinity }}
-              >
-                <GearSvg phase={22.5} />
-              </motion.span>
-            </span>
-          </motion.span>
-        </Station>
-
-        {/* DESTINATION — map pin becomes a teal delivered disc on arrival */}
-        <Station x={366} label="DESTINATION">
-          <motion.span
-            className="absolute inset-0 grid place-items-center"
-            style={{ opacity: pinOp }}
-          >
-            <MapPin size={24} strokeWidth={1.8} />
-          </motion.span>
-          <motion.span
-            className="absolute inset-0 grid place-items-center rounded-full bg-teal text-bg-elev"
-            style={{ opacity: tickOp, scale: tickSc }}
-          >
-            <Check size={28} strokeWidth={3} />
-          </motion.span>
-        </Station>
-
         {/* the parcel — z-10: above the line (z-0), BELOW the badges (z-20) so
-            the opaque circles cover it as it slides behind each station */}
+            the opaque circles cover it as it slides behind each station. top 15
+            centres the 26px parcel on the circle centre (28). */}
         <motion.div
           className="absolute z-10"
-          style={{ left: 0, top: 33, x: parcelX }}
+          style={{ left: 0, top: 15, x: parcelX }}
         >
           <Parcel />
         </motion.div>
+
+        {/* stations — a FORCED 3-equal-column grid (grid-cols-3 = three
+            minmax(0,1fr) tracks). Each circle is centred in its own column; a
+            long label like DESTINATION overflows its column symmetrically rather
+            than widening it, so the three circles are locked at 1/6, 1/2, 5/6 of
+            the block — centre badge dead-centre, SELLER and DESTINATION
+            mirrored. Symmetric by construction, not by eyeballed margins. */}
+        <div className="relative z-20 grid grid-cols-3">
+          <Station label="SELLER">
+            <Store size={24} strokeWidth={1.8} />
+          </Station>
+
+          {/* ITALPARCEL hub — warehouse ⇄ two counter-rotating gears (repack) */}
+          <Station label="ITALPARCEL" dark>
+            <motion.span
+              className="absolute inset-0 grid place-items-center"
+              style={{ opacity: whOp }}
+            >
+              <Warehouse size={24} strokeWidth={1.8} />
+            </motion.span>
+            <motion.span
+              className="absolute inset-0 grid place-items-center"
+              style={{ opacity: gearOp }}
+            >
+              {/* two meshed gears, centred in the hub: the right one is phased by
+                  half a tooth so its gaps line up with the left one's teeth, and
+                  they spin in opposite directions at the same speed (coupled). */}
+              <span className="flex items-center justify-center text-bg-elev">
+                <motion.span
+                  className="block"
+                  style={{ width: 24, height: 24 }}
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 3, ease: "linear", repeat: Infinity }}
+                >
+                  <GearSvg />
+                </motion.span>
+                <motion.span
+                  className="block"
+                  style={{ width: 24, height: 24, marginLeft: -7 }}
+                  animate={{ rotate: -360 }}
+                  transition={{ duration: 3, ease: "linear", repeat: Infinity }}
+                >
+                  <GearSvg phase={22.5} />
+                </motion.span>
+              </span>
+            </motion.span>
+          </Station>
+
+          {/* DESTINATION — map pin becomes a teal delivered disc on arrival */}
+          <Station label="DESTINATION">
+            <motion.span
+              className="absolute inset-0 grid place-items-center"
+              style={{ opacity: pinOp }}
+            >
+              <MapPin size={24} strokeWidth={1.8} />
+            </motion.span>
+            <motion.span
+              className="absolute inset-0 grid place-items-center rounded-full bg-teal text-bg-elev"
+              style={{ opacity: tickOp, scale: tickSc }}
+            >
+              <Check size={28} strokeWidth={3} />
+            </motion.span>
+          </Station>
+        </div>
       </motion.div>
     </PhaseVisual>
   );

@@ -623,8 +623,9 @@ function ReceiveArt() {
   // The 3-equal-column grid pins the circle centres at 1/6, 1/2, 5/6 of the
   // block. The parcel is positioned by the SAME fraction (not pixels), so it
   // rides the line through each circle centre at any width. It sweeps SELLER →
-  // DESTINATION but DWELLS briefly behind the hub (50%, p 0.36→0.48) so the
-  // repack gears get a longer beat to turn, then travels on and holds delivered.
+  // DESTINATION but DWELLS behind the hub (50%, p 0.36→0.56) so the repack gears
+  // get a long beat to turn before the parcel is released, then travels on and
+  // holds delivered.
   // It stays fully opaque throughout — the badges sit above it (z-20 > the
   // parcel's z-10 > the copper line's z-0), so each opaque circle covers it
   // while it's behind and it reappears on the far side.
@@ -635,38 +636,41 @@ function ReceiveArt() {
   // here was the source of the "goffo" robotic slide.
   const parcelPct = useTransform(
     p,
-    [0, 0.36, 0.48, 0.82, 1],
+    [0, 0.36, 0.56, 0.90, 1],
     [16.667, 50, 50, 83.333, 83.333],
     { ease: easeInOut }
   );
   const parcelLeft = useMotionTemplate`${parcelPct}%`;
 
   // Hub: warehouse ⇄ gears while the parcel is tucked behind the centre badge.
-  // The window spans the dwell (outer span p 0.34→0.50, unchanged), so it stays
-  // inside the "covered" span at every width (badge is a fixed 56px, widest case
-  // = 432px block) and no sliver of the parcel pokes out. The swap is an eased
-  // grow/shrink crossfade — warehouse shrinks+fades as the gears grow+fade in
-  // (and vice-versa) — instead of a flat opacity pop, which read as goffo.
-  const whOp = useTransform(p, [0.34, 0.38, 0.46, 0.50], [1, 0, 0, 1], {
+  // The window spans the (now longer) dwell — outer span p 0.34→0.58, with the
+  // gears held in full 0.38→0.54 so they turn a beat longer before the parcel is
+  // released at 0.56. It stays inside the "covered" span at every width (badge is
+  // a fixed 56px, widest case = 432px block) and no sliver of the parcel pokes
+  // out: the warehouse is back in full by 0.58, before the parcel emerges from
+  // behind the hub (~0.68). The swap is an eased grow/shrink crossfade —
+  // warehouse shrinks+fades as the gears grow+fade in (and vice-versa) — instead
+  // of a flat opacity pop, which read as goffo.
+  const whOp = useTransform(p, [0.34, 0.38, 0.54, 0.58], [1, 0, 0, 1], {
     ease: easeInOut,
   });
-  const whSc = useTransform(p, [0.34, 0.38, 0.46, 0.50], [1, 0.72, 0.72, 1], {
+  const whSc = useTransform(p, [0.34, 0.38, 0.54, 0.58], [1, 0.72, 0.72, 1], {
     ease: easeInOut,
   });
-  const gearOp = useTransform(p, [0.34, 0.38, 0.46, 0.50], [0, 1, 1, 0], {
+  const gearOp = useTransform(p, [0.34, 0.38, 0.54, 0.58], [0, 1, 1, 0], {
     ease: easeInOut,
   });
-  const gearSc = useTransform(p, [0.34, 0.38, 0.46, 0.50], [0.72, 1, 1, 0.72], {
+  const gearSc = useTransform(p, [0.34, 0.38, 0.54, 0.58], [0.72, 1, 1, 0.72], {
     ease: easeInOut,
   });
 
   // Destination "delivered" disc stamps in ONLY once the parcel has reached the
-  // badge: the parcel settles at p=0.82 and the swap fires at 0.79→0.815, while
+  // badge: the parcel settles at p=0.90 and the swap fires at 0.87→0.895, while
   // it is already tucked behind the DESTINATION circle — so the tick can never
   // appear before the parcel arrives.
-  const pinOp = useTransform(p, [0.79, 0.815], [1, 0]);
-  const tickOp = useTransform(p, [0.79, 0.815], [0, 1]);
-  const tickSc = useTransform(p, [0.79, 0.808, 0.82], [0.5, 1.12, 1]);
+  const pinOp = useTransform(p, [0.87, 0.895], [1, 0]);
+  const tickOp = useTransform(p, [0.87, 0.895], [0, 1]);
+  const tickSc = useTransform(p, [0.87, 0.888, 0.90], [0.5, 1.12, 1]);
 
   return (
     <PhaseVisual>

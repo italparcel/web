@@ -101,18 +101,22 @@ export async function POST(request: Request) {
 
   // Strip control chars from the user name before it lands in the Subject
   // header — defence-in-depth against header injection / display spoofing.
-  const safeName = data.name.replace(/[\r\n\t\f\v]+/g, " ").trim().slice(0, 100);
+  const safeName = oneLine(data.name).slice(0, 100);
   const subject = `New inquiry — ${safeName} (${PARCEL_LABELS[data.parcels]})`;
 
+  // Single-line fields are collapsed to one line in the plain-text body too, so
+  // a value containing a newline can't inject fake "Key: value" rows (e.g. spoof
+  // the IP/acceptance lines). itemDescription/notes keep their newlines — they
+  // sit in their own clearly delimited blocks.
   const text = [
     "New ItalParcel inquiry",
     "",
-    `Name: ${data.name}`,
-    `Email: ${data.email}`,
-    data.phone ? `Phone: ${data.phone}` : null,
+    `Name: ${oneLine(data.name)}`,
+    `Email: ${oneLine(data.email)}`,
+    data.phone ? `Phone: ${oneLine(data.phone)}` : null,
     "",
-    `Country: ${data.country}`,
-    `Address: ${data.address}`,
+    `Country: ${oneLine(data.country)}`,
+    `Address: ${oneLine(data.address)}`,
     `Parcels: ${PARCEL_LABELS[data.parcels]}`,
     `Origin: ${ORIGIN_LABELS[data.origin]}`,
     `Reply via: ${data.channel}`,
@@ -249,6 +253,12 @@ function escapeHtml(s: string) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+// Collapse CR/LF/tabs to a single space — keeps single-line fields on one line
+// in the plain-text email so they can't forge extra rows.
+function oneLine(s: string) {
+  return s.replace(/[\r\n\t\f\v]+/g, " ").trim();
 }
 
 function rateLimited(ip: string): boolean {

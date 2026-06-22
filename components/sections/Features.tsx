@@ -6,7 +6,6 @@ import {
   Lock,
   ScrollText,
   MessagesSquare,
-  Sparkles,
 } from "lucide-react";
 import { SectionHeader } from "../ui/SectionHeader";
 import { Reveal } from "../ui/Reveal";
@@ -366,5 +365,3 @@ function CardArtDots() {
     />
   );
 }
-
-export { Sparkles };

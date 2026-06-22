@@ -10,6 +10,7 @@ import {
   useTime,
   useTransform,
   useMotionTemplate,
+  easeInOut,
 } from "framer-motion";
 import type { Transition } from "framer-motion";
 import {
@@ -627,19 +628,37 @@ function ReceiveArt() {
   // It stays fully opaque throughout — the badges sit above it (z-20 > the
   // parcel's z-10 > the copper line's z-0), so each opaque circle covers it
   // while it's behind and it reappears on the far side.
+  // easeInOut per segment so the parcel glides: it decelerates into the hub,
+  // truly rests during the dwell (zero velocity at both ends of the flat
+  // segment, so the stop reads as deliberate rather than a hard halt), then
+  // accelerates back out and eases to a stop at the destination. Linear motion
+  // here was the source of the "goffo" robotic slide.
   const parcelPct = useTransform(
     p,
     [0, 0.36, 0.48, 0.82, 1],
-    [16.667, 50, 50, 83.333, 83.333]
+    [16.667, 50, 50, 83.333, 83.333],
+    { ease: easeInOut }
   );
   const parcelLeft = useMotionTemplate`${parcelPct}%`;
 
   // Hub: warehouse ⇄ gears while the parcel is tucked behind the centre badge.
-  // The window spans the dwell (p ~0.34→0.50), so the gears spin a beat longer;
-  // it stays inside the "covered" span at every width (badge is a fixed 56px,
-  // widest case = 432px block), so no sliver of the parcel pokes out.
-  const whOp = useTransform(p, [0.34, 0.37, 0.47, 0.50], [1, 0, 0, 1]);
-  const gearOp = useTransform(p, [0.34, 0.37, 0.47, 0.50], [0, 1, 1, 0]);
+  // The window spans the dwell (outer span p 0.34→0.50, unchanged), so it stays
+  // inside the "covered" span at every width (badge is a fixed 56px, widest case
+  // = 432px block) and no sliver of the parcel pokes out. The swap is an eased
+  // grow/shrink crossfade — warehouse shrinks+fades as the gears grow+fade in
+  // (and vice-versa) — instead of a flat opacity pop, which read as goffo.
+  const whOp = useTransform(p, [0.34, 0.38, 0.46, 0.50], [1, 0, 0, 1], {
+    ease: easeInOut,
+  });
+  const whSc = useTransform(p, [0.34, 0.38, 0.46, 0.50], [1, 0.72, 0.72, 1], {
+    ease: easeInOut,
+  });
+  const gearOp = useTransform(p, [0.34, 0.38, 0.46, 0.50], [0, 1, 1, 0], {
+    ease: easeInOut,
+  });
+  const gearSc = useTransform(p, [0.34, 0.38, 0.46, 0.50], [0.72, 1, 1, 0.72], {
+    ease: easeInOut,
+  });
 
   // Destination "delivered" disc stamps in ONLY once the parcel has reached the
   // badge: the parcel settles at p=0.82 and the swap fires at 0.79→0.815, while
@@ -697,13 +716,13 @@ function ReceiveArt() {
           <Station label="ITALPARCEL" dark>
             <motion.span
               className="absolute inset-0 grid place-items-center"
-              style={{ opacity: whOp }}
+              style={{ opacity: whOp, scale: whSc }}
             >
               <Warehouse size={24} strokeWidth={1.8} />
             </motion.span>
             <motion.span
               className="absolute inset-0 grid place-items-center"
-              style={{ opacity: gearOp }}
+              style={{ opacity: gearOp, scale: gearSc }}
             >
               {/* two meshed gears, centred in the hub: the right one is phased by
                   half a tooth so its gaps line up with the left one's teeth, and

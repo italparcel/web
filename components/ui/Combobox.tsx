@@ -133,6 +133,9 @@ export const Combobox = forwardRef<HTMLInputElement, Props>(function Combobox(
           aria-autocomplete="list"
           aria-expanded={open}
           aria-controls={listId}
+          aria-activedescendant={
+            open && filtered.length > 0 ? `${listId}-opt-${highlight}` : undefined
+          }
           autoComplete="off"
           spellCheck={false}
           value={query}
@@ -189,6 +192,7 @@ export const Combobox = forwardRef<HTMLInputElement, Props>(function Combobox(
               <li
                 key={c}
                 role="option"
+                id={`${listId}-opt-${i}`}
                 aria-selected={i === highlight}
                 data-idx={i}
                 onMouseDown={(e) => e.preventDefault()}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { Button } from "./ui/Button";
@@ -65,7 +66,7 @@ export function Nav() {
         aria-label="Primary"
         className="container-x flex h-16 items-center justify-between"
       >
-        <a
+        <Link
           href="/"
           aria-label="ItalParcel — home"
           className="group inline-flex items-center gap-2.5 font-semibold tracking-tight"
@@ -81,17 +82,17 @@ export function Nav() {
           <span className="text-fg text-[15px] md:text-base">
             Ital<span className="text-accent">Parcel</span>
           </span>
-        </a>
+        </Link>
 
         <ul className="hidden items-center gap-8 md:flex">
           {links.map((l) => (
             <li key={l.href}>
-              <a
+              <Link
                 href={l.href}
                 className="text-sm text-fg-muted transition hover:text-fg"
               >
                 {l.label}
-              </a>
+              </Link>
             </li>
           ))}
         </ul>
@@ -125,13 +126,13 @@ export function Nav() {
             <ul className="container-x flex flex-col gap-2 py-4">
               {links.map((l) => (
                 <li key={l.href}>
-                  <a
+                  <Link
                     href={l.href}
                     onClick={() => setOpen(false)}
                     className="block rounded-lg px-2 py-3 text-fg hover:bg-fg/5"
                   >
                     {l.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
               <li className="pt-2">

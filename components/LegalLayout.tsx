@@ -97,7 +97,11 @@ export function LegalLayout({
           </aside>
         )}
 
-        <article className="max-w-3xl text-fg">{children}</article>
+        {/* `text-pretty` (text-wrap: pretty) lets the browser optimise line
+            breaks so a sentence never strands its last word alone on a line.
+            Inherited by every paragraph below — no manual breaks needed, and the
+            clause numbering / per-clause blocks are untouched. */}
+        <article className="max-w-3xl text-pretty text-fg">{children}</article>
       </div>
     </div>
   );

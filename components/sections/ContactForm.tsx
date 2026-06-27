@@ -14,6 +14,7 @@ import {
 } from "@/lib/schema";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 import { COUNTRIES } from "@/lib/countries";
+import { CONSENT_STORAGE_KEY } from "@/lib/consent";
 import { Button } from "../ui/Button";
 import {
   FieldError,
@@ -36,6 +37,15 @@ const TURNSTILE_SCRIPT_SRC =
   "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
 const TURNSTILE_SCRIPT_MATCH =
   'script[src^="https://challenges.cloudflare.com/turnstile/v0/api.js"]';
+
+/** True only when the visitor granted advertising consent (Consent Mode). */
+function adConsentGranted(): boolean {
+  try {
+    return localStorage.getItem(CONSENT_STORAGE_KEY) === "granted";
+  } catch {
+    return false;
+  }
+}
 
 type TurnstileOptions = {
   sitekey: string;
@@ -191,6 +201,18 @@ export function ContactForm() {
       // covers both email and WhatsApp when the contact genuinely went through.
       // The WhatsApp fallback in catch() is deliberately NOT tracked, so a
       // failed backend is never counted as a conversion.
+      //
+      // Enhanced conversions for leads: only when the visitor granted
+      // advertising consent (Consent Mode), hand Google the email/phone the
+      // user typed so it can match the conversion. gtag normalises and
+      // SHA-256-hashes this data in the browser before it is sent — we never
+      // send it anywhere else and never log it.
+      if (adConsentGranted()) {
+        window.gtag?.("set", "user_data", {
+          email: data.email,
+          ...(data.phone ? { phone_number: data.phone } : {}),
+        });
+      }
       window.gtag?.("event", "conversion", {
         send_to: "AW-18237016910/CtkVCL-UwsYcEM6Wi_hD",
       });

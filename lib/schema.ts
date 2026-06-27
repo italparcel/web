@@ -83,3 +83,18 @@ export const contactSchema = z
   );
 
 export type ContactInput = z.infer<typeof contactSchema>;
+
+// Human-readable labels for the email / WhatsApp summaries. Centralised here so
+// the API route and the WhatsApp link builder share a single source of truth.
+export const PARCEL_LABELS: Record<ContactInput["parcels"], string> = {
+  "1": "1 parcel",
+  "2-4": "2–4 parcels",
+  "5-9": "5–9 parcels",
+  "10+": "10+ parcels",
+};
+
+export const ORIGIN_LABELS: Record<ContactInput["origin"], string> = {
+  eu: "Within the EU",
+  "extra-eu": "Outside the EU",
+  mixed: "Mixed / not sure",
+};

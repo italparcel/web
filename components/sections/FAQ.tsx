@@ -20,7 +20,7 @@ export function FAQ() {
           eyebrow="FAQ"
           title={
             <>
-              The questions you'd
+              The questions you&apos;d
               <br />
               <span className="display-light text-fg-muted">actually ask.</span>
             </>

@@ -1,20 +1,7 @@
-import type { ContactInput } from "./schema";
+import { PARCEL_LABELS, ORIGIN_LABELS, type ContactInput } from "./schema";
 
 export const WHATSAPP_NUMBER = "393293130206";
 export const WHATSAPP_DISPLAY = "+39 329 313 0206";
-
-const PARCEL_LABELS: Record<ContactInput["parcels"], string> = {
-  "1": "1 parcel",
-  "2-4": "2–4 parcels",
-  "5-9": "5–9 parcels",
-  "10+": "10+ parcels",
-};
-
-const ORIGIN_LABELS: Record<ContactInput["origin"], string> = {
-  eu: "Within the EU",
-  "extra-eu": "Outside the EU",
-  mixed: "Mixed / not sure",
-};
 
 export function buildWhatsAppMessage(data: ContactInput): string {
   const lines = [

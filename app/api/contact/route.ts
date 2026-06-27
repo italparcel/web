@@ -1,24 +1,11 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
-import { contactSchema, type ContactInput } from "@/lib/schema";
+import { contactSchema, PARCEL_LABELS, ORIGIN_LABELS } from "@/lib/schema";
 
 export const runtime = "nodejs";
 
 const CONTACT_EMAIL = process.env.CONTACT_EMAIL ?? "contact@italparcel.com";
 const FROM_EMAIL = process.env.FROM_EMAIL ?? "ItalParcel <onboarding@resend.dev>";
-
-const PARCEL_LABELS: Record<ContactInput["parcels"], string> = {
-  "1": "1 parcel",
-  "2-4": "2–4 parcels",
-  "5-9": "5–9 parcels",
-  "10+": "10+ parcels",
-};
-
-const ORIGIN_LABELS: Record<ContactInput["origin"], string> = {
-  eu: "Within the EU",
-  "extra-eu": "Outside the EU",
-  mixed: "Mixed / not sure",
-};
 
 // Best-effort per-IP throttle. NOTE: in-memory, so on serverless it only sees a
 // single warm instance's traffic — it is NOT shared across instances and resets

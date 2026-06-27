@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Bricolage_Grotesque, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { WHATSAPP_DISPLAY, WHATSAPP_NUMBER } from "@/lib/whatsapp";
@@ -166,6 +167,17 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-bg text-fg">
         {children}
+        {/* Google Ads (gtag.js) — base tag, loaded on every page */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=AW-18237016910"
+          strategy="afterInteractive"
+        />
+        <Script id="google-ads-gtag" strategy="afterInteractive">
+          {`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'AW-18237016910');`}
+        </Script>
         <script
           type="application/ld+json"
           // eslint-disable-next-line react/no-danger

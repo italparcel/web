@@ -186,6 +186,14 @@ export function ContactForm() {
       }
       setWaLink(link);
       setStatus("success");
+      // Google Ads conversion — fire ONLY here, where res.ok was confirmed
+      // (the backend accepted the inquiry / the email was actually sent). This
+      // covers both email and WhatsApp when the contact genuinely went through.
+      // The WhatsApp fallback in catch() is deliberately NOT tracked, so a
+      // failed backend is never counted as a conversion.
+      window.gtag?.("event", "conversion", {
+        send_to: "AW-18237016910/CtkVCL-UwsYcEM6Wi_hD",
+      });
       reset();
     } catch (e) {
       // For WhatsApp the emailed copy is secondary — don't block the user from
@@ -673,7 +681,7 @@ function SuccessCard({
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: "spring", stiffness: 240, damping: 16 }}
-        className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-teal-soft text-teal"
+        className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-teal text-white"
       >
         <CheckCircle2 size={28} />
       </motion.div>

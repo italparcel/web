@@ -182,6 +182,9 @@ export const AddressCombobox = forwardRef<HTMLInputElement, Props>(
             aria-autocomplete="list"
             aria-expanded={open}
             aria-controls={listId}
+            aria-activedescendant={
+              open && results.length > 0 ? `${listId}-opt-${highlight}` : undefined
+            }
             autoComplete="off"
             spellCheck={false}
             value={query}
@@ -236,6 +239,7 @@ export const AddressCombobox = forwardRef<HTMLInputElement, Props>(
                   <li
                     key={i}
                     role="option"
+                    id={`${listId}-opt-${i}`}
                     aria-selected={i === highlight}
                     onMouseDown={(e) => e.preventDefault()}
                     onMouseEnter={() => setHighlight(i)}

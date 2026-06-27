@@ -43,6 +43,10 @@
 }
 
 html {
+  /* Non-static so Framer Motion's `useScroll` can measure offsets against the
+     document scroll container without warning — it checks the container's
+     computed position, and the scrolling element (<html>) is static by default. */
+  position: relative;
   scroll-behavior: smooth;
 }
 

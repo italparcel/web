@@ -3,6 +3,8 @@ import Script from "next/script";
 import { Bricolage_Grotesque, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { WHATSAPP_DISPLAY, WHATSAPP_NUMBER } from "@/lib/whatsapp";
+import { CookieBanner } from "@/components/CookieBanner";
+import { CONSENT_DENIED_REGIONS, CONSENT_STORAGE_KEY } from "@/lib/consent";
 
 const bricolage = Bricolage_Grotesque({
   variable: "--font-sans",
@@ -167,6 +169,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-bg text-fg">
         {children}
+        <CookieBanner />
         {/* Google Ads (gtag.js) — base tag, loaded on every page */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=AW-18237016910"
@@ -175,6 +178,22 @@ export default function RootLayout({
         <Script id="google-ads-gtag" strategy="afterInteractive">
           {`window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
+gtag('consent', 'default', {
+  ad_storage: 'denied',
+  ad_user_data: 'denied',
+  ad_personalization: 'denied',
+  analytics_storage: 'denied',
+  wait_for_update: 500,
+  region: ${JSON.stringify(CONSENT_DENIED_REGIONS)}
+});
+try {
+  var stored = localStorage.getItem('${CONSENT_STORAGE_KEY}');
+  if (stored === 'granted') {
+    gtag('consent', 'update', { ad_storage: 'granted', ad_user_data: 'granted', ad_personalization: 'granted', analytics_storage: 'granted' });
+  } else if (stored === 'denied') {
+    gtag('consent', 'update', { ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied', analytics_storage: 'denied' });
+  }
+} catch (e) {}
 gtag('js', new Date());
 gtag('config', 'AW-18237016910');`}
         </Script>

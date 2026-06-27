@@ -673,7 +673,7 @@ function SuccessCard({
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: "spring", stiffness: 240, damping: 16 }}
-        className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-teal-soft text-teal"
+        className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-teal text-white"
       >
         <CheckCircle2 size={28} />
       </motion.div>

@@ -175,10 +175,7 @@ function TierCard({ tier }: { tier: Tier }) {
         {tier.price === "custom" ? (
           <span className="display text-5xl">Custom</span>
         ) : (
-          <>
-            <AnimatedPrice value={tier.price} />
-            <span className="text-sm text-white/70">+ shipping cost</span>
-          </>
+          <AnimatedPrice value={tier.price} />
         )}
       </div>
 

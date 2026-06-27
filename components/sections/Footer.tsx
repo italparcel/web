@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Mail, MessageCircle } from "lucide-react";
 import { WHATSAPP_DISPLAY, WHATSAPP_NUMBER } from "@/lib/whatsapp";
+import { CookieSettingsLink } from "@/components/CookieBanner";
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -78,6 +79,9 @@ export function Footer() {
                 >
                   Prohibited Items
                 </Link>
+              </li>
+              <li>
+                <CookieSettingsLink className="text-fg hover:text-accent" />
               </li>
             </ul>
           </div>

@@ -316,3 +316,38 @@ La build **non richiede** env var (tutte le pagine si prerenderizzano senza).
 - **Fix (S):** lasciare `analytics_storage: "denied"` in entrambi i rami (e nell'update dell'inline script di layout.tsx), così il consenso registrato coincide esattamente con l'uso dichiarato.
 
 ---
+
+## Fase 4 — Test funzionali / E2E
+
+**Setup creato:** `playwright.config.ts` (Chromium, due viewport: desktop 1440×900 e mobile 375×812, `webServer` su `next start`), suite in `tests/e2e/` (helpers + 5 spec, 20 test × 2 viewport), script `npm run test:e2e`. I test sono **ermetici**: tutte le richieste esterne (Google, Photon) vengono abortite; il percorso di submit riuscito usa `/api/contact` **mockato**; i POST reali all'endpoint locale esercitano solo percorsi che non inviano email (422 validazione, 400 JSON malformato, 200 honeypot, 405 metodo).
+
+### Esito: **39 passed / 0 failed** (1 skip strutturale: test solo-mobile sul progetto desktop)
+
+| Area | Test | Esito |
+| --- | --- | --- |
+| Home | Caricamento senza errori console né richieste fallite (2 viewport); un solo `h1`; `lang` presente | ✅ |
+| Hydration | Rendering con `prefers-reduced-motion: reduce` senza errori di hydration → **QUAL-06 non riproducibile empiricamente** (declassato a osservazione) | ✅ |
+| Navigazione | Tutti i link interni di tutte le pagine risolvono (<400); ancore `#how/#pricing/#features/#faq/#contact` e ancore clausole `/terms#sec-3-2, -3-10, -4-5, -5-9, -7-3, -8-2` esistono; menu mobile apre/naviga/chiude | ✅ |
+| Lingua | Toggle EN/IT sulle pagine legali cambia contenuto e resta sulla pagina | ✅ |
+| Form (client) | Messaggi di validazione su input non validi; submit disabilitato finché invalido; percorso di successo (mock) con success card e reset; errore backend mostrato con `role="alert"` mantenendo i dati inseriti; honeypot inviato vuoto | ✅ |
+| Form (server, reale) | Payload invalido → 422 generico; JSON malformato → 400; honeypot compilato → 200 senza elaborazione; `GET /api/contact` → **405 confermato** | ✅ |
+| Cookie banner | Visibile alla prima visita con Accept/Decline/link privacy; entrambe le scelte persistono oltre il reload; decline → zero cookie; riapertura dal footer | ✅ |
+| 404 | Status 404 reale + pagina custom con link alla home | ✅ |
+| Crawl | BFS su tutte le pagine interne: nessun link rotto, nessuna immagine rotta, nessun contenuto misto `http://` | ✅ |
+
+**Fix solo test-side applicati per arrivare al verde** (documentati nei commenti dei test): esclusione dell'artefatto Chromium/Playwright sul doppio caricamento del logo (il routing di rete disabilita la cache HTTP → la richiesta duplicata Nav+Footer viene cancellata con `net::ERR_FAILED`; verificato innocuo con `tests/probes/image-probe.mjs`); body raw per il test del JSON malformato; selettore `p[role="alert"]` (il route announcer di Next è anch'esso `role="alert"`); riordino del test WhatsApp (vedi FUNC-01).
+
+### Findings
+
+#### FUNC-01 · Bassa · Il messaggio "telefono obbligatorio con WhatsApp" appare solo a form altrimenti valido
+
+- **File:** `lib/schema.ts:77-83`
+- **Evidenza:** la regola è una `.refine()` a livello di schema zod: le refinement girano **solo dopo** che tutti i campi base sono validi. Se l'utente sceglie WhatsApp e mette un numero corto mentre altri campi sono ancora vuoti, nessun errore compare sul telefono finché il resto non è compilato (il submit resta comunque disabilitato — nessun invio errato possibile).
+- **Impatto:** micro-UX: feedback ritardato; combinato col bottone disabilitato senza spiegazione può confondere.
+- **Fix (S):** spostare la regola su un `superRefine`/validazione per-campo o validare il telefono con regola condizionale nel campo stesso.
+
+#### FUNC-02 · Nota · Messaggi di validazione solo in inglese
+
+- Il brief prevedeva la verifica dei messaggi "in entrambe le lingue": non applicabile — il form esiste solo in inglese (vedi QUAL-05/architettura i18n). Nessun test IT possibile.
+
+---

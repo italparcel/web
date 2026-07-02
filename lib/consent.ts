@@ -1,15 +1,10 @@
 // Shared Google Consent Mode v2 constants.
 //
-// EEA (EU-27 + Iceland, Liechtenstein, Norway) plus the United Kingdom and
-// Switzerland: the regions where advertising/analytics consent is denied by
-// default until the user opts in. Outside these regions we set no default, so
-// Consent Mode treats consent as granted — our non-EU audience keeps being
-// measured without a gate. ISO 3166-1 alpha-2 codes.
-export const CONSENT_DENIED_REGIONS = [
-  "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR",
-  "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK",
-  "SI", "ES", "SE", "IS", "LI", "NO", "GB", "CH",
-] as const;
+// The consent default is DENIED GLOBALLY (no region scoping): every visitor,
+// EEA or not, is measured only after accepting the banner. This keeps the
+// banner text ("only with your consent") and privacy policy §8 literally true
+// for everyone, at the cost of pre-consent modeling data outside the EEA — an
+// explicit product decision (see REVIEW_REPORT.md, CONS-04).
 
 // localStorage key holding the user's advertising-cookie choice:
 // "granted" | "denied". Absent = no choice yet (show the banner).

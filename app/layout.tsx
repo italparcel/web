@@ -4,7 +4,7 @@ import { Bricolage_Grotesque, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { WHATSAPP_DISPLAY, WHATSAPP_NUMBER } from "@/lib/whatsapp";
 import { CookieBanner } from "@/components/CookieBanner";
-import { CONSENT_DENIED_REGIONS, CONSENT_STORAGE_KEY } from "@/lib/consent";
+import { CONSENT_STORAGE_KEY } from "@/lib/consent";
 
 const bricolage = Bricolage_Grotesque({
   variable: "--font-sans",
@@ -183,8 +183,7 @@ gtag('consent', 'default', {
   ad_user_data: 'denied',
   ad_personalization: 'denied',
   analytics_storage: 'denied',
-  wait_for_update: 500,
-  region: ${JSON.stringify(CONSENT_DENIED_REGIONS)}
+  wait_for_update: 500
 });
 try {
   var stored = localStorage.getItem('${CONSENT_STORAGE_KEY}');

@@ -10,7 +10,9 @@ const GRANTED = {
   ad_storage: "granted",
   ad_user_data: "granted",
   ad_personalization: "granted",
-  analytics_storage: "granted",
+  // The site has no analytics (privacy policy §8.3): never request more
+  // consent than is actually used.
+  analytics_storage: "denied",
 } as const;
 
 const DENIED = {

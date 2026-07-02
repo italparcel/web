@@ -189,7 +189,7 @@ gtag('consent', 'default', {
 try {
   var stored = localStorage.getItem('${CONSENT_STORAGE_KEY}');
   if (stored === 'granted') {
-    gtag('consent', 'update', { ad_storage: 'granted', ad_user_data: 'granted', ad_personalization: 'granted', analytics_storage: 'granted' });
+    gtag('consent', 'update', { ad_storage: 'granted', ad_user_data: 'granted', ad_personalization: 'granted', analytics_storage: 'denied' });
   } else if (stored === 'denied') {
     gtag('consent', 'update', { ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied', analytics_storage: 'denied' });
   }

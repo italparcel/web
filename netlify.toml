@@ -22,8 +22,16 @@
     # Cloudflare Turnstile (script/frame/connect), the Photon geocoder (connect),
     # and Google Ads / Consent Mode gtag — googletagmanager.com (script/img/connect),
     # google.com + googleads.g.doubleclick.net (img/connect), googleadservices.com
-    # (connect) and td.doubleclick.net (frame).
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://www.googletagmanager.com https://www.google.com https://googleads.g.doubleclick.net; font-src 'self'; connect-src 'self' https://photon.komoot.io https://challenges.cloudflare.com https://www.googletagmanager.com https://www.google.com https://googleads.g.doubleclick.net https://www.googleadservices.com; frame-src https://challenges.cloudflare.com https://td.doubleclick.net; worker-src 'self' blob:; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'self'"
+    # (img/connect) and td.doubleclick.net (frame).
+    # img-src/connect-src additionally allow the domains gtag actually pings
+    # (captured empirically, see REVIEW_REPORT.md CONS-01):
+    #  - pagead2.googlesyndication.com — cookieless Consent Mode pings (consent
+    #    denied) AND the conversion ping of users who decline the banner;
+    #  - ad.doubleclick.net — post-consent ccm collection;
+    #  - www.google.it — pagead/1p-user-list remarketing ping for users in Italy
+    #    (Google uses the visitor's country TLD; other EEA TLDs are accepted as
+    #    a known loss — the conversion ping itself always goes to allowed hosts).
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://www.googletagmanager.com https://www.google.com https://www.google.it https://googleads.g.doubleclick.net https://ad.doubleclick.net https://pagead2.googlesyndication.com https://www.googleadservices.com; font-src 'self'; connect-src 'self' https://photon.komoot.io https://challenges.cloudflare.com https://www.googletagmanager.com https://www.google.com https://www.google.it https://googleads.g.doubleclick.net https://ad.doubleclick.net https://pagead2.googlesyndication.com https://www.googleadservices.com; frame-src https://challenges.cloudflare.com https://td.doubleclick.net; worker-src 'self' blob:; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'self'"
 
 [[headers]]
   for = "/_next/static/*"

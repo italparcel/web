@@ -37,11 +37,11 @@ export function Hero() {
               style={reduce ? undefined : { y: headlineY }}
               className="display text-balance text-[clamp(3rem,7.5vw,6rem)] text-fg"
             >
-              <Line delay={0.08}>Your Italian</Line>
-              <Line delay={0.22}>
+              <Line>Your Italian</Line>
+              <Line>
                 <span className="text-accent">address.</span>
               </Line>
-              <Line delay={0.36} className="display-light text-fg-muted">
+              <Line className="display-light text-fg-muted">
                 Anywhere in the world.
               </Line>
             </motion.h1>
@@ -91,28 +91,19 @@ export function Hero() {
   );
 }
 
+// The headline is the page's LCP element: it must be visible at first paint,
+// not gated behind hydration + an entrance animation (that cost ~3.4s of LCP
+// on throttled mobile — see REVIEW_REPORT.md PERF-01). The old rise-reveal
+// (y:108% inside an overflow-hidden mask) is intentionally gone; the scroll
+// parallax on the h1 and every other hero entrance animation are unchanged.
 function Line({
   children,
-  delay,
   className,
 }: {
   children: React.ReactNode;
-  delay: number;
   className?: string;
 }) {
-  const reduce = useReducedMotion();
-  return (
-    <span className={"block overflow-hidden " + (className ?? "")}>
-      <motion.span
-        initial={reduce ? false : { y: "108%" }}
-        animate={reduce ? undefined : { y: 0 }}
-        transition={{ duration: 0.95, delay, ease: [0.16, 1, 0.3, 1] }}
-        className="inline-block will-change-transform"
-      >
-        {children}
-      </motion.span>
-    </span>
-  );
+  return <span className={"block " + (className ?? "")}>{children}</span>;
 }
 
 function Stat({

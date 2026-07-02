@@ -28,6 +28,13 @@ for (const path of pages) {
       CLS: audits["cumulative-layout-shift"]?.displayValue,
       SI: audits["speed-index"]?.displayValue,
     },
+    lcpElement:
+      audits["largest-contentful-paint-element"]?.details?.items?.[0]?.items?.[0]?.node
+        ?.snippet ?? null,
+    lcpBreakdown:
+      audits["largest-contentful-paint-element"]?.details?.items?.[1]?.items?.map(
+        (i) => `${i.phase}: ${Math.round(i.timing)}ms`
+      ) ?? null,
     topOpportunities: Object.values(audits)
       .filter((a) => a.details?.type === "opportunity" && (a.details.overallSavingsMs ?? 0) > 100)
       .sort((a, b) => (b.details.overallSavingsMs ?? 0) - (a.details.overallSavingsMs ?? 0))

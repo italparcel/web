@@ -80,6 +80,10 @@ function TurnstileWidget({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
+  // Without this the submit button just stays disabled forever when the
+  // Cloudflare script is blocked or the challenge errors — the visitor gets
+  // an explanation and an escape hatch instead (audit L-4).
+  const [failed, setFailed] = useState(false);
   // Stable wrappers that always see the latest props, callable from the
   // Turnstile widget's callbacks without re-running the mount effect.
   const handleVerify = useEffectEvent((token: string) => onVerify(token));
@@ -89,6 +93,10 @@ function TurnstileWidget({
     const siteKey = TURNSTILE_SITE_KEY;
     if (!siteKey) return;
     let cancelled = false;
+
+    const markFailed = () => {
+      if (!cancelled) setFailed(true);
+    };
 
     const render = () => {
       if (
@@ -101,9 +109,15 @@ function TurnstileWidget({
       }
       widgetIdRef.current = window.turnstile.render(containerRef.current, {
         sitekey: siteKey,
-        callback: (token) => handleVerify(token),
+        callback: (token) => {
+          setFailed(false);
+          handleVerify(token);
+        },
         "expired-callback": () => handleExpire(),
-        "error-callback": () => handleExpire(),
+        "error-callback": () => {
+          setFailed(true);
+          handleExpire();
+        },
       });
     };
 
@@ -114,12 +128,14 @@ function TurnstileWidget({
         document.querySelector<HTMLScriptElement>(TURNSTILE_SCRIPT_MATCH);
       if (existing) {
         existing.addEventListener("load", render, { once: true });
+        existing.addEventListener("error", markFailed, { once: true });
       } else {
         const script = document.createElement("script");
         script.src = TURNSTILE_SCRIPT_SRC;
         script.async = true;
         script.defer = true;
         script.addEventListener("load", render, { once: true });
+        script.addEventListener("error", markFailed, { once: true });
         document.head.appendChild(script);
       }
     }
@@ -140,7 +156,18 @@ function TurnstileWidget({
   }, [resetSignal]);
 
   if (!TURNSTILE_SITE_KEY) return null;
-  return <div ref={containerRef} className="min-h-[65px]" />;
+  return (
+    <div>
+      <div ref={containerRef} className="min-h-[65px]" />
+      {failed && (
+        <p role="alert" className="mt-1.5 text-xs text-red-600">
+          The anti-bot check couldn&apos;t load or verify, so the form can&apos;t
+          be submitted. Please reload the page and try again — or contact us
+          directly on WhatsApp.
+        </p>
+      )}
+    </div>
+  );
 }
 
 export function ContactForm() {

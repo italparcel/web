@@ -21,7 +21,7 @@ import {
   Check,
   MessageCircle,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 
 // How long each intermediate phase is held while the stage "catches up" to a
@@ -118,45 +118,36 @@ function DesktopScroll() {
   });
   const [active, setActive] = useState(0);
   const [target, setTarget] = useState(0);
-  const activeRef = useRef(0);
-  const targetRef = useRef(0);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Step `active` toward `target` one phase at a time. Reading from refs (not
-  // closed-over state) keeps the chain correct even while the scroll position
-  // keeps moving the target underneath us.
-  const tick = useCallback(() => {
-    const a = activeRef.current;
-    const t = targetRef.current;
-    if (a === t) {
-      timerRef.current = null;
-      return;
-    }
-    const next = a + (t > a ? 1 : -1);
-    activeRef.current = next;
-    setActive(next);
-    timerRef.current = setTimeout(tick, STEP_ADVANCE_MS);
-  }, []);
+  // Time of the last phase step — lets the first catch-up step after idle
+  // fire immediately while chained steps stay spaced out.
+  const lastStepRef = useRef(0);
 
   useMotionValueEvent(scrollYProgress, "change", (v) => {
     const next = Math.min(
       STEPS.length - 1,
       Math.max(0, Math.floor(v * STEPS.length + 0.0001))
     );
-    targetRef.current = next;
     setTarget((t) => (t === next ? t : next));
-    // Kick off the catch-up immediately (first phase changes with no delay);
-    // any further phases are then spaced out by STEP_ADVANCE_MS so none are
-    // skipped, even on a fast flick or scrollbar drag.
-    if (timerRef.current === null && next !== activeRef.current) tick();
   });
 
-  useEffect(
-    () => () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    },
-    []
-  );
+  // Step `active` toward `target` one phase at a time: the first phase change
+  // after idle fires with no perceptible delay, any further phases are spaced
+  // by STEP_ADVANCE_MS so none are skipped, even on a fast flick or scrollbar
+  // drag. The timer is rescheduled (and cleaned up) whenever either value
+  // changes, so the chain stays correct while scrolling keeps moving the
+  // target underneath it.
+  useEffect(() => {
+    if (active === target) return;
+    const delay = Math.max(
+      0,
+      STEP_ADVANCE_MS - (Date.now() - lastStepRef.current)
+    );
+    const timer = setTimeout(() => {
+      lastStepRef.current = Date.now();
+      setActive((a) => (a === target ? a : a + (target > a ? 1 : -1)));
+    }, delay);
+    return () => clearTimeout(timer);
+  }, [active, target]);
 
   const marching = active !== target;
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "./ui/Button";
@@ -22,26 +22,39 @@ const DENIED = {
 
 export const OPEN_COOKIE_SETTINGS_EVENT = "italparcel:open-cookie-settings";
 
+// Hydration-safe read of the stored consent choice: the server snapshot
+// pretends a choice exists so the SSR HTML never contains the banner; after
+// hydration the client snapshot takes over and first-time visitors see it.
+// Any previous choice has already been re-applied by the inline script in
+// layout.tsx — this component only drives the UI.
+const emptySubscribe = () => () => {};
+function hasStoredChoice(): boolean {
+  try {
+    return Boolean(localStorage.getItem(CONSENT_STORAGE_KEY));
+  } catch {
+    // localStorage unavailable (private mode, blocked) — treat as no choice.
+    return false;
+  }
+}
+const serverHasChoice = () => true;
+
 export function CookieBanner() {
-  const [open, setOpen] = useState(false);
+  const hasChoice = useSyncExternalStore(
+    emptySubscribe,
+    hasStoredChoice,
+    serverHasChoice
+  );
+  // Session override: "closed" once the visitor picks, "open" when the
+  // "Manage cookies" footer link re-opens the banner.
+  const [override, setOverride] = useState<"open" | "closed" | null>(null);
 
   useEffect(() => {
-    // First visit (no stored choice) → show the banner. Any previous choice has
-    // already been re-applied by the inline script in layout.tsx, so here we
-    // only drive the UI.
-    let hasChoice = false;
-    try {
-      hasChoice = Boolean(localStorage.getItem(CONSENT_STORAGE_KEY));
-    } catch {
-      // localStorage unavailable (private mode, blocked) — treat as no choice.
-    }
-    if (!hasChoice) setOpen(true);
-
-    // The "Manage cookies" footer link re-opens the banner via this event.
-    const reopen = () => setOpen(true);
+    const reopen = () => setOverride("open");
     window.addEventListener(OPEN_COOKIE_SETTINGS_EVENT, reopen);
     return () => window.removeEventListener(OPEN_COOKIE_SETTINGS_EVENT, reopen);
   }, []);
+
+  const open = override !== null ? override === "open" : !hasChoice;
 
   const choose = (granted: boolean) => {
     try {
@@ -50,7 +63,7 @@ export function CookieBanner() {
       // localStorage unavailable — consent still applied for this session below.
     }
     window.gtag?.("consent", "update", granted ? GRANTED : DENIED);
-    setOpen(false);
+    setOverride("closed");
   };
 
   return (

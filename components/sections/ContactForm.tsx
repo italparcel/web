@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
@@ -80,10 +80,10 @@ function TurnstileWidget({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
-  const onVerifyRef = useRef(onVerify);
-  const onExpireRef = useRef(onExpire);
-  onVerifyRef.current = onVerify;
-  onExpireRef.current = onExpire;
+  // Stable wrappers that always see the latest props, callable from the
+  // Turnstile widget's callbacks without re-running the mount effect.
+  const handleVerify = useEffectEvent((token: string) => onVerify(token));
+  const handleExpire = useEffectEvent(() => onExpire());
 
   useEffect(() => {
     const siteKey = TURNSTILE_SITE_KEY;
@@ -101,9 +101,9 @@ function TurnstileWidget({
       }
       widgetIdRef.current = window.turnstile.render(containerRef.current, {
         sitekey: siteKey,
-        callback: (token) => onVerifyRef.current(token),
-        "expired-callback": () => onExpireRef.current(),
-        "error-callback": () => onExpireRef.current(),
+        callback: (token) => handleVerify(token),
+        "expired-callback": () => handleExpire(),
+        "error-callback": () => handleExpire(),
       });
     };
 

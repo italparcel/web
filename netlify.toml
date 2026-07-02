@@ -1,5 +1,7 @@
 [build]
-  command = "npm run build"
+  # Lint runs first and is deploy-blocking by design (audit M-1): `next build`
+  # no longer runs ESLint itself, so this is the only gate that enforces it.
+  command = "npm run lint && npm run build"
   publish = ".next"
 
 [[plugins]]

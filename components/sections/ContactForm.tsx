@@ -247,6 +247,12 @@ export function ContactForm() {
       }
       window.gtag?.("event", "conversion", {
         send_to: "AW-18237016910/CtkVCL-UwsYcEM6Wi_hD",
+        // Dedup id (audit L-3): a replayed/duplicated event for THIS
+        // submission counts once; distinct submissions get distinct ids.
+        transaction_id:
+          typeof crypto !== "undefined" && "randomUUID" in crypto
+            ? crypto.randomUUID()
+            : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
       });
       reset();
     } catch (e) {

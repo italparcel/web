@@ -166,6 +166,10 @@ export function ContactForm() {
   // When the user picks WhatsApp we keep the deep link so the SuccessCard can
   // open it from a real click — window.open after an await is blocked on iOS.
   const [waLink, setWaLink] = useState<string | null>(null);
+  // True when the backend email copy FAILED and the WhatsApp deep link is the
+  // only remaining path — the SuccessCard must not claim an email was logged
+  // and must push the user to actually send the message (audit M-4).
+  const [waEmailFailed, setWaEmailFailed] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileResetKey, setTurnstileResetKey] = useState(0);
   const turnstileEnabled = Boolean(TURNSTILE_SITE_KEY);
@@ -195,6 +199,7 @@ export function ContactForm() {
         throw new Error(body.error || "Submission failed");
       }
       setWaLink(link);
+      setWaEmailFailed(false);
       setStatus("success");
       // Google Ads conversion — fire ONLY here, where res.ok was confirmed
       // (the backend accepted the inquiry / the email was actually sent). This
@@ -219,9 +224,12 @@ export function ContactForm() {
       reset();
     } catch (e) {
       // For WhatsApp the emailed copy is secondary — don't block the user from
-      // reaching WhatsApp just because that copy failed to send.
+      // reaching WhatsApp just because that copy failed to send. The success
+      // card is shown with honest copy (no email was logged) and, as ever, NO
+      // conversion is fired on this path.
       if (isWhatsApp) {
         setWaLink(link);
+        setWaEmailFailed(true);
         setStatus("success");
         reset();
         return;
@@ -259,8 +267,10 @@ export function ContactForm() {
                   onReset={() => {
                     setStatus("idle");
                     setWaLink(null);
+                    setWaEmailFailed(false);
                   }}
                   waLink={waLink}
+                  emailFailed={waEmailFailed}
                 />
               ) : (
                 <motion.form
@@ -691,9 +701,11 @@ function ChannelOption({
 function SuccessCard({
   onReset,
   waLink,
+  emailFailed,
 }: {
   onReset: () => void;
   waLink: string | null;
+  emailFailed: boolean;
 }) {
   return (
     <motion.div
@@ -711,10 +723,14 @@ function SuccessCard({
       >
         <CheckCircle2 size={28} />
       </motion.div>
-      <h3 className="mt-5 display text-3xl">Got it.</h3>
+      <h3 className="mt-5 display text-3xl">
+        {emailFailed ? "One more step." : "Got it."}
+      </h3>
       <p className="mt-2 text-sm text-fg-muted">
         {waLink
-          ? "Your message is on its way via WhatsApp. We've logged an email copy on our end too."
+          ? emailFailed
+            ? "Our server hiccuped, so no email copy was logged on our end. Your message is ready — please tap “Open WhatsApp” below so your request actually reaches us."
+            : "Your message is on its way via WhatsApp. We've logged an email copy on our end too."
           : "We will reply within 36 working hours."}
       </p>
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">

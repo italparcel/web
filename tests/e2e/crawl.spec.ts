@@ -14,7 +14,6 @@ test.describe("site crawl", () => {
   test("crawl internal pages: no broken links, images or mixed content", async ({
     context,
     page,
-    request,
   }) => {
     test.slow();
     await blockExternal(context);

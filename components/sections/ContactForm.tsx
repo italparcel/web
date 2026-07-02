@@ -82,8 +82,12 @@ function TurnstileWidget({
   const widgetIdRef = useRef<string | null>(null);
   const onVerifyRef = useRef(onVerify);
   const onExpireRef = useRef(onExpire);
-  onVerifyRef.current = onVerify;
-  onExpireRef.current = onExpire;
+  // Latest-ref pattern, updated in an effect (refs must not be written during
+  // render): Turnstile callbacks always see the freshest handlers.
+  useEffect(() => {
+    onVerifyRef.current = onVerify;
+    onExpireRef.current = onExpire;
+  });
 
   useEffect(() => {
     const siteKey = TURNSTILE_SITE_KEY;

@@ -49,10 +49,15 @@ export const Combobox = forwardRef<HTMLInputElement, Props>(function Combobox(
   const rootRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
 
-  // Keep query in sync with external value changes (e.g. form reset)
-  useEffect(() => {
+  // Keep query in sync with external value changes (e.g. form reset) — the
+  // render-time "adjust state when a prop changes" pattern from react.dev,
+  // instead of a synchronous setState inside an effect.
+  const [prevValue, setPrevValue] = useState(value);
+  if (value !== prevValue) {
+    setPrevValue(value);
     setQuery(value);
-  }, [value]);
+    setHighlight(0);
+  }
 
   // Close on outside click
   useEffect(() => {
@@ -78,12 +83,9 @@ export const Combobox = forwardRef<HTMLInputElement, Props>(function Combobox(
     return [...starts, ...contains].slice(0, 200);
   }, [query, options]);
 
-  useEffect(() => {
-    setHighlight(0);
-  }, [query]);
-
   const handleSelect = (v: string) => {
     setQuery(v);
+    setHighlight(0);
     onChange(v);
     setOpen(false);
   };
@@ -112,6 +114,7 @@ export const Combobox = forwardRef<HTMLInputElement, Props>(function Combobox(
 
   const clear = () => {
     setQuery("");
+    setHighlight(0);
     onChange("");
     setOpen(true);
   };
@@ -142,6 +145,7 @@ export const Combobox = forwardRef<HTMLInputElement, Props>(function Combobox(
           placeholder={placeholder}
           onChange={(e) => {
             setQuery(e.target.value);
+            setHighlight(0);
             onChange(e.target.value);
             setOpen(true);
           }}

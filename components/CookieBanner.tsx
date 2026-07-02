@@ -35,12 +35,18 @@ export function CookieBanner() {
     } catch {
       // localStorage unavailable (private mode, blocked) — treat as no choice.
     }
-    if (!hasChoice) setOpen(true);
+    // setState deferred to a frame callback (not sync in the effect body); the
+    // entrance animation makes the one-frame delay invisible.
+    let raf: number | null = null;
+    if (!hasChoice) raf = requestAnimationFrame(() => setOpen(true));
 
     // The "Manage cookies" footer link re-opens the banner via this event.
     const reopen = () => setOpen(true);
     window.addEventListener(OPEN_COOKIE_SETTINGS_EVENT, reopen);
-    return () => window.removeEventListener(OPEN_COOKIE_SETTINGS_EVENT, reopen);
+    return () => {
+      if (raf !== null) cancelAnimationFrame(raf);
+      window.removeEventListener(OPEN_COOKIE_SETTINGS_EVENT, reopen);
+    };
   }, []);
 
   const choose = (granted: boolean) => {

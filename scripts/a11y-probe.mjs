@@ -82,7 +82,6 @@ await scan("form-errors", async (ctx, page) => {
   // focus-visible styling on a button
   await page.getByRole("button", { name: "Decline" }).focus();
   out.keyboard.focusOutline = await page.evaluate(() => {
-    const cs = getComputedStyle(document.activeElement, ":focus-visible");
     const plain = getComputedStyle(document.activeElement);
     return { outlineStyle: plain.outlineStyle, outlineWidth: plain.outlineWidth, outlineColor: plain.outlineColor };
   });

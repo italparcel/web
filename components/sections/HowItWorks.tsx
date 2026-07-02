@@ -125,7 +125,9 @@ function DesktopScroll() {
   // Step `active` toward `target` one phase at a time. Reading from refs (not
   // closed-over state) keeps the chain correct even while the scroll position
   // keeps moving the target underneath us.
-  const tick = useCallback(() => {
+  // Named function expression so the recursive setTimeout reference is the
+  // function itself (no self-reference to the const before it is initialised).
+  const tick = useCallback(function tickFn() {
     const a = activeRef.current;
     const t = targetRef.current;
     if (a === t) {
@@ -135,7 +137,7 @@ function DesktopScroll() {
     const next = a + (t > a ? 1 : -1);
     activeRef.current = next;
     setActive(next);
-    timerRef.current = setTimeout(tick, STEP_ADVANCE_MS);
+    timerRef.current = setTimeout(tickFn, STEP_ADVANCE_MS);
   }, []);
 
   useMotionValueEvent(scrollYProgress, "change", (v) => {

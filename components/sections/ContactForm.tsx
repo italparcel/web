@@ -212,9 +212,18 @@ export function ContactForm() {
       // SHA-256-hashes this data in the browser before it is sent — we never
       // send it anywhere else and never log it.
       if (adConsentGranted()) {
+        // Google requires E.164 for phone matching: strip spaces/punctuation
+        // and keep the leading +. Without an explicit +country prefix the
+        // country code is unknowable, so the field is omitted rather than
+        // sending a wrong number that would poison the match.
+        const digits = (data.phone ?? "").replace(/\D/g, "");
+        const phoneE164 =
+          (data.phone ?? "").trim().startsWith("+") && digits.length >= 7
+            ? `+${digits}`
+            : null;
         window.gtag?.("set", "user_data", {
           email: data.email,
-          ...(data.phone ? { phone_number: data.phone } : {}),
+          ...(phoneE164 ? { phone_number: phoneE164 } : {}),
         });
       }
       window.gtag?.("event", "conversion", {

@@ -27,7 +27,9 @@ export function LegalLayout({
   children,
 }: Props) {
   return (
-    <div className="container-x py-24 md:py-32">
+    // `lang` follows the toggle so assistive tech pronounces the Italian
+    // version correctly while <html lang> stays "en" (audit L-6).
+    <div lang={lang} className="container-x py-24 md:py-32">
       <div className="flex items-center justify-between gap-4">
         <Link
           href="/"

@@ -175,7 +175,7 @@ const SHIPMENTS: Shipment[] = [
   { code: "8472-EW", city: "Tokyo", country: "JP", postcode: "100-0001", carrier: "DPD", weight: "2.1 kg", eta: "Sat · May 14" },
   { code: "5391-KT", city: "Sydney", country: "AU", postcode: "2000", carrier: "UPS Express", weight: "3.4 kg", eta: "Mon · May 16" },
   { code: "6207-QL", city: "New York", country: "US", postcode: "10001", carrier: "FedEx", weight: "1.8 kg", eta: "Thu · May 12" },
-  { code: "7048-RJ", city: "London", country: "UK", postcode: "EC1A", carrier: "FedEx", weight: "0.9 kg", eta: "Fri · May 13" },
+  { code: "7048-RJ", city: "London", country: "GB", postcode: "EC1A", carrier: "FedEx", weight: "0.9 kg", eta: "Fri · May 13" },
   { code: "3315-MC", city: "Berlin", country: "DE", postcode: "10117", carrier: "DPD", weight: "5.2 kg", eta: "Sat · May 14" },
   { code: "4926-PD", city: "São Paulo", country: "BR", postcode: "01310", carrier: "DPD", weight: "4.0 kg", eta: "Tue · May 17" },
   { code: "5573-HB", city: "Seoul", country: "KR", postcode: "04524", carrier: "UPS Express", weight: "2.6 kg", eta: "Sun · May 15" },

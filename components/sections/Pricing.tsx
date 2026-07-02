@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Check, ArrowRight } from "lucide-react";
 import { Reveal } from "../ui/Reveal";
 import { cn } from "@/lib/cn";
+import { usePrefersReducedMotion } from "@/lib/usePrefersReducedMotion";
 
 type Tier = {
   parcels: string;
@@ -223,8 +224,12 @@ function TierCard({ tier }: { tier: Tier }) {
 function AnimatedPrice({ value }: { value: number }) {
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, margin: "-50px" });
-  const reduce = useReducedMotion();
-  const [n, setN] = useState(reduce ? value : 0);
+  // Hydration-safe hook (not framer's null-on-server one) — see audit M-2.
+  const reduce = usePrefersReducedMotion();
+  // Initialised to the real value so the server HTML — no-JS visitors, reader
+  // modes, the pre-hydration paint — always shows the actual price; the
+  // count-up from 0 starts only once the card scrolls into view (audit M-3).
+  const [n, setN] = useState(value);
 
   useEffect(() => {
     if (!inView || reduce) return;

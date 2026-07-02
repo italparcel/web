@@ -5,6 +5,9 @@ import { Footer } from "@/components/sections/Footer";
 
 export const metadata: Metadata = {
   title: "Page not found",
+  // Don't inherit the root layout's canonical "/" — a 404 must not claim to
+  // be the canonical homepage (audit L-6).
+  alternates: { canonical: null },
 };
 
 export default function NotFound() {

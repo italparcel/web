@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  forwardRef,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { forwardRef, useEffect, useId, useMemo, useRef, useState } from "react";
 import { ChevronDown, Search, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/cn";
@@ -42,17 +35,16 @@ export const Combobox = forwardRef<HTMLInputElement, Props>(function Combobox(
   const inputId = id ?? autoId;
   const listId = `${inputId}-list`;
 
-  const [query, setQuery] = useState(value);
+  // The input is fully controlled by the parent (react-hook-form Controller):
+  // every keystroke goes through onChange and comes back as `value`, so the
+  // query needs no mirrored local state — external changes (form reset) are
+  // picked up for free.
+  const query = value;
   const [open, setOpen] = useState(false);
   const [highlight, setHighlight] = useState(0);
 
   const rootRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
-
-  // Keep query in sync with external value changes (e.g. form reset)
-  useEffect(() => {
-    setQuery(value);
-  }, [value]);
 
   // Close on outside click
   useEffect(() => {
@@ -78,12 +70,12 @@ export const Combobox = forwardRef<HTMLInputElement, Props>(function Combobox(
     return [...starts, ...contains].slice(0, 200);
   }, [query, options]);
 
-  useEffect(() => {
-    setHighlight(0);
-  }, [query]);
+  // The highlight is reset in the handlers that change the query; external
+  // value changes (e.g. form reset) don't, so clamp it to the current list.
+  const safeHighlight =
+    filtered.length > 0 ? Math.min(highlight, filtered.length - 1) : 0;
 
   const handleSelect = (v: string) => {
-    setQuery(v);
     onChange(v);
     setOpen(false);
   };
@@ -92,16 +84,18 @@ export const Combobox = forwardRef<HTMLInputElement, Props>(function Combobox(
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setOpen(true);
-      setHighlight((h) => Math.min(filtered.length - 1, h + 1));
-      scrollHighlightIntoView(listRef, highlight + 1);
+      const next = Math.min(filtered.length - 1, safeHighlight + 1);
+      setHighlight(next);
+      scrollHighlightIntoView(listRef, next);
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      setHighlight((h) => Math.max(0, h - 1));
-      scrollHighlightIntoView(listRef, highlight - 1);
+      const next = Math.max(0, safeHighlight - 1);
+      setHighlight(next);
+      scrollHighlightIntoView(listRef, next);
     } else if (e.key === "Enter") {
-      if (open && filtered[highlight]) {
+      if (open && filtered[safeHighlight]) {
         e.preventDefault();
-        handleSelect(filtered[highlight]);
+        handleSelect(filtered[safeHighlight]);
       }
     } else if (e.key === "Escape") {
       setOpen(false);
@@ -111,8 +105,8 @@ export const Combobox = forwardRef<HTMLInputElement, Props>(function Combobox(
   };
 
   const clear = () => {
-    setQuery("");
     onChange("");
+    setHighlight(0);
     setOpen(true);
   };
 
@@ -134,15 +128,17 @@ export const Combobox = forwardRef<HTMLInputElement, Props>(function Combobox(
           aria-expanded={open}
           aria-controls={listId}
           aria-activedescendant={
-            open && filtered.length > 0 ? `${listId}-opt-${highlight}` : undefined
+            open && filtered.length > 0
+              ? `${listId}-opt-${safeHighlight}`
+              : undefined
           }
           autoComplete="off"
           spellCheck={false}
           value={query}
           placeholder={placeholder}
           onChange={(e) => {
-            setQuery(e.target.value);
             onChange(e.target.value);
+            setHighlight(0);
             setOpen(true);
           }}
           onFocus={() => setOpen(true)}
@@ -193,14 +189,14 @@ export const Combobox = forwardRef<HTMLInputElement, Props>(function Combobox(
                 key={c}
                 role="option"
                 id={`${listId}-opt-${i}`}
-                aria-selected={i === highlight}
+                aria-selected={i === safeHighlight}
                 data-idx={i}
                 onMouseDown={(e) => e.preventDefault()}
                 onMouseEnter={() => setHighlight(i)}
                 onClick={() => handleSelect(c)}
                 className={cn(
                   "cursor-pointer px-4 py-2 text-sm transition",
-                  i === highlight
+                  i === safeHighlight
                     ? "bg-fg text-bg"
                     : "text-fg hover:bg-fg/5"
                 )}

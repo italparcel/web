@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
@@ -80,15 +80,23 @@ function TurnstileWidget({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
-  const onVerifyRef = useRef(onVerify);
-  const onExpireRef = useRef(onExpire);
-  onVerifyRef.current = onVerify;
-  onExpireRef.current = onExpire;
+  // Without this the submit button just stays disabled forever when the
+  // Cloudflare script is blocked or the challenge errors — the visitor gets
+  // an explanation and an escape hatch instead (audit L-4).
+  const [failed, setFailed] = useState(false);
+  // Stable wrappers that always see the latest props, callable from the
+  // Turnstile widget's callbacks without re-running the mount effect.
+  const handleVerify = useEffectEvent((token: string) => onVerify(token));
+  const handleExpire = useEffectEvent(() => onExpire());
 
   useEffect(() => {
     const siteKey = TURNSTILE_SITE_KEY;
     if (!siteKey) return;
     let cancelled = false;
+
+    const markFailed = () => {
+      if (!cancelled) setFailed(true);
+    };
 
     const render = () => {
       if (
@@ -101,9 +109,15 @@ function TurnstileWidget({
       }
       widgetIdRef.current = window.turnstile.render(containerRef.current, {
         sitekey: siteKey,
-        callback: (token) => onVerifyRef.current(token),
-        "expired-callback": () => onExpireRef.current(),
-        "error-callback": () => onExpireRef.current(),
+        callback: (token) => {
+          setFailed(false);
+          handleVerify(token);
+        },
+        "expired-callback": () => handleExpire(),
+        "error-callback": () => {
+          setFailed(true);
+          handleExpire();
+        },
       });
     };
 
@@ -114,12 +128,14 @@ function TurnstileWidget({
         document.querySelector<HTMLScriptElement>(TURNSTILE_SCRIPT_MATCH);
       if (existing) {
         existing.addEventListener("load", render, { once: true });
+        existing.addEventListener("error", markFailed, { once: true });
       } else {
         const script = document.createElement("script");
         script.src = TURNSTILE_SCRIPT_SRC;
         script.async = true;
         script.defer = true;
         script.addEventListener("load", render, { once: true });
+        script.addEventListener("error", markFailed, { once: true });
         document.head.appendChild(script);
       }
     }
@@ -140,7 +156,18 @@ function TurnstileWidget({
   }, [resetSignal]);
 
   if (!TURNSTILE_SITE_KEY) return null;
-  return <div ref={containerRef} className="min-h-[65px]" />;
+  return (
+    <div>
+      <div ref={containerRef} className="min-h-[65px]" />
+      {failed && (
+        <p role="alert" className="mt-1.5 text-xs text-red-600">
+          The anti-bot check couldn&apos;t load or verify, so the form can&apos;t
+          be submitted. Please reload the page and try again — or contact us
+          directly on WhatsApp.
+        </p>
+      )}
+    </div>
+  );
 }
 
 export function ContactForm() {
@@ -166,6 +193,10 @@ export function ContactForm() {
   // When the user picks WhatsApp we keep the deep link so the SuccessCard can
   // open it from a real click — window.open after an await is blocked on iOS.
   const [waLink, setWaLink] = useState<string | null>(null);
+  // True when the backend email copy FAILED and the WhatsApp deep link is the
+  // only remaining path — the SuccessCard must not claim an email was logged
+  // and must push the user to actually send the message (audit M-4).
+  const [waEmailFailed, setWaEmailFailed] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileResetKey, setTurnstileResetKey] = useState(0);
   const turnstileEnabled = Boolean(TURNSTILE_SITE_KEY);
@@ -186,7 +217,7 @@ export function ContactForm() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           ...data,
-          company: honeypotRef.current?.value ?? "",
+          contact_time: honeypotRef.current?.value ?? "",
           turnstileToken: turnstileToken ?? "",
         }),
       });
@@ -195,6 +226,7 @@ export function ContactForm() {
         throw new Error(body.error || "Submission failed");
       }
       setWaLink(link);
+      setWaEmailFailed(false);
       setStatus("success");
       // Google Ads conversion — fire ONLY here, where res.ok was confirmed
       // (the backend accepted the inquiry / the email was actually sent). This
@@ -215,13 +247,22 @@ export function ContactForm() {
       }
       window.gtag?.("event", "conversion", {
         send_to: "AW-18237016910/CtkVCL-UwsYcEM6Wi_hD",
+        // Dedup id (audit L-3): a replayed/duplicated event for THIS
+        // submission counts once; distinct submissions get distinct ids.
+        transaction_id:
+          typeof crypto !== "undefined" && "randomUUID" in crypto
+            ? crypto.randomUUID()
+            : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
       });
       reset();
     } catch (e) {
       // For WhatsApp the emailed copy is secondary — don't block the user from
-      // reaching WhatsApp just because that copy failed to send.
+      // reaching WhatsApp just because that copy failed to send. The success
+      // card is shown with honest copy (no email was logged) and, as ever, NO
+      // conversion is fired on this path.
       if (isWhatsApp) {
         setWaLink(link);
+        setWaEmailFailed(true);
         setStatus("success");
         reset();
         return;
@@ -259,8 +300,10 @@ export function ContactForm() {
                   onReset={() => {
                     setStatus("idle");
                     setWaLink(null);
+                    setWaEmailFailed(false);
                   }}
                   waLink={waLink}
+                  emailFailed={waEmailFailed}
                 />
               ) : (
                 <motion.form
@@ -611,17 +654,21 @@ export function ContactForm() {
                     </Button>
                   </div>
 
-                  {/* Honeypot — hidden from humans; bots that fill it are
-                      silently dropped server-side. Not part of the schema. */}
+                  {/* Honeypot — hidden from humans; a filled value flags the
+                      inquiry server-side ("[possible bot]" subject tag) instead
+                      of dropping it, because browser autofill can also fill
+                      hidden fields. The name deliberately matches no autofill
+                      heuristic (earlier name="company" was autofilled as
+                      "organization" by Chrome). Not part of the schema. */}
                   <div
                     aria-hidden="true"
                     className="pointer-events-none absolute -left-[9999px] top-0 h-0 w-0 overflow-hidden"
                   >
-                    <label htmlFor="company">Company (leave this empty)</label>
+                    <label htmlFor="contact_time">Leave this field empty</label>
                     <input
                       ref={honeypotRef}
-                      id="company"
-                      name="company"
+                      id="contact_time"
+                      name="contact_time"
                       type="text"
                       tabIndex={-1}
                       autoComplete="off"
@@ -687,9 +734,11 @@ function ChannelOption({
 function SuccessCard({
   onReset,
   waLink,
+  emailFailed,
 }: {
   onReset: () => void;
   waLink: string | null;
+  emailFailed: boolean;
 }) {
   return (
     <motion.div
@@ -707,10 +756,14 @@ function SuccessCard({
       >
         <CheckCircle2 size={28} />
       </motion.div>
-      <h3 className="mt-5 display text-3xl">Got it.</h3>
+      <h3 className="mt-5 display text-3xl">
+        {emailFailed ? "One more step." : "Got it."}
+      </h3>
       <p className="mt-2 text-sm text-fg-muted">
         {waLink
-          ? "Your message is on its way via WhatsApp. We've logged an email copy on our end too."
+          ? emailFailed
+            ? "Our server hiccuped, so no email copy was logged on our end. Your message is ready — please tap “Open WhatsApp” below so your request actually reaches us."
+            : "Your message is on its way via WhatsApp. We've logged an email copy on our end too."
           : "We will reply within 36 working hours."}
       </p>
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">

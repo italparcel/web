@@ -4,8 +4,12 @@ import { Mail, MessageCircle } from "lucide-react";
 import { WHATSAPP_DISPLAY, WHATSAPP_NUMBER } from "@/lib/whatsapp";
 import { CookieSettingsLink } from "@/components/CookieBanner";
 
+// Hardcoded on purpose (audit L-2): new Date() in a statically prerendered
+// component freezes at build time anyway and adds a hydration mismatch in the
+// window where the client year differs. Bump once a year.
+const COPYRIGHT_YEAR = 2026;
+
 export function Footer() {
-  const year = new Date().getFullYear();
   return (
     <footer className="relative mt-auto border-t border-border bg-bg">
       <div className="container-x py-16">
@@ -89,7 +93,7 @@ export function Footer() {
 
         <div className="mt-12 flex flex-col gap-2 border-t border-border pt-6 text-xs text-fg-subtle md:flex-row md:items-center md:justify-between">
           <p>
-            © {year}{" "}ItalParcel di Samuel Borghesi
+            © {COPYRIGHT_YEAR}{" "}ItalParcel di Samuel Borghesi
             <br />
             VAT Number: IT&nbsp;02818050227
             <br />

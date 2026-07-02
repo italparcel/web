@@ -105,7 +105,6 @@ export const AddressCombobox = forwardRef<HTMLInputElement, Props>(
         return;
       }
 
-      abortRef.current?.abort();
       const ctrl = new AbortController();
       abortRef.current = ctrl;
 
@@ -118,15 +117,24 @@ export const AddressCombobox = forwardRef<HTMLInputElement, Props>(
           const res = await fetch(url, { signal: ctrl.signal });
           if (!res.ok) throw new Error("photon-error");
           const json: { features?: Feature[] } = await res.json();
-          setResults(json.features ?? []);
+          if (abortRef.current === ctrl) setResults(json.features ?? []);
         } catch (e) {
-          if ((e as Error).name !== "AbortError") setResults([]);
+          if ((e as Error).name !== "AbortError" && abortRef.current === ctrl) {
+            setResults([]);
+          }
         } finally {
-          setLoading(false);
+          // Only the latest request may clear the spinner — an aborted fetch
+          // settling late must not hide its successor's loading state.
+          if (abortRef.current === ctrl) setLoading(false);
         }
       }, 320);
 
-      return () => clearTimeout(t);
+      return () => {
+        clearTimeout(t);
+        // Aborts the in-flight request when the query changes AND on unmount
+        // (the old effect-start abort never covered unmount).
+        ctrl.abort();
+      };
     }, [query]);
 
     useEffect(() => {
@@ -237,7 +245,7 @@ export const AddressCombobox = forwardRef<HTMLInputElement, Props>(
                 const sub = secondaryFeature(f);
                 return (
                   <li
-                    key={i}
+                    key={`${text}-${i}`}
                     role="option"
                     id={`${listId}-opt-${i}`}
                     aria-selected={i === highlight}

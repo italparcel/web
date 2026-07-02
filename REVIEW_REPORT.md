@@ -155,3 +155,107 @@ La build **non richiede** env var (tutte le pagine si prerenderizzano senza).
 - 404 (`app/not-found.tsx`) e error boundary (`app/error.tsx`) presenti e coerenti col design ✓
 
 ---
+
+## Fase 2 — Audit di sicurezza
+
+### Header HTTP (unica fonte: `netlify.toml` — nessun conflitto con `next.config.ts`, che non imposta header)
+
+| Header | Valore | Giudizio |
+| --- | --- | --- |
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains` | ✓ (manca `preload` — opzionale, SEC-05) |
+| `X-Content-Type-Options` | `nosniff` | ✓ |
+| `X-Frame-Options` / `frame-ancestors` | `SAMEORIGIN` + `frame-ancestors 'self'` | ✓ coerenti |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | ⚠ in conflitto col meta della pagina (SEC-04) |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` | ✓ |
+| Cache | `_next/static/*` immutable 1y; `logo.png` 7d | ✓ |
+
+**CSP analizzata** (`netlify.toml:26`): presenti e corrette `default-src 'self'`, `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'self'`, `worker-src 'self' blob:'`. Niente wildcard. Niente `unsafe-eval`. Allowlist di terze parti minimale e motivata nel commento (Turnstile, Photon, domini Google per gtag/Consent Mode). Due rilievi: SEC-01 (`unsafe-inline` negli script) e la verifica empirica dei domini Google effettivamente contattati (rimandata alla Fase 3: il build locale non applica la CSP di Netlify, quindi catturo i domini reali e li confronto con l'allowlist — attenzione in particolare ai ping di conversione verso domini country-specific tipo `www.google.it`, non in allowlist).
+
+### Endpoint API — `POST /api/contact` (unico endpoint)
+
+| Aspetto | Stato |
+| --- | --- |
+| Metodi HTTP | Solo `POST` esportato; App Router restituisce 405 per gli altri (verifica runtime in Fase 4) |
+| Validazione input | zod server-side (`contactSchema`), limiti di lunghezza per ogni campo, enum vincolati ✓ |
+| Auth | N/A (endpoint pubblico by design) |
+| CORS | Nessun header CORS → il browser blocca letture cross-origin; nessun cookie/sessione → niente CSRF classico ✓ |
+| Error leakage | Messaggi generici, dettagli zod non riecheggiati, stack solo su console server ✓ |
+| Email injection | `oneLine()` collassa CR/LF nei campi single-line, subject troncato a 100 char, HTML escapato, `replyTo` validato da zod ✓ — difese complete |
+| Anti-bot | Honeypot `company` (accetta con 200 senza inviare) + Turnstile obbligatorio in produzione (fail-closed) + throttle IP ✓ |
+
+### Findings
+
+#### SEC-01 · Media · CSP · `'unsafe-inline'` in `script-src` senza nonce/hash
+
+- **File:** `netlify.toml:26`
+- **Evidenza:** `script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://www.googletagmanager.com`.
+- **Impatto:** la CSP non mitiga l'iniezione di script inline — è una difesa in profondità indebolita, non una vulnerabilità attiva: il sito non ha contenuti user-generated né parametri riflessi (verificato: zero `useSearchParams`/reflection, `dangerouslySetInnerHTML` solo su 4 blob JSON-LD statici). Il commento nel file documenta il perché (script inline di idratazione Next + consent snippet). Con pagine completamente statiche i nonce non sono praticabili (richiedono rendering dinamico); gli hash sono possibili ma fragili ad ogni build.
+- **Fix (M, post-lancio):** valutare `strict-dynamic` + hash generati in build, o spostare il consent snippet in file esterno. Non bloccante per il lancio.
+
+#### SEC-02 · **Alta** · Rate limiting · chiave `x-forwarded-for` falsificabile + store in-memory per-istanza
+
+- **File:** `app/api/contact/route.ts:46-49,54,251-265`
+- **Evidenza:** `request.headers.get("x-forwarded-for")?.split(",")[0]` usa il valore **più a sinistra** dell'XFF, che è controllabile dal client (i proxy *appendono*, non sovrascrivono): basta inviare `X-Forwarded-For: <ip-casuale>` per ottenere una chiave nuova a ogni richiesta e azzerare il throttle. Inoltre lo store è una `Map` in-memory: su Netlify Functions vale solo per la singola istanza calda e si azzera a ogni cold start (limite già dichiarato nel commento del codice).
+- **Impatto:** il throttle attuale ferma solo il flood ingenuo. La vera barriera anti-spam resta Turnstile (robusta). Scenario residuo di abuso: flood di richieste che superano Turnstile no, ma ogni richiesta con token invalido costa comunque una chiamata `siteverify` (latenza/banda) e un'iterazione; con honeypot+Turnstile il rischio di spam email vero è basso. Severità alta principalmente perché il brief la considera un gap di lancio e il fix è piccolo.
+- **Fix (S):** su Netlify usare l'header **`x-nf-client-connection-ip`** (impostato dalla piattaforma, non falsificabile) come chiave; per lo store condiviso vedi il piano sotto.
+
+#### SEC-03 · Bassa · Nessun limite dimensione body su `/api/contact`
+
+- **Evidenza:** `await request.json()` senza guardia su `Content-Length`; il parsing avviene prima di honeypot/validazione. Il cap effettivo è quello della piattaforma Netlify (~6 MB).
+- **Impatto:** micro-DoS (CPU/memoria per parse di payload grossi). Basso.
+- **Fix (S):** rifiutare `Content-Length > 10_000` con 413 prima di `request.json()`.
+
+#### SEC-04 · Bassa · Referrer-Policy incoerente tra header e meta
+
+- **File:** `netlify.toml:17` (`strict-origin-when-cross-origin`) vs `app/layout.tsx:84` (`referrer: "origin-when-cross-origin"`)
+- **Impatto:** il meta della pagina vince per le richieste avviate dal documento; `origin-when-cross-origin` invia l'origin anche su downgrade HTTPS→HTTP. Differenza marginale ma incoerenza inutile.
+- **Fix (S):** rimuovere `referrer` dal metadata o allinearlo a `strict-origin-when-cross-origin`.
+
+#### SEC-05 · Bassa · HSTS senza `preload`
+
+- **Fix (S, opzionale):** aggiungere `; preload` e registrare su hstspreload.org quando si è sicuri di HTTPS-only permanente su tutti i sottodomini.
+
+#### SEC-06 · Nota (decisione di business) · Turnstile fail-closed
+
+- **Evidenza:** `app/api/contact/route.ts:70-87` — se `siteverify` di Cloudflare è irraggiungibile o in errore, la richiesta viene respinta con 403; se `TURNSTILE_SECRET_KEY` manca in produzione, tutte le submission ricevono 500.
+- **Impatto:** un'indisponibilità di Cloudflare = zero lead finché dura (con campagna Ads attiva = spesa senza conversioni). Fail-closed è la scelta più sicura contro lo spam; va solo decisa consapevolmente. Alternativa: fail-open temporaneo con honeypot+rate-limit se `siteverify` va in timeout (non se il token è invalido).
+- **Pre-lancio:** verificare che `TURNSTILE_SECRET_KEY`, `NEXT_PUBLIC_TURNSTILE_SITE_KEY` e `RESEND_API_KEY` siano configurate su Netlify (il codice fallisce in modo rumoroso ma il lead è comunque perso).
+
+#### SEC-07 · Bassa · Nessuna verifica `Origin` sul POST
+
+- **Evidenza:** l'endpoint accetta POST da qualsiasi origine (nessun check su `Origin`/`Referer`). Non è una vulnerabilità (niente sessione da rubare, Turnstile gate) ma un check `Origin === https://italparcel.com` è una cintura di sicurezza gratuita contro submission scriptate da altri siti.
+- **Fix (S).**
+
+#### DEP-01 · Bassa · npm audit: 2 moderate (postcss transitivo in next)
+
+- Già triagiato in Fase 0: build-time only, non sfruttabile. Si chiude col prossimo upgrade di Next. Nessun pacchetto abbandonato tra le dipendenze dirette (tutte attivamente mantenute).
+
+#### SEC-08 · Info · Scansione segreti: pulita
+
+- Working tree: nessun pattern di chiave (Resend `re_…`, AWS, GitHub, Google API, PEM) in alcun file.
+- **Storia git completa (72 commit):** nessun file `.env*`/chiave mai committato; grep dei pattern su tutti i blob storici → zero match.
+- `.gitignore` copre `.env*` ✓. Unica `NEXT_PUBLIC_*` è la site key Turnstile, pubblica by design ✓.
+
+### Piano di rate limiting (gap noto — proposta, da NON implementare in questa fase)
+
+**Superficie:** un solo endpoint mutante/pubblico, `POST /api/contact`.
+
+| Endpoint | Costo per abuso | Protezioni attuali | Rischio residuo |
+| --- | --- | --- | --- |
+| `POST /api/contact` | invio email (quota/costo Resend, flooding inbox `contact@`), 1 chiamata `siteverify` per tentativo | Turnstile (forte), honeypot, throttle in-memory 5/min/IP (debole: SEC-02) | flood con token invalidi → latenza/rumore; spam reale solo se Turnstile viene battuto |
+| Photon (`photon.komoot.io`) | chiamato **direttamente dal browser** dell'utente — non transita dai nostri server | debounce 320ms client | nullo per la nostra infrastruttura (rate limit a carico di Komoot) |
+| Pagine statiche | CDN Netlify | — | nullo |
+
+**Proposta (compatibile Netlify + Next 16, effort S ≈ 1-2h):**
+
+1. **Store condiviso:** Upstash Redis (REST, serverless-friendly; free tier 500k comandi/mese ≫ necessità) + `@upstash/ratelimit`.
+2. **Chiave:** `request.headers.get("x-nf-client-connection-ip")` (trusted su Netlify), fallback all'ultimo hop di XFF.
+3. **Limiti suggeriti per `/api/contact`:**
+   - per-IP: sliding window **5 richieste / 60 s** (come oggi) **+ 20 / 24 h** (blocca lo spam lento);
+   - globale (tutte le IP): **fixed window 200 / 24 h** come circuit-breaker sulla quota Resend contro flood distribuiti — al superamento, 429 e alert via log.
+4. **Posizione codice:** nuovo `lib/rate-limit.ts` (client Upstash + i tre limiter); in `app/api/contact/route.ts` sostituire `rateLimited()` con il check condiviso, **prima** di `siteverify`.
+5. **Degradazione:** se Redis è irraggiungibile → log di errore e fallback al throttle in-memory attuale (fail-open sul limiter, mai perdere lead per un'indisponibilità di Upstash).
+6. **Env:** `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` su Netlify (server-only).
+7. **Alternativa senza dipendenze:** le [Netlify Rate Limiting rules](https://docs.netlify.com/security/rate-limiting/) a livello di edge (config in `netlify.toml`) — meno flessibili (no limite globale/giornaliero) ma zero codice; valide come primo livello anche in aggiunta.
+
+---

@@ -23,18 +23,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  // Honeypot: a hidden field real users never see. Bots that auto-fill every
-  // input tend to populate it. We accept the request (200) so they don't learn
-  // they were filtered, but skip validation and sending entirely.
-  if (
-    body &&
-    typeof body === "object" &&
-    typeof (body as Record<string, unknown>).company === "string" &&
-    (body as Record<string, unknown>).company !== ""
-  ) {
-    return NextResponse.json({ ok: true });
-  }
-
   const parsed = contactSchema.safeParse(body);
   if (!parsed.success) {
     // Don't echo zod's raw issue tree back to the client — the form runs its own
@@ -49,6 +37,21 @@ export async function POST(request: Request) {
     "unknown";
   const ua = request.headers.get("user-agent") ?? "unknown";
   const acceptedAt = new Date().toISOString();
+
+  // Honeypot: a hidden field real users never see. Bots that auto-fill every
+  // input tend to populate it — but so can overeager browser autofill, so a
+  // trip FLAGS the inquiry instead of dropping it: the email still goes out,
+  // tagged "[possible bot]" in the subject, and the trip is logged so the
+  // false-positive rate is measurable. A success response therefore always
+  // corresponds to an email that was actually sent.
+  const honeypotTripped =
+    body !== null &&
+    typeof body === "object" &&
+    typeof (body as Record<string, unknown>).contact_time === "string" &&
+    (body as Record<string, unknown>).contact_time !== "";
+  if (honeypotTripped) {
+    console.warn(`[contact] honeypot tripped — flagged, not dropped. ip=${ip} ua=${ua}`);
+  }
 
   // Throttle by IP before doing any real work (Turnstile call, email send).
   if (ip !== "unknown" && rateLimited(ip)) {
@@ -89,7 +92,7 @@ export async function POST(request: Request) {
   // Strip control chars from the user name before it lands in the Subject
   // header — defence-in-depth against header injection / display spoofing.
   const safeName = oneLine(data.name).slice(0, 100);
-  const subject = `New inquiry — ${safeName} (${PARCEL_LABELS[data.parcels]})`;
+  const subject = `${honeypotTripped ? "[possible bot] " : ""}New inquiry — ${safeName} (${PARCEL_LABELS[data.parcels]})`;
 
   // Single-line fields are collapsed to one line in the plain-text body too, so
   // a value containing a newline can't inject fake "Key: value" rows (e.g. spoof

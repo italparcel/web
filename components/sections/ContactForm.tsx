@@ -186,7 +186,7 @@ export function ContactForm() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           ...data,
-          company: honeypotRef.current?.value ?? "",
+          contact_time: honeypotRef.current?.value ?? "",
           turnstileToken: turnstileToken ?? "",
         }),
       });
@@ -611,17 +611,21 @@ export function ContactForm() {
                     </Button>
                   </div>
 
-                  {/* Honeypot — hidden from humans; bots that fill it are
-                      silently dropped server-side. Not part of the schema. */}
+                  {/* Honeypot — hidden from humans; a filled value flags the
+                      inquiry server-side ("[possible bot]" subject tag) instead
+                      of dropping it, because browser autofill can also fill
+                      hidden fields. The name deliberately matches no autofill
+                      heuristic (earlier name="company" was autofilled as
+                      "organization" by Chrome). Not part of the schema. */}
                   <div
                     aria-hidden="true"
                     className="pointer-events-none absolute -left-[9999px] top-0 h-0 w-0 overflow-hidden"
                   >
-                    <label htmlFor="company">Company (leave this empty)</label>
+                    <label htmlFor="contact_time">Leave this field empty</label>
                     <input
                       ref={honeypotRef}
-                      id="company"
-                      name="company"
+                      id="contact_time"
+                      name="contact_time"
                       type="text"
                       tabIndex={-1}
                       autoComplete="off"

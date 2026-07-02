@@ -1,10 +1,105 @@
 # REVIEW_REPORT — italparcel.com
 
 > Audit completo (codice, sicurezza, consenso/tracking, funzionale, performance, SEO, accessibilità).
-> Branch: `review/full-audit-20260702` · Avviato: 2026-07-02 · Stato: **in corso**
->
-> Report incrementale: ogni fase aggiunge la propria sezione. La sintesi esecutiva e la
-> checklist pre-lancio vengono finalizzate in Fase 8.
+> Branch: `review/full-audit-20260702` · 2026-07-02 · Stato: **fasi 0–7 completate; fix in attesa di approvazione**
+
+---
+
+## Sintesi esecutiva
+
+Codebase in salute sopra la media: TypeScript strict senza scorciatoie, endpoint API ben difeso (zod + Turnstile + honeypot + escape), Consent Mode v2 implementato correttamente nei flussi accept/reject (verificato empiricamente in browser), tutto il contenuto server-renderizzato, suite E2E ora presente e verde (63 test). **Un problema blocca il lancio della campagna: la CSP di produzione blocca 3 domini Google usati dai ping di Consent Mode e conversione (CONS-01) — le conversioni degli utenti che rifiutano il banner e parte della misurazione andrebbero perse silenziosamente dal giorno 1.** Inoltre le enhanced conversions oggi non trasmettono nulla (CONS-02) e il throttle anti-abuso è aggirabile (SEC-02). Top 5 azioni: 1) estendere la CSP (15 min); 2) attivare `allow_enhanced_conversions` e ri-verificare; 3) chiave rate-limit su header Netlify affidabile; 4) riparare il gate di lint; 5) rendere visibile l'hero al primo paint (LCP mobile 4.5 s → target <2.5 s). Il bilinguismo IT è solo client-side nelle pagine legali: invisibile a Google e agli screen reader — decisione di prodotto da pianificare post-lancio.
+
+## Tabella dei findings
+
+| ID | Severità | Area | File | Titolo | Effort |
+| --- | --- | --- | --- | --- | --- |
+| CONS-01 | **Critica** | Tracking/CSP | `netlify.toml:26` | CSP blocca `pagead2.googlesyndication.com`, `ad.doubleclick.net`, `www.google.it` (ping Consent Mode/conversioni) | S |
+| CONS-02 | **Alta** | Tracking | `app/layout.tsx:198` | Enhanced conversions: `user_data` non trasmesso (manca `allow_enhanced_conversions`) | S |
+| SEC-02 | **Alta** | Sicurezza | `app/api/contact/route.ts:46-49` | Rate-limit su XFF falsificabile + store in-memory per-istanza | S |
+| QUAL-01 | **Alta** | Qualità | vari (4 file) | `npm run lint` fallisce: 6 errori react-hooks | S |
+| PERF-01 | **Alta** | Performance | `components/sections/Hero.tsx:94-116` | LCP mobile 4.5 s: titolo hero nascosto fino a idratazione+animazione | S/M |
+| SEO-01 | **Alta** | SEO | `components/LegalLayout.tsx` | Contenuto italiano invisibile ai motori (no route `/it`, no hreflang) | L |
+| CONS-03 | Media | Tracking | `ContactForm.tsx:213` | Telefono non normalizzato E.164 per `user_data` | S |
+| CONS-04 | Media | Consenso | `lib/consent.ts:8` | Extra-EEA: default granted-per-assenza ma banner promette opt-in | S |
+| SEC-01 | Media | Sicurezza | `netlify.toml:26` | CSP `script-src 'unsafe-inline'` senza nonce/hash | M |
+| QUAL-02 | Media | Qualità | `components/ui/{Combobox,AddressCombobox}.tsx` | ~70% logica duplicata tra le due combobox | M |
+| QUAL-05 | Media | i18n | architettura | Bilinguismo solo client-side nelle legali; `lang` fisso | L |
+| SEO-02 | Media | SEO | `app/{privacy,terms,prohibited-items}/page.tsx` | `og:url`/`og:title` ereditati dalla home sulle pagine legali | S |
+| A11Y-01 | Media | A11y | Nav/Footer/Marquee/Pricing | Contrasto < 4.5:1 (wordmark accent, marquee, CTA Bundle 10) | S |
+| A11Y-04 | Media | A11y | `components/ui/Field.tsx:28` | Errori non collegati ai campi via `aria-describedby` | S |
+| A11Y-05 | Media | A11y | `components/LegalLayout.tsx:104` | Testo italiano senza `lang="it"` | S |
+| PERF-02 | Media | Performance | globale | ~400 KB gzip JS/pagina; legali spediscono i contenuti due volte | M |
+| DOC-01 | Media | Docs/Env | `README.md:17-23` | Env table senza `TURNSTILE_SECRET_KEY`/`NEXT_PUBLIC_TURNSTILE_SITE_KEY`; `.env.local.example` citato ma inesistente | S |
+| CONS-05 | Bassa | Consenso | `CookieBanner.tsx:9-14` | Consenso `analytics_storage` concesso ma inutilizzato | S |
+| SEC-03 | Bassa | Sicurezza | `route.ts:21` | Nessun limite dimensione body | S |
+| SEC-04 | Bassa | Sicurezza | `layout.tsx:84` vs `netlify.toml:17` | Referrer-Policy incoerente header/meta | S |
+| SEC-05 | Bassa | Sicurezza | `netlify.toml:19` | HSTS senza `preload` | S |
+| SEC-07 | Bassa | Sicurezza | `route.ts` | Nessun check `Origin` sul POST | S |
+| DEP-01 | Bassa | Dipendenze | `package-lock.json` | 2 moderate npm audit (postcss transitivo di next, build-time only) | — |
+| QUAL-03 | Bassa | Qualità | vari | Dead code: variante `ghost`, prop `as`, 4 eslint-disable inutili | S |
+| QUAL-04 | Bassa | Qualità | `Footer.tsx:8` | Anno copyright congelato alla build | S |
+| QUAL-06 | Bassa | Qualità | `HowItWorks.tsx:97`, `Pricing.tsx:227` | Rischio teorico hydration con reduced-motion (non riprodotto nei test) | S |
+| QUAL-07 | Bassa | Qualità | `Button.tsx:66` | `transition-colors transition-transform` in conflitto | S |
+| QUAL-08 | Bassa | Qualità | `ContactForm.tsx:194` | Risposta fetch non tipizzata | S |
+| QUAL-09 | Bassa | Qualità | vari | Classi link ripetute 8+ volte; bottoni statici duplicati | S |
+| FUNC-01 | Bassa | UX form | `lib/schema.ts:77-83` | Errore telefono-WhatsApp appare solo a form altrimenti valido | S |
+| SEO-03 | Bassa | SEO | `app/sitemap.ts:5` | `lastmod` = timestamp di build per tutte le URL | S |
+| SEO-04 | Bassa | SEO/A11y | `HowItWorks.tsx:203` | Salto heading h1→h3 su desktop | S |
+| A11Y-02 | Bassa | A11y | `WhatsAppFab.tsx` | FAB fuori dai landmark | S |
+| A11Y-03 | Bassa | A11y | `CookieBanner.tsx:60` | `role="dialog"` non modale, ESC non chiude | S |
+| A11Y-06 | Bassa | A11y | `ContactForm.tsx:588` | Submit disabilitato senza spiegazione | S/M |
+| SEC-06 | Nota | Decisione | `route.ts:70-87` | Turnstile fail-closed: Cloudflare down = zero lead | — |
+| PERF-03 | Bassa | Performance | `ContactForm.tsx:110` | Turnstile caricato al mount invece che on-scroll | S |
+| PERF-04 | Bassa | Performance | `public/logo.png` | Originale 1254×1254 / 372 KB | S |
+
+## ✅ Checklist pre-lancio Google Ads
+
+**Verificato e conforme (build locale, browser reale):**
+
+- [x] Consent Mode v2: default `denied` (EEA+UK+CH) impostato prima di qualsiasi hit — `dataLayer[0]`, primo ping `gcs=G100`
+- [x] `wait_for_update: 500` presente
+- [x] Pre-consenso: zero cookie (anche httpOnly), solo ping cookieless
+- [x] Accept: `consent update` granted → `_gcl_au` + cookie DoubleClick solo dopo il click; persiste al reload
+- [x] Reject: 1 click, parità visiva sostanziale, zero cookie, persiste, riapribile dal footer ("Manage cookies")
+- [x] Conversione unica per submit riuscito (`res.ok`), nessun double-fire (re-render, "Send another", reload/back testati)
+- [x] Nessuna PII raw negli URL verso Google (email/telefono mai in query string)
+- [x] `user_data` chiamato solo con consenso granted
+- [x] Banner ↔ privacy policy v1.2 coerenti (categorie dichiarate = comportamento osservato; no analytics confermato)
+- [x] Form: validazione server speculare al client (422), honeypot, Turnstile fail-closed, 405 su metodi non-POST
+
+**DA FARE prima di attivare la campagna:**
+
+- [ ] **CONS-01 (Critica):** aggiungere a `img-src` e `connect-src` della CSP: `https://pagead2.googlesyndication.com https://ad.doubleclick.net https://www.google.it` (o wildcard `*.googlesyndication.com` / `*.doubleclick.net`) → poi verificare in produzione con devtools (4 flussi: load, accept, reject, submit) che non ci siano violazioni CSP
+- [ ] **CONS-02 (Alta):** `allow_enhanced_conversions: true` nella `gtag('config')` + verificare in Ads UI (enhanced conversions ON, metodo "tag Google") + ri-test: il ping di conversione deve contenere `em=tv.1~em.<hash>`
+- [ ] **CONS-03:** normalizzare il telefono in E.164 prima di `gtag('set','user_data')`
+- [ ] **CONS-04:** decidere il comportamento extra-EEA (default denied globale / geo-gating banner / testo banner)
+- [ ] **SEC-06:** confermare su Netlify le env `TURNSTILE_SECRET_KEY`, `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `RESEND_API_KEY` (senza di esse il form fallisce in produzione = spesa Ads senza lead)
+- [ ] Verificare in Ads UI che l'evento automatico `form_start` NON sia configurato come conversione
+- [ ] In produzione: confermare il cookie tecnico Cloudflare `__cf_bm` (non testabile in locale) e che il probe consenso passi sul dominio reale
+- [ ] **PERF-01 (fortemente consigliato):** hero visibile al primo paint — LCP mobile 4.5 s impatta Quality Score e conversione mobile
+
+## Quick wins (≤30 minuti ciascuno)
+
+1. CONS-01 — 3 domini in CSP (il blocco del lancio si risolve in un'unica riga di `netlify.toml`)
+2. CONS-02 — `allow_enhanced_conversions: true`
+3. CONS-03 — normalizzazione E.164
+4. CONS-05 — `analytics_storage: denied` fisso
+5. SEC-02 (parte 1) — chiave rate-limit da `x-nf-client-connection-ip`
+6. SEC-03 — guardia `Content-Length` con 413
+7. SEC-04 — allineare Referrer-Policy (rimuovere il meta)
+8. SEC-07 — check `Origin`
+9. SEO-02 — `openGraph` per-pagina sulle legali
+10. SEO-03 — `lastmod` statici nel sitemap
+11. A11Y-05 — `lang={lang}` sull'`<article>` legale
+12. A11Y-02 — landmark sul FAB
+13. QUAL-03/QUAL-07 — dead code + classe transition
+14. DOC-01 — env table README + `.env.local.example`
+
+## Backlog (post-lancio)
+
+- **Rate limiting completo (SEC-02 parte 2):** piano Upstash dettagliato in Fase 2 (store condiviso, limiti 5/min + 20/die per IP + circuit-breaker globale 200/die, fallback in-memory) — effort S/M
+- QUAL-02 (unificare combobox) · PERF-02 (legali come server components + dynamic import home) · PERF-03 (Turnstile lazy) · PERF-04 (logo ridotto) · QUAL-09 (componenti condivisi) · A11Y-01/03/04/06 · FUNC-01 · SEO-04 · QUAL-04/06/08 · SEC-01 (CSP hash) · SEC-05 (HSTS preload)
+- **Decisioni di prodotto:** SEO-01/QUAL-05 (route `/it` + hreflang — sblocca il segmento italiani all'estero) · CONS-04 (consenso extra-EEA) · SEC-06 (fail-open vs fail-closed su outage Cloudflare) · contenuti corridoio Italia→USA (tabella intenti in Fase 6)
 
 ---
 

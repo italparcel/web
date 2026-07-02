@@ -259,3 +259,60 @@ La build **non richiede** env var (tutte le pagine si prerenderizzano senza).
 7. **Alternativa senza dipendenze:** le [Netlify Rate Limiting rules](https://docs.netlify.com/security/rate-limiting/) a livello di edge (config in `netlify.toml`) — meno flessibili (no limite globale/giornaliero) ma zero codice; valide come primo livello anche in aggiunta.
 
 ---
+
+## Fase 3 — Consenso & tracking (gate pre-campagna)
+
+**Metodo:** Chromium headless (Playwright) contro la build di produzione locale (`next start`), contesto `it-IT`/IP italiano (percorso EEA), backend `/api/contact` **mockato** (nessun invio reale), Photon bloccato. Catturati: `dataLayer`, cookie, tutte le richieste verso domini Google con parametro `gcs`. Probe: `tests/probes/consent-probe.mjs`, `tests/probes/conversion-probe.mjs`.
+
+### Verifiche SUPERATE ✅
+
+| # | Verifica | Esito osservato |
+| --- | --- | --- |
+| 1 | Default Consent Mode v2 `denied` prima di ogni hit | `dataLayer[0]` = `consent default` con `ad_storage/ad_user_data/ad_personalization/analytics_storage: denied` + `wait_for_update: 500`; il **primo** ping Google esce già con `gcs=G100` (denied). L'ordine nella coda dataLayer (default → js → config) garantisce la precedenza anche se gtag.js (entrambi `afterInteractive`) finisse di caricarsi prima dello snippet inline. |
+| 2 | Pre-consenso: nessun cookie | `document.cookie` vuoto, zero cookie di contesto (anche httpOnly), un solo ping cookieless (`ccm/collect`, `gcs=G100`). Zero errori console. |
+| 3 | Flusso Accept | `consent update` granted in dataLayer; cookie `_gcl_au` (1st-party) + `test_cookie`/`IDE` (.doubleclick.net) creati **solo dopo** il click; scelta persistita (`localStorage`), banner assente dopo reload; al reload l'inline script ripristina subito granted (ordine: default → update → js → config); ping `gcs=G111`. |
+| 4 | Flusso Reject paritario | Stesso layer, stesso numero di click (1), stessa dimensione (Decline 89×42 vs Accept 85×42, font identico 14px; differenza solo di stile filled/outline — conforme come primo layer paritario). Dopo reject: **zero cookie**, scelta persistita, ping solo cookieless `gcs=G100`. Riapertura possibile via "Manage cookies" nel footer (verificato). |
+| 5 | Conversione singola, niente double-fire | Con submit riuscito: **una** conversione con label `CtkVCL…` (la coppia `googleadservices.com/pagead/conversion` + `googleads.g.doubleclick.net/pagead/viewthroughconversion` è la stessa conversione registrata sui due endpoint — normale). Click su "Send another": **0** conversioni aggiuntive. Nessun re-fire su reload/back (stato solo client, nessuna thank-you page ricaricabile). Il fallback WhatsApp su errore backend deliberatamente non traccia (commento nel codice) ✓. |
+| 6 | Nessuna PII raw negli URL | Email/telefono di test mai presenti in query string verso Google (né in chiaro né URL-encoded). Con consenso negato `gtag('set','user_data')` non viene proprio chiamata (gate `adConsentGranted()` su localStorage) ✓. |
+| 7 | Coerenza banner ↔ privacy policy v1.2 | La policy (§8, EN+IT) dichiara esattamente ciò che si osserva: `_gcl_au` + cookie domini google.com/doubleclick.net **solo dopo consenso**; cookie tecnici Cloudflare (`__cf_bm`) per Turnstile; nessun cookie analytics (§8.3 — confermato: nessuna richiesta GA). Nota: `__cf_bm` non verificabile in locale (Turnstile non montato senza site key) → ricontrollare in produzione. |
+| 8 | Consenso valido su tutte le pagine | La scelta è in `localStorage` a livello di origin e il banner/snippet sono nel root layout → vale per home e pagine legali (il toggle EN/IT delle legali non interagisce col consenso). |
+
+**Inventario eventi di conversione:** uno solo — `send_to: AW-18237016910/CtkVCL-UwsYcEM6Wi_hD` (`components/sections/ContactForm.tsx:216-218`), trigger = submit form riuscito (`res.ok`). Nessun parametro `value`/`currency` (accettabile per lead-gen; eventuale valore statico è scelta di marketing). Osservato inoltre l'evento automatico `form_start` del tag Ads (`en=form_start`, auto-rilevamento form di gtag): **verificare nella UI di Google Ads che non sia configurato come conversione**, altrimenti conterebbe interazioni senza invio.
+
+### Findings
+
+#### CONS-01 · **Critica (blocca il lancio)** · La CSP di produzione blocca domini usati da Consent Mode / conversioni
+
+- **File:** `netlify.toml:26`
+- **Evidenza (empirica):** domini Google effettivamente contattati da gtag durante i flussi: `www.googletagmanager.com` ✓, `www.google.com` ✓, `googleads.g.doubleclick.net` ✓, `www.googleadservices.com` ✓ (tutti in allowlist) **ma anche**: `pagead2.googlesyndication.com` (← è il dominio del **ping di conversione cookieless quando il consenso è negato**, `gcs=G100`, e del ping pre-consenso), `ad.doubleclick.net` (`ccm/s/collect` post-accept), `www.google.it` (`pagead/1p-user-list`, remarketing per utenti italiani). Nessuno dei tre è in `img-src`/`connect-src` → in produzione quelle richieste vengono bloccate dalla CSP (in locale la CSP non è applicata, per questo il test le vede).
+- **Impatto:** (a) tutti gli utenti EEA che **rifiutano** il banner producono ping di conversione cookieless che la CSP blocca → il conversion modeling di Consent Mode perde integralmente quel segmento; (b) ping remarketing/user-list bloccato per gli utenti italiani (e per ogni paese EEA sul rispettivo TLD google.**xx**); (c) parte della raccolta post-consenso persa. Con campagna imminente = misurazione danneggiata dal giorno 1, in modo silenzioso (solo errori CSP in console degli utenti).
+- **Fix (S):** aggiungere a **entrambe** `img-src` e `connect-src`: `https://pagead2.googlesyndication.com https://ad.doubleclick.net https://www.google.it` (o più robusto: `https://*.googlesyndication.com https://*.doubleclick.net`). Per i TLD nazionali degli altri paesi EEA decidere: allowlist dei mercati target o accettare la perdita del solo ping remarketing (non della conversione). **Dopo il deploy, ri-verificare in devtools sul sito reale che non compaiano violazioni CSP nei 4 flussi (load, accept, reject, submit).**
+
+#### CONS-02 · **Alta** · Enhanced conversions: `user_data` non arriva a Google
+
+- **File:** `app/layout.tsx:198` (config), `components/sections/ContactForm.tsx:210-215` (set user_data)
+- **Evidenza (empirica):** con consenso granted e submit riuscito, i ping di conversione portano `em=tv.1~ec.e3` — **nessun hash** `em.<sha256>` di email/telefono. Il codice chiama correttamente `gtag('set','user_data',{email,phone_number})` prima dell'evento, ma `gtag('config','AW-18237016910')` è privo di **`allow_enhanced_conversions: true`**, che è il prerequisito lato tag; il rilevamento "automatico" lato account (visibile come `ec_mode=a` nei ping) non cattura nulla (`ec.e3`) perché il form invia via `fetch()` e al momento della conversione è già stato smontato/resettato.
+- **Impatto:** le enhanced conversions for leads sono di fatto **spente**: match quality e attribuzione ridotte proprio per la campagna in partenza. (Nessun problema privacy: semplicemente non viene trasmesso nulla.)
+- **Fix (S):** aggiungere `allow_enhanced_conversions: true` alla `gtag('config', …)`; verificare nella UI Google Ads che le enhanced conversions siano attive con metodo "tag Google"; ri-testare col probe che compaia `em=tv.1~em.<hash>` nel ping di conversione.
+
+#### CONS-03 · Media · Telefono non normalizzato E.164 per `user_data`
+
+- **File:** `components/sections/ContactForm.tsx:213`, placeholder `+1 555 123 4567` (`:317`)
+- **Evidenza:** `phone_number` è passato così come digitato (spazi inclusi); Google richiede formato E.164 (`+15551234567`) per il match.
+- **Fix (S):** normalizzare prima del `set`: `"+" + phone.replace(/\D/g, "")` (mantenendo il `+` iniziale), o non inviare il telefono se non riconducibile a E.164.
+
+#### CONS-04 · Media · Fuori EEA/UK/CH il default è "granted per assenza" ma il banner (in inglese) promette il contrario
+
+- **File:** `lib/consent.ts:8-12`, `components/CookieBanner.tsx:70-73`
+- **Evidenza:** il default `denied` è region-scoped; per un visitatore USA (audience primaria!) non esiste default → gtag tratta il consenso come concesso e `_gcl_au` viene impostato **al primo load**, prima di qualsiasi interazione. Il banner però viene mostrato a tutti con il testo "only with your consent".
+- **Impatto:** nessuna violazione GDPR (utenti extra-EEA fuori ambito; regimi USA opt-out), ma testo del banner fattualmente inesatto per quegli utenti, e scelta architetturale da confermare consapevolmente. Il Decline di un utente USA funziona comunque (update globale) ✓.
+- **Fix (decisione di business, S):** (a) default `denied` globale (misurazione pre-interazione persa anche per USA — più semplice e coerente col testo), oppure (b) mostrare il banner solo agli utenti EEA (geo-gating, es. header Netlify `X-Country`) e adeguare il testo, oppure (c) riformulare il testo del banner.
+
+#### CONS-05 · Bassa · L'update di consenso concede `analytics_storage` ma il sito non ha analytics
+
+- **File:** `components/CookieBanner.tsx:9-14`
+- **Evidenza:** GRANTED include `analytics_storage: "granted"`; la policy §8.3 dichiara che non si usano cookie analytics (vero: nessuna property GA presente).
+- **Impatto:** nessun cookie analytics viene comunque creato; è solo un consenso dichiarato più ampio del necessario.
+- **Fix (S):** lasciare `analytics_storage: "denied"` in entrambi i rami (e nell'update dell'inline script di layout.tsx), così il consenso registrato coincide esattamente con l'uso dichiarato.
+
+---

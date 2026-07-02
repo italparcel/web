@@ -1,7 +1,27 @@
 # REVIEW_REPORT — italparcel.com
 
 > Audit completo (codice, sicurezza, consenso/tracking, funzionale, performance, SEO, accessibilità).
-> Branch: `review/full-audit-20260702` · 2026-07-02 · Stato: **fasi 0–7 completate; fix in attesa di approvazione**
+> Branch: `review/full-audit-20260702` · 2026-07-02 · Stato: **fix approvati applicati; in attesa di verifica su deploy preview e autorizzazione al merge**
+
+---
+
+## Stato dei fix applicati (2026-07-02, post-approvazione)
+
+Dopo ogni commit: `npm run build` ✓ + `tsc --noEmit` ✓ + `npm run lint` ✓ (0 errori) + suite E2E completa ✓ (65 test verdi, 2 viewport). Un commit per finding.
+
+| Finding | Commit | Verifica |
+| --- | --- | --- |
+| QUAL-01 | `fix(QUAL-01)` | `npm run lint` exit 0 (prima: 6 errori); suite verde |
+| CONS-01 | `fix(CONS-01)` | `scripts/csp-check.mjs`: tutti i 10 host osservati empiricamente ammessi nelle direttive richieste; **ri-verifica finale sul deploy preview** (la CSP è applicata solo da Netlify) |
+| CONS-02 | `fix(CONS-02)` | `allow_enhanced_conversions: true` attivo; probe conversione (ora capture-and-abort, nulla raggiunge Google): parametro `em=` presente sui ping di conversione. L'hash SHA-256 comparirà **dopo l'attivazione lato interfaccia Google Ads** (metodo "tag Google") — azione manuale del titolare, non un difetto del codice |
+| SEC-02 | `fix(SEC-02)` | chiave = `x-nf-client-connection-ip` (non falsificabile); **test di regressione E2E obbligatorio aggiunto e verde**: 7 richieste con XFF rotante e IP fidato fisso → 429 alla sesta |
+| PERF-01 | `fix(PERF-01)` | titolo hero visibile al first paint; probe di attribuzione LCP: unico candidato = titolo, **LCP = FCP** a livello di paint; Lighthouse locale: perf 72→81-85, LCP 4.5s→3.1-3.8s (residuo = contabilizzazione del font-swap + varianza locale; numero definitivo dal preview). Screenshot prima/dopo (design invariato) in `docs/audit-screenshots/` |
+| A11Y-05 | `fix(A11Y-05)` | `lang={lang}` sul blocco legale; asserzione E2E sul toggle EN/IT |
+| CONS-03 | `fix(CONS-03)` | telefono normalizzato E.164 (omesso se senza prefisso `+` esplicito) |
+| CONS-05 | `fix(CONS-05)` | `analytics_storage` resta `denied` anche su Accept (coerente con policy §8.3) |
+| CONS-04 | `fix(CONS-04)` | default `denied` **globale** (rimosso il region-scoping); `scripts/consent-default-check.mjs`: primo evento dataLayer = default negato senza chiave `region`, zero cookie pre-consenso. **Testo banner e privacy policy verificati: già coerenti col nuovo comportamento, nessun ritocco necessario** ("only with your consent" ora letteralmente vero per tutti) |
+
+Non toccati (fuori approvazione): SEO-01 (backlog, decisione di prodotto), tutti gli altri Medium/Low del backlog.
 
 ---
 
@@ -69,14 +89,14 @@ Codebase in salute sopra la media: TypeScript strict senza scorciatoie, endpoint
 
 **DA FARE prima di attivare la campagna:**
 
-- [ ] **CONS-01 (Critica):** aggiungere a `img-src` e `connect-src` della CSP: `https://pagead2.googlesyndication.com https://ad.doubleclick.net https://www.google.it` (o wildcard `*.googlesyndication.com` / `*.doubleclick.net`) → poi verificare in produzione con devtools (4 flussi: load, accept, reject, submit) che non ci siano violazioni CSP
-- [ ] **CONS-02 (Alta):** `allow_enhanced_conversions: true` nella `gtag('config')` + verificare in Ads UI (enhanced conversions ON, metodo "tag Google") + ri-test: il ping di conversione deve contenere `em=tv.1~em.<hash>`
-- [ ] **CONS-03:** normalizzare il telefono in E.164 prima di `gtag('set','user_data')`
-- [ ] **CONS-04:** decidere il comportamento extra-EEA (default denied globale / geo-gating banner / testo banner)
+- [x] **CONS-01 (Critica):** domini aggiunti a `img-src`/`connect-src` (`fix(CONS-01)`, validato da `scripts/csp-check.mjs`) → resta la ri-verifica sul **deploy preview** con `scripts/preview-audit.mjs` (4 flussi: load, accept, reject+submit, granted+submit)
+- [x] **CONS-02 (Alta):** `allow_enhanced_conversions: true` attivo, `em=` presente sui ping → **manca solo il passo manuale in Google Ads UI** (enhanced conversions ON, metodo "tag Google"); dopo, l'hash `em=tv.1~em.<hash>` va confermato
+- [x] **CONS-03:** telefono normalizzato E.164 (`fix(CONS-03)`)
+- [x] **CONS-04:** deciso e applicato il default **denied globale** (`fix(CONS-04)`); testi banner/policy già coerenti
 - [ ] **SEC-06:** confermare su Netlify le env `TURNSTILE_SECRET_KEY`, `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `RESEND_API_KEY` (senza di esse il form fallisce in produzione = spesa Ads senza lead)
 - [ ] Verificare in Ads UI che l'evento automatico `form_start` NON sia configurato come conversione
 - [ ] In produzione: confermare il cookie tecnico Cloudflare `__cf_bm` (non testabile in locale) e che il probe consenso passi sul dominio reale
-- [ ] **PERF-01 (fortemente consigliato):** hero visibile al primo paint — LCP mobile 4.5 s impatta Quality Score e conversione mobile
+- [x] **PERF-01:** hero visibile al primo paint (`fix(PERF-01)`; LCP finale da misurare sul deploy preview)
 
 ## Quick wins (≤30 minuti ciascuno)
 

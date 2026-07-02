@@ -10,7 +10,8 @@ const browser = await chromium.launch({
 const pages = process.argv.slice(2);
 const results = {};
 for (const path of pages) {
-  const runnerResult = await lighthouse(`http://localhost:3000${path}`, {
+  const target = path.startsWith("http") ? path : `http://localhost:3000${path}`;
+  const runnerResult = await lighthouse(target, {
     port: PORT,
     output: "json",
     logLevel: "error",

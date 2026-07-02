@@ -1,16 +1,21 @@
-// Phase 3 consent & tracking probe — runs against http://localhost:3000 (next start).
+﻿// Phase 3 consent & tracking probe — runs against http://localhost:3000 (next start).
 // Read-only with respect to the app; outbound form submissions are mocked.
+// Google pings are CAPTURED THEN ABORTED (only gtag.js itself is allowed to
+// load), so URLs/params can be inspected without anything reaching Google.
 import { chromium } from "@playwright/test";
 
 const BASE = "http://localhost:3000";
 const GOOGLE_RE = /google|doubleclick|gstatic/i;
 const out = { scenarios: {} };
 
-function trackGoogle(page, bucket) {
-  page.on("request", (req) => {
-    const url = req.url();
-    if (GOOGLE_RE.test(new URL(url).hostname)) bucket.push(url);
-  });
+async function trackGoogle(page, bucket) {
+  await page.route(
+    (url) => GOOGLE_RE.test(url.hostname) && !url.pathname.startsWith("/gtag/js"),
+    (route) => {
+      bucket.push(route.request().url());
+      route.abort();
+    }
+  );
 }
 
 async function getState(page) {
@@ -47,7 +52,7 @@ const browser = await chromium.launch();
   const page = await ctx.newPage();
   const reqs = [];
   const consoleErrors = [];
-  trackGoogle(page, reqs);
+  await trackGoogle(page, reqs);
   page.on("console", (m) => { if (m.type() === "error") consoleErrors.push(m.text()); });
   await page.goto(BASE, { waitUntil: "networkidle" });
   await page.waitForTimeout(2500);
@@ -79,7 +84,7 @@ const browser = await chromium.launch();
   const ctx = await browser.newContext({ locale: "it-IT", timezoneId: "Europe/Rome" });
   const page = await ctx.newPage();
   const reqs = [];
-  trackGoogle(page, reqs);
+  await trackGoogle(page, reqs);
   await page.goto(BASE, { waitUntil: "networkidle" });
   const preClickCount = reqs.length;
   await page.getByRole("button", { name: "Accept" }).click();
@@ -89,7 +94,7 @@ const browser = await chromium.launch();
   const postAccept = reqs.slice(preClickCount);
   // reload → banner must stay closed, consent re-applied
   const reloadReqs = [];
-  trackGoogle(page, reloadReqs);
+  await trackGoogle(page, reloadReqs);
   await page.reload({ waitUntil: "networkidle" });
   await page.waitForTimeout(2000);
   const stateAfterReload = await getState(page);
@@ -118,7 +123,7 @@ const browser = await chromium.launch();
   const ctx = await browser.newContext({ locale: "it-IT", timezoneId: "Europe/Rome" });
   const page = await ctx.newPage();
   const reqs = [];
-  trackGoogle(page, reqs);
+  await trackGoogle(page, reqs);
   await page.goto(BASE, { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Decline" }).click();
   await page.waitForTimeout(2000);
@@ -172,7 +177,7 @@ for (const consent of ["granted", "denied"]) {
   }, consent);
   const page = await ctx.newPage();
   const reqs = [];
-  trackGoogle(page, reqs);
+  await trackGoogle(page, reqs);
   let apiPayload = null;
   await page.route("**/api/contact", async (route) => {
     apiPayload = route.request().postDataJSON();

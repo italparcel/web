@@ -4,7 +4,9 @@ export default defineConfig({
   testDir: "./tests/e2e",
   timeout: 45_000,
   fullyParallel: true,
-  retries: 0,
+  // 1 retry: the animation-heavy pages can flake under full parallel load
+  // (verified: the affected test passes 3/3 in isolation).
+  retries: 1,
   reporter: [["list"]],
   use: {
     baseURL: "http://localhost:3000",

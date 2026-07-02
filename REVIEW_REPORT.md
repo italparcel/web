@@ -497,3 +497,61 @@ Chunk più grandi in `.next/static/chunks`: 280+280+221+147+144 KB (non compress
 | Long-tail informativi ("customs duties Italy to US", "consolidate packages from Italy") | ⚠️ risposte brevi nelle FAQ della home | Le FAQ non hanno URL propri; valutare pagine guida/blog per intercettare long-tail |
 
 ---
+
+## Fase 7 — Accessibilità
+
+**Metodo:** axe-core (`@axe-core/playwright`) su 7 stati: home (con e senza banner), `/terms`, `/privacy` EN **e IT** (toggle attivato), `/prohibited-items`, form con errori di validazione visibili — su entrambi i viewport. Più test tastiera/focus dedicati. Spec permanente: `tests/e2e/a11y.spec.ts` (con allowlist documentata delle violazioni note, così le **nuove** regressioni falliscono comunque). Lighthouse a11y: 97 (home) / 96 (privacy).
+
+### Esito axe: **solo 2 regole violate** su tutti gli stati scansionati
+
+Il resto è pulito: pattern ARIA delle combobox completi (`role=combobox/listbox/option`, `aria-activedescendant`), accordion FAQ con `aria-expanded` e operabile da tastiera, tutte le label associate, `aria-invalid` corretto, menu mobile con `aria-expanded`/`aria-label`.
+
+### Findings
+
+#### A11Y-01 · Media · Contrasto insufficiente (axe `color-contrast`, serious) — 3 combinazioni ricorrenti
+
+- **Evidenza (axe, su tutte le pagine):**
+  1. **Wordmark logo** — "Parcel" in `text-accent` #d97706 su #faf9f6, 15px semibold (`components/Nav.tsx:83`, `Footer.tsx:23`): ratio ≈ 3.1:1 < 4.5:1. Presente su ogni pagina (Nav + Footer).
+  2. **Marquee** — etichette "Trento" `text-bg/40` su nero #0b0f14, 11px (`components/sections/Marquee.tsx:49`): ≈ 3.7:1 (già previsto in Fase 1).
+  3. **CTA "Bundle 10"** — testo bianco su `bg-accent` #d97706, 14px (`components/sections/Pricing.tsx:208`): ≈ 3.1:1.
+  - Gli altri candidati di Fase 1 (label stat hero, per-parcel Pricing, placeholder) **passano** secondo axe.
+- **Impatto:** WCAG 2.1 AA 1.4.3 non rispettata per testo informativo (il wordmark è borderline "brand", ma il CTA è un'azione primaria).
+- **Fix (S):** per testo su chiaro usare `--accent-hover` #b45309 (≈4.6:1); per il CTA scurire il fondo o passare a testo scuro; per il marquee alzare a `text-bg/55`+.
+
+#### A11Y-02 · Bassa · WhatsApp FAB fuori da qualsiasi landmark (axe `region`, moderate)
+
+- **File:** `components/WhatsAppFab.tsx:10-28`
+- **Fix (S):** avvolgerlo in un landmark (`<aside aria-label="Quick contact">`) o accettare consapevolmente (il link ha già `aria-label="Chat on WhatsApp"` ✓).
+
+#### A11Y-03 · Bassa · Cookie banner: `role="dialog"` non modale, ESC non lo chiude
+
+- **File:** `components/CookieBanner.tsx:60-67`
+- **Evidenza (empirica):** `aria-modal` assente, nessun focus management, ESC non chiude (documentato da test). Essendo **non modale** (la pagina resta pienamente usabile) il focus trap NON è richiesto; ma `role="dialog"` senza gestione del focus è un pattern ambiguo per gli screen reader.
+- **Fix (S):** o `role="region" aria-label="Cookie consent"` (banner non modale classico), oppure tenere `dialog` aggiungendo focus iniziale + ESC = decline/chiudi. Nota GDPR: la chiusura con ESC senza scelta NON deve valere come consenso (e oggi non imposta nulla ✓).
+
+#### A11Y-04 · Media · Errori di validazione non collegati ai campi via `aria-describedby`
+
+- **File:** `components/ui/Field.tsx:28-35` + usi in `ContactForm.tsx`
+- **Evidenza:** `FieldError` ha `role="alert"` (annuncio alla comparsa ✓) e i campi hanno `aria-invalid` ✓, ma nessun `aria-describedby` che leghi l'errore al campo: chi naviga col lettore di schermo direttamente sul campo sente "invalid" senza il perché.
+- **Fix (S):** `id={`${name}-error`}` sull'errore + `aria-describedby` condizionale sull'input.
+
+#### A11Y-05 · Media · Contenuto italiano annunciato come inglese (cross-ref QUAL-05/SEO-01)
+
+- **Evidenza:** col toggle IT attivo su `/privacy`, `<html lang="en">` resta invariato e nessun elemento porta `lang="it"` → gli screen reader leggono l'italiano con fonetica inglese (WCAG 3.1.1/3.1.2).
+- **Fix (S, indipendente dal fix SEO completo):** `lang={lang}` sull'`<article>` in `LegalLayout`.
+
+#### A11Y-06 · Bassa · Submit disabilitato senza spiegazione
+
+- **File:** `components/sections/ContactForm.tsx:588-593`
+- **Evidenza:** il bottone resta `disabled` finché il form non è valido (e finché manca il token Turnstile): gli utenti di tecnologie assistive non ricevono alcuna indicazione del motivo; i bottoni disabled non sono nemmeno focusabili.
+- **Fix (S/M):** pattern consigliato: bottone sempre attivo che al click triggera la validazione e porta il focus al primo errore; oppure `aria-disabled` + testo di stato.
+
+### Verifiche tastiera/focus superate ✅
+
+- Outline `:focus-visible` globale 2px solid accent, verificato computato sul focus reale ✓ (`app/globals.css:110-114`)
+- Banner cookie completamente operabile da tastiera (focus + Enter su Decline funziona e persiste) ✓
+- Accordion FAQ: Enter/Space, `aria-expanded` corretto ✓
+- Navigazione mobile: bottone menu con `aria-label` dinamica e `aria-expanded` ✓
+- Nessun controllo del form senza label (verificato programmaticamente su tutti gli input/select/textarea) ✓
+
+---

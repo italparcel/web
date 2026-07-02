@@ -7,15 +7,48 @@ export const runtime = "nodejs";
 const CONTACT_EMAIL = process.env.CONTACT_EMAIL ?? "contact@italparcel.com";
 const FROM_EMAIL = process.env.FROM_EMAIL ?? "ItalParcel <onboarding@resend.dev>";
 
-// Best-effort per-IP throttle. NOTE: in-memory, so on serverless it only sees a
-// single warm instance's traffic — it is NOT shared across instances and resets
-// on cold start. It still blunts a naive flood from one IP hammering a warm
-// function; for a hard guarantee use a shared store (e.g. Upstash Redis).
+// Best-effort per-IP throttle. NOTE: in-memory, so on serverless it only sees
+// a single warm instance's traffic — it is NOT shared across instances and
+// resets on cold start. It blunts a naive single-source flood; a distributed
+// attacker gets through it, and the hard backstop remains the mandatory
+// Turnstile verification below. For a shared guarantee use an external store
+// (e.g. Upstash Redis) or Netlify's platform rate limiting.
 const RATE_WINDOW_MS = 60_000;
 const RATE_MAX = 5;
+// Hard cap on tracked IPs. The Map is kept in least-recently-seen order
+// (delete + re-set on every hit), so exceeding the cap evicts the oldest-seen
+// IP — this works even when every entry is "recent", unlike an expiry-only
+// prune, which never fires under a spoofed-unique-IP flood.
+const RATE_MAP_MAX = 2_000;
 const rateHits = new Map<string, number[]>();
 
+// Trusted client IP. Netlify sets x-nf-client-connection-ip from the actual
+// TCP connection; the first x-forwarded-for entry is client-forgeable and is
+// used only as a last resort (e.g. local `next start`).
+function clientIp(request: Request): string {
+  return (
+    request.headers.get("x-nf-client-connection-ip")?.trim() ||
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    "unknown"
+  );
+}
+
 export async function POST(request: Request) {
+  const ip = clientIp(request);
+  const ua = request.headers.get("user-agent") ?? "unknown";
+
+  // Throttle before any body parsing, so floods of malformed/invalid payloads
+  // are counted too and a throttled IP costs no JSON/zod/Turnstile work.
+  if (ip !== "unknown" && rateLimited(ip)) {
+    return NextResponse.json(
+      { error: "Too many requests. Please wait a moment and try again." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(Math.ceil(RATE_WINDOW_MS / 1000)) },
+      }
+    );
+  }
+
   let body: unknown;
   try {
     body = await request.json();
@@ -31,11 +64,6 @@ export async function POST(request: Request) {
   }
   const data = parsed.data;
 
-  const ip =
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    request.headers.get("x-real-ip") ??
-    "unknown";
-  const ua = request.headers.get("user-agent") ?? "unknown";
   const acceptedAt = new Date().toISOString();
 
   // Honeypot: a hidden field real users never see. Bots that auto-fill every
@@ -51,14 +79,6 @@ export async function POST(request: Request) {
     (body as Record<string, unknown>).contact_time !== "";
   if (honeypotTripped) {
     console.warn(`[contact] honeypot tripped — flagged, not dropped. ip=${ip} ua=${ua}`);
-  }
-
-  // Throttle by IP before doing any real work (Turnstile call, email send).
-  if (ip !== "unknown" && rateLimited(ip)) {
-    return NextResponse.json(
-      { error: "Too many requests. Please wait a moment and try again." },
-      { status: 429 }
-    );
   }
 
   // Cloudflare Turnstile. The token is sent outside the zod schema, so read it
@@ -257,12 +277,19 @@ function rateLimited(ip: string): boolean {
     (t) => now - t < RATE_WINDOW_MS
   );
   recent.push(now);
+  // Cap the per-IP array: only "more than RATE_MAX in the window" matters, so
+  // the newest handful of timestamps keeps the answer correct while a single
+  // IP hammers the endpoint, without unbounded growth.
+  if (recent.length > RATE_MAX + 5) {
+    recent.splice(0, recent.length - (RATE_MAX + 5));
+  }
+  // Delete + re-set keeps Map insertion order as least-recently-seen order.
+  rateHits.delete(ip);
   rateHits.set(ip, recent);
-  // Bound memory: occasionally drop IPs whose window has fully expired.
-  if (rateHits.size > 5000) {
-    for (const [k, times] of rateHits) {
-      if (times.every((t) => now - t >= RATE_WINDOW_MS)) rateHits.delete(k);
-    }
+  while (rateHits.size > RATE_MAP_MAX) {
+    const oldest = rateHits.keys().next().value;
+    if (oldest === undefined) break;
+    rateHits.delete(oldest);
   }
   return recent.length > RATE_MAX;
 }

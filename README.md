@@ -16,18 +16,20 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Environment variables
 
-| Variable          | Required | Notes                                                           |
-| ----------------- | -------- | --------------------------------------------------------------- |
-| `RESEND_API_KEY`  | yes      | Without it, contact submissions log to stdout instead of email. |
-| `CONTACT_EMAIL`   | no       | Defaults to `contact@italparcel.com`.                           |
-| `FROM_EMAIL`      | no       | Defaults to Resend's `onboarding@resend.dev` for testing.       |
+| Variable                         | Required      | Notes                                                                                        |
+| -------------------------------- | ------------- | -------------------------------------------------------------------------------------------- |
+| `RESEND_API_KEY`                 | yes           | In dev, submissions log to stdout when unset; in production the endpoint returns 500.       |
+| `TURNSTILE_SECRET_KEY`           | in production | Contact endpoint hard-fails (500) in production without it. Skipped in dev when unset.      |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | in production | Public Turnstile site key; the captcha widget renders only when set.                        |
+| `CONTACT_EMAIL`                  | no            | Defaults to `contact@italparcel.com`.                                                        |
+| `FROM_EMAIL`                     | no            | Defaults to Resend's `onboarding@resend.dev` for testing.                                    |
 
 ## Deploying to Netlify
 
 The repo ships with `netlify.toml` and uses the official `@netlify/plugin-nextjs`.
 
 1. Create a Netlify site connected to this repo.
-2. In **Site settings → Environment variables**, set `RESEND_API_KEY` (and optionally `CONTACT_EMAIL`, `FROM_EMAIL`).
+2. In **Site settings → Environment variables**, set `RESEND_API_KEY`, `TURNSTILE_SECRET_KEY` and `NEXT_PUBLIC_TURNSTILE_SITE_KEY` (and optionally `CONTACT_EMAIL`, `FROM_EMAIL`).
 3. Deploy — Netlify detects the Next.js build automatically; the plugin handles SSR routes such as `/api/contact`.
 
 The first deploy installs `@netlify/plugin-nextjs` automatically.

@@ -408,3 +408,92 @@ Chunk più grandi in `.next/static/chunks`: 280+280+221+147+144 KB (non compress
 - **CLS 0** anche sotto Lighthouse mobile ✓ (niente layout shift dalle animazioni: trasformazioni, non reflow).
 
 ---
+
+## Fase 6 — Audit SEO
+
+**Metodo:** ispezione dell'HTML renderizzato (view-source) di tutte le pagine sulla build di produzione locale + verifica `sitemap.xml`/`robots.txt` + Lighthouse SEO (100/100 su home e privacy).
+
+### Verifiche positive
+
+- **Rendering:** tutto il contenuto commerciale è **server-renderizzato** e presente nel view-source: headline hero, pricing (€17/€60/€95), testi FAQ completi, JSON-LD — verificato con grep sull'HTML grezzo ✓. Nulla è client-only.
+- **Home:** title 57 caratteri ✓, description 150 caratteri ✓, `robots: index, follow` ✓, canonical assoluto ✓, OG completo con `og:image` 1200×630 generata dalla convenzione `opengraph-image.png` ✓, Twitter card `summary_large_image` ✓.
+- **Pagine legali:** title (via template `%s · ItalParcel`) e description unici e corretti; canonical per-pagina corretto ✓.
+- **`sitemap.xml`:** 4 URL assoluti, tutti rispondono 200 (verificato dal crawl di Fase 4), nessuna entry morta ✓.
+- **`robots.txt`:** allow-all + riferimento sitemap ✓; nessun `noindex` in nessuna pagina (verificato nel rendered HTML) ✓.
+- **Semantica:** un solo `h1` per pagina (testato in E2E) ✓; anchor text descrittivi ✓; loghi con `alt=""` decorativo accanto al testo del brand (accettabile) ✓.
+- **Structured data presenti:** `Organization` (con `vatID`, indirizzo, contactPoint), `WebSite`, `Service` (offer €10), `FAQPage` (8 Q&A, testo **identico** a quello visibile — costruiti dalla stessa sorgente `lib/faqs.ts` → conforme alle policy Google) ✓.
+
+### Findings
+
+#### SEO-01 · **Alta** · Contenuto italiano invisibile ai motori: nessuna route `/it`, nessun hreflang
+
+- **File:** `components/LegalLayout.tsx` (toggle client-side), `app/sitemap.ts`, `app/layout.tsx:167`
+- **Evidenza:** l'unico contenuto italiano del sito (pagine legali) esiste solo come stato React post-idratazione: nessun URL dedicato, non nel sitemap, `<html lang="en">` fisso, zero `hreflang`/`x-default`. La home non ha alcuna versione italiana.
+- **Impatto:** zero possibilità di ranking per query italiane ("spedire pacchi dall'Italia all'estero", "spedire dall'Italia agli USA") — che intercettano il segmento *italiani all'estero / diaspora*, plausibilmente una fetta rilevante del target. È il lato SEO di QUAL-05.
+- **Fix (L, decisione di prodotto):** route localizzate (`/it` o `/it/privacy` ecc.) con `alternates.languages` (hreflang + x-default) e `<html lang>` corretto per locale. In Next 16 App Router: segmento `[locale]` o route parallele statiche. Da pianificare post-lancio se la campagna è solo EN/USA.
+
+#### SEO-02 · Media · Open Graph/Twitter sbagliati sulle pagine legali (ereditati dal layout)
+
+- **File:** `app/privacy/page.tsx:6-11` (e terms/prohibited-items — definiscono `title`/`description` ma non `openGraph`/`twitter`)
+- **Evidenza (rendered):** su `/privacy` → `og:title = "ItalParcel — Your Italian address…"`, **`og:url = "https://italparcel.com"`** (homepage!), `twitter:title` idem; il merge dei metadata di Next eredita l'intero blocco `openGraph` del layout.
+- **Impatto:** condivisioni social/messaging delle pagine legali mostrano titolo e URL della home; segnale di canonical incoerente per i crawler che leggono og:url.
+- **Fix (S):** aggiungere `openGraph: { title, url }` (e twitter) per pagina, o impostare solo `alternates` + usare `openGraph.url` relativo per pagina.
+
+#### SEO-03 · Bassa · `lastmod` del sitemap = timestamp di build per tutte le pagine
+
+- **File:** `app/sitemap.ts:5` (`const now = new Date()`)
+- **Evidenza:** ogni deploy riscrive `lastmod` di tutte le URL all'istante di build (osservato: tutte identiche al secondo).
+- **Impatto:** lastmod non attendibile → Google tende a ignorarlo; occasione persa di segnalare aggiornamenti reali (es. versioni dei T&C).
+- **Fix (S):** date statiche per pagina (es. la data versione dei documenti legali) o omettere `lastModified`.
+
+#### SEO-04 · Bassa · Salto gerarchico di heading sulla home desktop (h1 → h3)
+
+- **File:** `components/sections/HowItWorks.tsx:203-224` (step title `h3` in `DesktopScroll`) vs `:265` (`h2` solo nel `Fallback` mobile, che nel DOM viene dopo)
+- **Evidenza:** nel DOM desktop il primo heading dopo l'`h1` hero è l'`h3` del passo attivo; l'`h2` "The service in four phases" appartiene al fallback mobile ed è successivo.
+- **Impatto:** outline non lineare per crawler e screen reader (cross-ref Fase 7).
+- **Fix (S):** aggiungere un `h2` (anche `sr-only`) in testa a `DesktopScroll`.
+
+#### SEO-05 · Nota informativa · Limitazioni note di Google
+
+- `FAQPage`: dal 2023 Google mostra i rich result FAQ quasi solo a siti governativi/sanitari — lo schema resta corretto e utile ad altri motori/LLM, ma non aspettarsi rich snippet.
+- `robots.txt`: la direttiva `Host` non è standard (ignorata da Google; usata storicamente da Yandex) — innocua.
+- `keywords` meta (`app/layout.tsx:35-44`): ignorata da Google — innocua, nessuna azione.
+- `Organization.sameAs` è un array vuoto — riempirlo quando esisteranno profili social (segnale di entità).
+
+### Structured data — proposte pronte all'uso (non implementate)
+
+`BreadcrumbList` non ha valore su un sito flat di 4 pagine — sconsigliato. Valgono invece:
+
+1. **`OfferCatalog` dentro `Service`** (listino tier — rende il pricing machine-readable):
+
+```json
+{
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "name": "Italian parcel forwarding",
+  "provider": { "@type": "Organization", "name": "ItalParcel", "url": "https://italparcel.com" },
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "Handling fees",
+    "itemListElement": [
+      { "@type": "Offer", "name": "Single parcel", "price": "17", "priceCurrency": "EUR" },
+      { "@type": "Offer", "name": "Bundle 5", "price": "60", "priceCurrency": "EUR" },
+      { "@type": "Offer", "name": "Bundle 10", "price": "95", "priceCurrency": "EUR" }
+    ]
+  }
+}
+```
+
+2. **`ContactPoint` con `contactOption`** già presente — aggiungere `"availableLanguage"` è già fatto ✓. Nessun altro schema prioritario.
+
+### Copertura degli intenti di ricerca (solo raccomandazioni, nessuna modifica)
+
+| Intent | Copertura attuale | Gap |
+| --- | --- | --- |
+| "parcel forwarding Italy" / "Italian package forwarding" | ✅ home (title, h1, testi) | — |
+| "shop from Italy ship to USA" / "ship from Italy to USA cost" | ⚠️ generico | Nessuna pagina corridoio **Italia → USA** (il corridoio primario!): una landing "Shipping from Italy to the USA" con prezzi indicativi, dazi/dogana, tempi — alto potenziale, media difficoltà |
+| "Italian mailbox / Italian address for shopping" | ⚠️ solo nel claim hero | Pagina/sezione dedicata "Your Italian address" con casi d'uso (Vinted, outlet, brand italiani) |
+| "spedire dall'Italia agli USA" / "spedizione pacchi Italia estero" (IT) | ❌ zero | Richiede contenuti in italiano (SEO-01) — segmento italiani all'estero |
+| Long-tail informativi ("customs duties Italy to US", "consolidate packages from Italy") | ⚠️ risposte brevi nelle FAQ della home | Le FAQ non hanno URL propri; valutare pagine guida/blog per intercettare long-tail |
+
+---

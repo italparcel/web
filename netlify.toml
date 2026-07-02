@@ -9,21 +9,10 @@
   NODE_VERSION = "20"
   NEXT_TELEMETRY_DISABLED = "1"
 
-[[headers]]
-  for = "/*"
-  [headers.values]
-    X-Frame-Options = "SAMEORIGIN"
-    X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
-    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
-    # 'unsafe-inline' is required for Next.js' inline hydration scripts and the
-    # app's inline styles (Framer Motion / style props). Allowed external origins:
-    # Cloudflare Turnstile (script/frame/connect), the Photon geocoder (connect),
-    # and Google Ads / Consent Mode gtag — googletagmanager.com (script/img/connect),
-    # google.com + googleads.g.doubleclick.net (img/connect), googleadservices.com
-    # (connect) and td.doubleclick.net (frame).
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://www.googletagmanager.com https://www.google.com https://googleads.g.doubleclick.net; font-src 'self'; connect-src 'self' https://photon.komoot.io https://challenges.cloudflare.com https://www.googletagmanager.com https://www.google.com https://googleads.g.doubleclick.net https://www.googleadservices.com; frame-src https://challenges.cloudflare.com https://td.doubleclick.net; worker-src 'self' blob:; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'self'"
+# Security headers intentionally do NOT live here: netlify.toml [[headers]]
+# only reach static CDN assets, never HTML/API responses served by the Next.js
+# runtime (verified in production 2026-07-02). They are set in next.config.ts
+# `headers()` instead. Only static-asset cache-control rules belong below.
 
 [[headers]]
   for = "/_next/static/*"

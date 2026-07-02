@@ -81,9 +81,11 @@ export function CookieBanner() {
         >
           <div className="mx-auto flex max-w-3xl flex-col gap-4 rounded-2xl border border-border bg-bg-elev p-5 shadow-[var(--shadow-lift)] sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-fg-muted">
-              We use one optional cookie for Google Ads to measure ad
-              conversions, only with your consent. Cookies strictly necessary for
-              the site (security and anti-bot protection) stay on. See our{" "}
+              We use one optional Google Ads cookie to measure ad conversions.
+              In the EEA, UK and Switzerland it stays off until you accept;
+              elsewhere it is on by default unless you decline. Cookies strictly
+              necessary for the site (security and anti-bot protection) stay
+              on. See our{" "}
               <Link
                 href="/privacy"
                 className="font-medium text-fg underline underline-offset-2 hover:text-accent"

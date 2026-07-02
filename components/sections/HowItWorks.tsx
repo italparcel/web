@@ -5,7 +5,6 @@ import {
   AnimatePresence,
   useScroll,
   useMotionValueEvent,
-  useReducedMotion,
   useInView,
   useTime,
   useTransform,
@@ -23,6 +22,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
+import { usePrefersReducedMotion } from "@/lib/usePrefersReducedMotion";
 
 // How long each intermediate phase is held while the stage "catches up" to a
 // fast scroll. Big enough that every phase is actually seen, small enough that
@@ -92,7 +92,11 @@ const STEPS: Step[] = [
 ];
 
 export function HowItWorks() {
-  const reduce = useReducedMotion();
+  // Hydration-safe (audit M-2): framer's useReducedMotion returns null during
+  // SSR but the real value on the first client render, so branching the TREE
+  // on it broke hydration for exactly the reduced-motion audience. This hook
+  // agrees with the server during hydration and re-renders right after.
+  const reduce = usePrefersReducedMotion();
 
   if (reduce) return <Fallback id="how" />;
 

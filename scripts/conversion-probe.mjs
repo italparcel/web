@@ -1,4 +1,7 @@
-// Phase 3 conversion probe (fixed): real submit with mocked /api/contact + blocked Photon.
+// Phase 3 conversion probe: real submit with mocked /api/contact + blocked Photon.
+// Google requests are CAPTURED THEN ABORTED (except gtag.js itself), so the
+// fully-formed URLs can be inspected without any ping ever reaching Google —
+// safe to re-run without polluting Ads data.
 import { chromium } from "@playwright/test";
 
 const BASE = "http://localhost:3000";
@@ -29,10 +32,13 @@ for (const consent of ["granted", "denied"]) {
   }, consent);
   const page = await ctx.newPage();
   const reqs = [];
-  page.on("request", (req) => {
-    const url = req.url();
-    if (GOOGLE_RE.test(new URL(url).hostname)) reqs.push(url);
-  });
+  await ctx.route(
+    (url) => GOOGLE_RE.test(url.hostname) && !url.pathname.startsWith("/gtag/js"),
+    (route) => {
+      reqs.push(route.request().url());
+      route.abort();
+    }
+  );
   let apiPayload = null;
   let apiCalls = 0;
   await page.route("**/api/contact", async (route) => {

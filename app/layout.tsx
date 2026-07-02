@@ -195,7 +195,7 @@ try {
   }
 } catch (e) {}
 gtag('js', new Date());
-gtag('config', 'AW-18237016910');`}
+gtag('config', 'AW-18237016910', { allow_enhanced_conversions: true });`}
         </Script>
         <script
           type="application/ld+json"

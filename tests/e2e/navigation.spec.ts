@@ -54,8 +54,11 @@ test.describe("navigation", () => {
     await page.getByRole("button", { name: "IT", exact: true }).click();
     await expect(page.locator("h1")).toContainText("Informativa sulla Privacy");
     expect(page.url()).toContain("/privacy");
+    // A11Y-05: the legal block declares its language for assistive tech
+    await expect(page.locator('main [lang="it"]')).toHaveCount(1);
     await page.getByRole("button", { name: "EN", exact: true }).click();
     await expect(page.locator("h1")).toContainText("Privacy Policy");
+    await expect(page.locator('main [lang="en"]')).toHaveCount(1);
   });
 
   test("mobile menu opens, navigates and closes", async ({ context, page, isMobile }) => {

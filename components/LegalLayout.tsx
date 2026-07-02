@@ -27,7 +27,10 @@ export function LegalLayout({
   children,
 }: Props) {
   return (
-    <div className="container-x py-24 md:py-32">
+    // lang: the document is lang="en"; when the Italian version is shown the
+    // whole legal block (breadcrumb, TOC, article) must announce itself as
+    // Italian to assistive tech (WCAG 3.1.2).
+    <div lang={lang} className="container-x py-24 md:py-32">
       <div className="flex items-center justify-between gap-4">
         <Link
           href="/"

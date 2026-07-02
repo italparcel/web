@@ -351,3 +351,60 @@ La build **non richiede** env var (tutte le pagine si prerenderizzano senza).
 - Il brief prevedeva la verifica dei messaggi "in entrambe le lingue": non applicabile — il form esiste solo in inglese (vedi QUAL-05/architettura i18n). Nessun test IT possibile.
 
 ---
+
+## Fase 5 — Performance
+
+**Metodo:** Next 16/Turbopack non stampa più la tabella "First Load JS" → misurazione diretta: (1) transfer reale per pagina via Playwright (`tests/probes/perf-probe.mjs`, richieste esterne bloccate = solo payload first-party); (2) **Lighthouse 13** (emulazione mobile + throttling, default) via Chromium/Playwright (`tests/probes/lighthouse-probe.mjs` — chrome-launcher non può spawnare nel sandbox, quindi LH è agganciato alla porta di debug di un Chromium lanciato da Playwright).
+
+### Payload per pagina (trasferito, compresso — build di produzione locale)
+
+| Pagina | HTML | JS | CSS | Font | Totale | FCP locale | CLS |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `/` | 18 KB | **380 KB** (13 file) | 10 KB | 81 KB | ~500 KB | 312 ms | 0 |
+| `/terms` | 20 KB | **412 KB** (15 file) | 10 KB | 72 KB | ~526 KB | 124 ms | 0 |
+| `/privacy` | 11 KB | **428 KB** (16 file) | 10 KB | 72 KB | ~539 KB | 140 ms | 0 |
+
+Chunk più grandi in `.next/static/chunks`: 280+280+221+147+144 KB (non compressi; totale 1.7 MB non compresso). Il JS domina il payload: l'intera UI è client component (framer-motion ovunque).
+
+### Lighthouse (mobile emulato, throttled)
+
+| Pagina | Perf | A11y | Best Practices | SEO | FCP | LCP | TBT | CLS |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `/` | **72** | 97 | 100 | 100 | 1.1 s | **4.5 s** | **480 ms** | 0 |
+| `/privacy` | 93 | 96 | 100 | 100 | 0.8 s | 3.0 s | 140 ms | 0 |
+
+### Findings
+
+#### PERF-01 · **Alta** · LCP 4.5 s su mobile: il titolo hero resta nascosto fino a idratazione + animazione
+
+- **File:** `components/sections/Hero.tsx:94-116` (componente `Line`: `initial={{ y: "108%" }}` dentro contenitore `overflow-hidden`, delay 0.08–0.36 s, durata 0.95 s)
+- **Evidenza:** FCP 1.1 s ma LCP 4.5 s (score 36). L'elemento LCP è l'`h1`: nel primo paint è traslato fuori dal proprio contenitore (invisibile), diventa visibile solo dopo il download/parse di ~380 KB di JS, l'idratazione React (TBT 480 ms su CPU mobile) e l'animazione di entrata. Sotto throttling mobile ≈ 3,4 s di LCP spesi in coreografia.
+- **Impatto:** Core Web Vitals mobile scadenti sulla landing della campagna → potenziale effetto su Quality Score/CPC e su conversione da traffico mobile (l'audience USA arriva in gran parte da mobile).
+- **Fix (S/M):** rendere il titolo visibile al primo paint e animare solo progressivamente: es. animazione CSS pura (non gated dall'idratazione), o `initial={false}` al primo mount, o animare `opacity` con partenza ≥0.4 mantenendo il testo leggibile. Ri-misurare con il probe (target LCP < 2.5 s).
+
+#### PERF-02 · Media · ~400 KB gzip di JS su ogni pagina; pagine legali che spediscono i contenuti due volte
+
+- **Evidenza:** tutte le sezioni sono client component; framer-motion è incluso ovunque. Le pagine legali sono il caso peggiore: `TermsContent`/`PrivacyContent`/`ProhibitedContent` sono `"use client"` con l'intero testo bilingue **dentro il bundle JS** (oltre che nell'HTML prerenderizzato) — `/privacy` scarica più JS della home (428 vs 380 KB). Lighthouse: "Reduce unused JavaScript ~860 ms".
+- **Impatto:** TBT 480 ms su mobile (contribuisce a PERF-01); banda sprecata su pagine di puro testo.
+- **Fix (M):** (a) pagine legali → server components con un piccolo island client per il toggle lingua (o due route `/privacy` e `/it/privacy`, che risolverebbe anche SEO-05); taglio stimato: >300 KB di JS su quelle pagine; (b) home → `next/dynamic` per le sezioni below-the-fold pesanti (`HowItWorks` con le 4 scene SVG animate, `FAQ`, `ContactForm`); (c) `Features` non usa hook propri → può perdere `"use client"` lasciando client solo `Reveal`. Non bloccante per il lancio.
+
+#### PERF-03 · Bassa · Turnstile caricato al mount della pagina anziché quando serve
+
+- **File:** `components/sections/ContactForm.tsx:110-125`
+- **Evidenza:** con site key configurata, lo script `challenges.cloudflare.com/turnstile/v0/api.js` viene iniettato appena il form monta — cioè a ogni visita della home, anche per chi non arriva mai al form (in fondo alla pagina).
+- **Fix (S):** caricare lo script quando la sezione `#contact` entra nel viewport (IntersectionObserver / `whileInView`).
+
+#### PERF-04 · Bassa · Originale `logo.png` sovradimensionato (1254×1254, 372 KB)
+
+- **Evidenza:** reso a 54–60 px via `next/image` (il browser riceve ~3 KB di webp — runtime OK). L'originale intero viene però servito a chi accede a `/logo.png` diretto (header cache 7 g in `netlify.toml:33-36`) e ai crawler del JSON-LD `logo`.
+- **Fix (S):** sostituire con un originale ≤512 px (~20 KB).
+
+### Verifiche positive
+
+- **gtag:** `next/script` `strategy="afterInteractive"` → non render-blocking ✓ (nessuno script bloccante in `<head>`).
+- **Font:** `next/font/google` self-hosted, `display: swap`, subset latin → CLS misurato 0 su tutte le pagine ✓.
+- **Immagini:** unico uso runtime è il logo via `next/image` (ottimizzato, AVIF/WebP) ✓; su Netlify il plugin instrada `/_next/image` alla Netlify Image CDN — nessuna config extra necessaria ✓.
+- **Caching:** `_next/static/*` immutable 1 anno ✓; HTML gestito dal runtime Netlify ✓.
+- **CLS 0** anche sotto Lighthouse mobile ✓ (niente layout shift dalle animazioni: trasformazioni, non reflow).
+
+---

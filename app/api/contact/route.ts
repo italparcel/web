@@ -43,9 +43,16 @@ export async function POST(request: Request) {
   }
   const data = parsed.data;
 
+  // Client IP for the rate limiter (and the acceptance record / Turnstile).
+  // x-nf-client-connection-ip is set by the Netlify edge and cannot be forged
+  // by the client. The X-Forwarded-For fallback takes the LAST hop — appended
+  // by the proxy closest to us — because the leftmost entries are attacker-
+  // controlled: keying on them would mint a fresh identity per request and
+  // bypass the limit entirely.
   const ip =
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    request.headers.get("x-real-ip") ??
+    request.headers.get("x-nf-client-connection-ip")?.trim() ||
+    request.headers.get("x-forwarded-for")?.split(",").at(-1)?.trim() ||
+    request.headers.get("x-real-ip") ||
     "unknown";
   const ua = request.headers.get("user-agent") ?? "unknown";
   const acceptedAt = new Date().toISOString();

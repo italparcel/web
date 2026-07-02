@@ -105,4 +105,43 @@ test.describe("quote/contact form", () => {
     const res = await request.get("/api/contact");
     expect(res.status()).toBe(405);
   });
+
+  test("SEC-02 regression: X-Forwarded-For spoofing cannot reset the rate limit", async ({
+    request,
+  }) => {
+    // Simulates Netlify: the trusted x-nf-client-connection-ip is fixed while
+    // the attacker rotates X-Forwarded-For on every request. With the old
+    // leftmost-XFF key each request looked like a new client and the limit
+    // never triggered; keyed on the trusted header, request #6 must get 429.
+    // Payloads pass validation but never send email locally (Turnstile secret
+    // is not configured, so non-limited requests stop with a 4xx/5xx there).
+    const trusted = `198.51.100.${Math.floor(Math.random() * 200)}.${Date.now() % 1000}`;
+    const payload = {
+      name: "Rate Limit Probe",
+      email: "rate-limit-probe@example.com",
+      phone: "",
+      country: "United States",
+      address: "123 Probe Street, Springfield",
+      itemDescription: "rate limit regression test",
+      parcels: "1",
+      origin: "extra-eu",
+      notes: "",
+      channel: "email",
+      acceptTerms: true,
+      acceptClauses: true,
+    };
+    const statuses: number[] = [];
+    for (let i = 0; i < 7; i++) {
+      const res = await request.post("/api/contact", {
+        headers: {
+          "x-nf-client-connection-ip": trusted,
+          "x-forwarded-for": `10.0.${i}.${i}, 172.16.0.1`,
+        },
+        data: payload,
+      });
+      statuses.push(res.status());
+      if (res.status() === 429) break;
+    }
+    expect(statuses, `statuses seen: ${statuses.join(",")}`).toContain(429);
+  });
 });
